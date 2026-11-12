@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScoreUpdate (provisional)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "match_id",
+    "home_score",
+    "away_score",
+    "event_id",
+    "event_type",
+    "updated_at",
+    "var_status"
+  ],
+  "properties": {
+    "match_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "home_score": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "away_score": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "event_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "event_type": {
+      "enum": [
+        "GOAL",
+        "VAR_CHECK",
+        "GOAL_ANNULLED",
+        "MATCH_CONTINUES"
+      ]
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "var_status": {
+      "enum": [
+        "CLEAR",
+        "IN_PROGRESS"
+      ]
+    },
+    "reference_event_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "GOAL_ANNULLED"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reference_event_id"
+        ],
+        "properties": {
+          "reference_event_id": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -6,12 +6,20 @@ import com.live_jgv.matchstate.domain.port.MatchStateRepository;
 import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
 import java.util.ConcurrentModificationException;
 import java.util.Objects;
+import java.time.Clock;
+import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 
 public final class MatchStateService implements ProcessMatchEvent {
     private final MatchStateRepository repository;
+    private final Clock clock;
 
     public MatchStateService(MatchStateRepository repository) {
+        this(repository, Clock.systemUTC());
+    }
+
+    public MatchStateService(MatchStateRepository repository, Clock clock) {
         this.repository = Objects.requireNonNull(repository);
+        this.clock = Objects.requireNonNull(clock);
     }
 
     @Override
@@ -25,7 +33,10 @@ public final class MatchStateService implements ProcessMatchEvent {
         if (updated == current) {
             return current;
         }
-        if (!repository.compareAndSet(current, updated)) {
+        var score = updated.score();
+        var update = new ScoreUpdate(updated.matchId(), score.home(), score.away(), event.eventId(),
+                event.eventType(), clock.instant(), updated.varStatus(), event.referenceEventId());
+        if (!repository.compareAndSet(current, updated, update)) {
             throw new ConcurrentModificationException("Match changed concurrently; reload and retry event");
         }
         return updated;

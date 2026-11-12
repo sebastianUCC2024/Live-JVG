@@ -26,12 +26,12 @@ class MatchStateServiceTest {
     @Test
     void loadsAppliesAndAtomicallyStoresStateAndHistory() {
         when(repository.findById("m1")).thenReturn(Optional.of(initial));
-        when(repository.compareAndSet(eq(initial), any())).thenReturn(true);
+        when(repository.compareAndSet(eq(initial), any(), any())).thenReturn(true);
         var updated = service.process(goal);
         var captured = ArgumentCaptor.forClass(MatchState.class);
         var order = inOrder(repository);
         order.verify(repository).findById("m1");
-        order.verify(repository).compareAndSet(same(initial), captured.capture());
+        order.verify(repository).compareAndSet(same(initial), captured.capture(), any());
         assertSame(updated, captured.getValue());
         assertEquals(new Score(1, 0), updated.score());
         assertEquals(goal, updated.processedEvents().get("g1"));
@@ -75,7 +75,7 @@ class MatchStateServiceTest {
     @Test
     void reportsConcurrentWriteConflictWithoutClaimingSuccess() {
         when(repository.findById("m1")).thenReturn(Optional.of(initial));
-        when(repository.compareAndSet(eq(initial), any())).thenReturn(false);
+        when(repository.compareAndSet(eq(initial), any(), any())).thenReturn(false);
         assertThrows(ConcurrentModificationException.class, () -> service.process(goal));
         assertTrue(initial.processedEvents().isEmpty());
     }
@@ -84,7 +84,7 @@ class MatchStateServiceTest {
     void propagatesStorageFailureAndKeepsLoadedSnapshotUnchanged() {
         when(repository.findById("m1")).thenReturn(Optional.of(initial));
         var failure = new IllegalStateException("Storage unavailable");
-        when(repository.compareAndSet(eq(initial), any())).thenThrow(failure);
+        when(repository.compareAndSet(eq(initial), any(), any())).thenThrow(failure);
         assertSame(failure, assertThrows(IllegalStateException.class, () -> service.process(goal)));
         assertTrue(initial.processedEvents().isEmpty());
     }
