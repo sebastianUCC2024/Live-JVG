@@ -3,16 +3,13 @@
 Status: pending approval. This document does not change the shared contract.
 The existing `contracts/events/match-event.schema.json` is empty.
 Future transport adapters must map Java camelCase attributes to these snake_case
-properties. No serialization adapter is implemented in this phase.
+properties. The Phase 3 Kafka adapter implements this provisional serialization format.
 
 ## Domain tests
 
-Run `mvn -Pdomain-tests test` to execute only domain tests with JUnit 5.12.2.
-Run `mvn clean test` for the full suite with Spring Boot's managed JUnit version.
-Spring Framework 7's context test extension requires JUnit 6; downgrading the
-entire suite to JUnit 5 causes a `NoSuchMethodError`. The domain profile uses
-existing transitive test dependencies and adds no libraries. Both commands can
-run offline with `-o` once their dependencies and plugins have been cached.
+Run `mvn clean test` for the full JUnit 5 suite, including domain and Kafka adapter
+unit tests. No broker or Docker is required. Spring Boot 3.5 manages JUnit 5 and
+Jackson 2 consistently; the former Boot 4 / JUnit 6 domain-only profile was removed.
 
 The reviewable Draft 2020-12 schema is [match-event.schema.proposed.json](match-event.schema.proposed.json). This is the single proposal source; the shared contract remains unchanged.
 
