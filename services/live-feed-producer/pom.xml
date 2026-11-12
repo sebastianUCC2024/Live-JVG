@@ -69,6 +69,30 @@
 		</dependency>
 	</dependencies>
 
+	<!-- Spring Framework 7 context tests require JUnit 6. This profile runs
+	     the independent domain tests with the requested JUnit 5 runtime. -->
+	<profiles>
+		<profile>
+			<id>domain-tests</id>
+			<properties>
+				<junit-jupiter.version>5.12.2</junit-jupiter.version>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>**/domain/**/*Test.java</include>
+							</includes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<plugin>
