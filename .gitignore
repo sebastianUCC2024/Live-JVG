@@ -1,0 +1,28 @@
+# Java / Maven
+**/target/
+*.class
+*.log
+
+# React / Node.js
+**/node_modules/
+**/dist/
+**/coverage/
+
+# Environment variables
+.env
+**/.env
+.env.local
+**/.env.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
