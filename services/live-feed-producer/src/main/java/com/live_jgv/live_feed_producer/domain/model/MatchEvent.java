@@ -3,6 +3,14 @@ package com.live_jgv.live_feed_producer.domain.model;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Immutable sporting event with no infrastructure dependencies.
+ * The inclusive 0..130 minute interval is an initial project simulation limit,
+ * not a universal football rule.
+ * A GOAL_ANNULLED reference must identify the original GOAL. This value object
+ * only checks that the reference is nonblank. The match-state-service will check
+ * existence, event type, match ownership and whether the goal was already annulled.
+ */
 public record MatchEvent(String eventId, String matchId, EventType eventType,
                          String teamId, int minute, Instant timestamp,
                          String referenceEventId) {

@@ -99,6 +99,25 @@ class MatchEventTest {
     }
 
     @Test
+    void createsAnnulmentReferencingOriginalGoal() {
+        var goal = MatchEvent.create("match-1", EventType.GOAL, "team-1", 42, TIME, null);
+        var annulment = MatchEvent.create("match-1", EventType.GOAL_ANNULLED,
+                null, 43, TIME, goal.eventId());
+        assertEquals(goal.eventId(), annulment.referenceEventId());
+        assertNotEquals(goal.eventId(), annulment.eventId());
+        assertNull(annulment.teamId());
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(value = EventType.class,
+            names = {"VAR_CHECK", "MATCH_CONTINUES"})
+    void acceptsNonApplicableFieldsAsNull(EventType type) {
+        var optional = event("event-1", "match-1", type, null, 42, TIME, null);
+        assertNull(optional.teamId());
+        assertNull(optional.referenceEventId());
+    }
+
+    @Test
     void createsVarEventsAndContinuationWithoutTeam() {
         var review = event("review-1", "match-1", EventType.VAR_CHECK, null, 45, TIME, "goal-1");
         var annulment = event("annulment-1", "match-1", EventType.GOAL_ANNULLED, null, 46, TIME, "goal-1");

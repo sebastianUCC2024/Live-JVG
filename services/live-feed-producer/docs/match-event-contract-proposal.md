@@ -14,45 +14,7 @@ entire suite to JUnit 5 causes a `NoSuchMethodError`. The domain profile uses
 existing transitive test dependencies and adds no libraries. Both commands can
 run offline with `-o` once their dependencies and plugins have been cached.
 
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "MatchEvent",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["event_id", "match_id", "event_type", "minute", "timestamp"],
-  "properties": {
-    "event_id": { "$ref": "#/$defs/identifier" },
-    "match_id": { "$ref": "#/$defs/identifier" },
-    "event_type": {
-      "enum": ["GOAL", "VAR_CHECK", "GOAL_ANNULLED", "MATCH_CONTINUES"]
-    },
-    "team_id": { "type": ["string", "null"] },
-    "minute": { "type": "integer", "minimum": 0, "maximum": 130 },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "reference_event_id": { "type": ["string", "null"] }
-  },
-  "$defs": {
-    "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
-  },
-  "allOf": [
-    {
-      "if": { "properties": { "event_type": { "const": "GOAL" } } },
-      "then": {
-        "required": ["team_id"],
-        "properties": { "team_id": { "$ref": "#/$defs/identifier" } }
-      }
-    },
-    {
-      "if": { "properties": { "event_type": { "const": "GOAL_ANNULLED" } } },
-      "then": {
-        "required": ["reference_event_id"],
-        "properties": { "reference_event_id": { "$ref": "#/$defs/identifier" } }
-      }
-    }
-  ]
-}
-```
+The reviewable Draft 2020-12 schema is [match-event.schema.proposed.json](match-event.schema.proposed.json). This is the single proposal source; the shared contract remains unchanged.
 
 The 130-minute maximum is an initial documented domain limit, not runtime
 configuration. A valid team means a nonblank identifier; membership in a match
@@ -69,3 +31,7 @@ Review the optional null fields, VAR reference semantics, minute limit and UUID
 policy before approving the shared contract. Configure date-time format
 assertion in the future schema validator. Unicode whitespace rules may differ
 between JSON Schema regular expressions and Java `String.isBlank()`.
+
+The 0..130 interval is a provisional simulation restriction, not a universal football rule. For GOAL_ANNULLED, reference_event_id denotes the original GOAL. match-state-service will validate existence, event type, match ownership and prior annulment. Neither the domain nor JSON Schema queries Kafka or a database.
+
+MatchEventContractTest checks structural consistency using the existing Jackson dependency: fields, enum, bounds, nullability, and conditional rules. It is not a full JSON Schema validator or a serialization test. If a nonempty shared contract is present, the test also checks that it matches the proposal. Enable date-time format assertion in a future Draft 2020-12 validator; format alone is an annotation by default.
