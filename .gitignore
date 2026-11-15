@@ -26,3 +26,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+# Local MVP credentials, logs and generated run state
+.mvp/

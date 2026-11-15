@@ -1,4 +1,119 @@
-name: live-JVG
-
-
-services: {}
+name: live-jvg-mvp
+x-rabbit: &rabbit
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USERNAME: mvp
+  RABBITMQ_PASSWORD: ${MVP_RABBIT_PASSWORD:?Run scripts/start-mvp.sh}
+x-match: &match
+  MATCH_ID: ${MVP_MATCH_ID:-mvp-match-001}
+  HOME_TEAM_ID: home
+  AWAY_TEAM_ID: away
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: live_jvg
+      POSTGRES_USER: live_jvg
+      POSTGRES_PASSWORD: ${MVP_DB_PASSWORD:?Run scripts/start-mvp.sh}
+    ports: ["127.0.0.1:55434:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U live_jvg -d live_jvg"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  kafka:
+    image: apache/kafka:3.9.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    ports: ["127.0.0.1:19092:19092"]
+    volumes: ["kafka_data:/var/lib/kafka/data"]
+    healthcheck:
+      test: [CMD-SHELL, "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+  kafka-init:
+    image: apache/kafka:3.9.1
+    depends_on:
+      kafka: {condition: service_healthy}
+    entrypoint: [/opt/kafka/bin/kafka-topics.sh]
+    command: [--bootstrap-server, "kafka:9092", --create, --if-not-exists, --topic, match_events, --partitions, "1", --replication-factor, "1"]
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: mvp
+      RABBITMQ_DEFAULT_PASS: ${MVP_RABBIT_PASSWORD:?Run scripts/start-mvp.sh}
+    ports: ["127.0.0.1:5673:5672", "127.0.0.1:15673:15672"]
+    volumes: ["rabbit_data:/var/lib/rabbitmq"]
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  producer:
+    build:
+      context: .
+      args: {JAR_FILE: services/live-feed-producer/target/live-feed-producer-0.0.1-SNAPSHOT.jar}
+    environment:
+      <<: *match
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports: ["127.0.0.1:18081:8080"]
+    depends_on:
+      kafka-init: {condition: service_completed_successfully}
+    mem_limit: 384m
+  dashboard:
+    build:
+      context: .
+      args: {JAR_FILE: services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar}
+    environment:
+      <<: [*match, *rabbit]
+      DASHBOARD_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
+      DB_USERNAME: live_jvg
+      DB_PASSWORD: ${MVP_DB_PASSWORD}
+      PRODUCER_URL: http://producer:8080
+      DASHBOARD_QUEUE: mvp-dashboard-scores
+    ports: ["127.0.0.1:18080:8080"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 4s
+      timeout: 5s
+      retries: 40
+    mem_limit: 512m
+  match-state:
+    build:
+      context: .
+      args: {JAR_FILE: services/match-state-service/target/match-state-service-0.0.1-SNAPSHOT.jar}
+    environment:
+      <<: [*match, *rabbit]
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MATCH_STATE_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
+      MATCH_STATE_DB_USERNAME: live_jvg
+      MATCH_STATE_DB_PASSWORD: ${MVP_DB_PASSWORD}
+      KAFKA_SOURCE_ID: live-jvg-mvp
+    depends_on:
+      kafka-init: {condition: service_completed_successfully}
+      postgres: {condition: service_healthy}
+      dashboard: {condition: service_healthy}
+    mem_limit: 512m
+volumes:
+  postgres_data:
+  kafka_data:
+  rabbit_data:

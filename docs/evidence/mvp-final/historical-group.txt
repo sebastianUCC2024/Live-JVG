@@ -1,0 +1,3 @@
+
+GROUP                                              TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                                        HOST            CLIENT-ID
+phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-state match_events    0          5               5               0               consumer-phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-state-1-6d6e1bdf-1aed-4c8b-8fd4-3c8e9a946c41 /192.168.65.1   consumer-phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-state-1
