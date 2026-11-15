@@ -1,8 +1,20 @@
-# Fase 7 — Informe de integración (7D)
+# Fase 7 — Informe de integración consolidado (7B–7D)
 
 Fecha: 2026-11-14 (America/Bogota).
 
-Estado: integracion Kafka a RabbitMQ reportada por el usuario; publicador real pendiente. Las secciones previas son historicas.
+Estado actual (Fase 7E): PASS funcional de la secuencia de cinco eventos del
+publicador real → Kafka → match-state-service → RabbitMQ. Publicación mediante
+bean Spring desde JShell ejecutada por el usuario; registros Kafka y cinco
+resultados RabbitMQ inspeccionados directamente por Codex. Ver sección 12.
+El cierre general del sistema sigue pendiente: resiliencia, persistencia,
+deduplicación y aprobación de contratos no quedan demostradas por esta prueba.
+
+Las secciones 1–9 registran el diagnóstico inicial de Codex en Fase 7B; la sección
+10 registra Fase 7C. Sus estados y casos «no ejecutados» corresponden a esas
+intervenciones, no al resultado posterior del usuario. La sección 11 consolida
+el estado de aquel momento y la procedencia de las evidencias. La sección 12
+actualiza el resultado vigente. No se repitió el diagnóstico
+ni se asumió acceso de Codex a los recursos de la terminal local.
 
 ## 1. Objetivo
 
@@ -586,3 +598,145 @@ En Fase 7D Codex solo modificó `docs/phase-7b-integration-report.md`. No ejecut
 builds, diagnóstico de infraestructura ni pruebas de mensajería; no modificó
 código, contratos, Compose o dependencias. Sin commits, merges o push.
 Trabajo detenido a la espera de aprobación del usuario.
+
+## 12. FASE 7E — Productor real → Kafka → match-state-service → RabbitMQ
+
+### Objetivo, procedencia y alcance
+
+Continuación desde Paso 25, sin reiniciar la secuencia ni publicar eventos.
+El usuario confirmó que invocó el bean real KafkaMatchEventPublisher desde JShell
+a través de MatchEventPublisher, y aportó IDs, offsets y el log de confirmación
+del quinto evento. Codex no ejecutó esas publicaciones; verificó los registros
+existentes en Kafka y los cinco resultados reales en RabbitMQ.
+
+Los timestamps observados son del 2026-11-15 UTC (2026-11-14 en America/Bogota).
+Los estados pendientes de productor, MATCH_CONTINUES y gol visitante indicados
+en Fase 7D quedan superados para esta secuencia, no para todos los escenarios.
+
+### Infraestructura observada
+
+- Contenedores activos: live-jvg-test-kafka-1 (apache/kafka:3.9.1) y
+  live-jvg-test-rabbitmq-1 (rabbitmq:4-management), proyecto live-jvg-test.
+- Topic: match_events, partición inspeccionada: 0.
+- Partido: phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc.
+- Grupo observado: phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-state.
+- Exchange de los mensajes: live_updates.
+- Routing key: score.phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc.
+- Cola: phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-queue.
+
+### Paso 25 y tabla de resultados
+
+PASS: se encontró el GOAL visitante con event_id
+655071f7-955a-4a54-a615-6f4e808ecd27, home_score=0, away_score=1,
+var_status=CLEAR, reference_event_id=null y updated_at presente.
+
+| Evento | event_id | Offset Kafka | Marcador RabbitMQ | VAR RabbitMQ | Estado |
+|---|---|---:|---|---|---|
+| GOAL local | 80cf9464-5c02-42cb-a389-b98a4ec2e576 | 0 | 1–0 | CLEAR | PASS |
+| VAR_CHECK | 58304ff4-c781-45d5-8a1f-102e5ec0cb5c | 1 | 1–0 | IN_PROGRESS | PASS |
+| GOAL_ANNULLED | d74a21a7-11b2-4ab4-acc8-508f2d31f63a | 2 | 0–0 | CLEAR | PASS |
+| MATCH_CONTINUES | 84ecd1fc-0e99-4f27-8031-235888acb919 | 3 | 0–0 | CLEAR | PASS |
+| GOAL visitante | 655071f7-955a-4a54-a615-6f4e808ecd27 | 4 | 0–1 | CLEAR | PASS |
+
+Codex observó cinco mensajes y cinco event_id distintos, todos con el match_id,
+exchange y routing key anteriores. VAR_CHECK y GOAL_ANNULLED contienen
+reference_event_id=80cf9464-5c02-42cb-a389-b98a4ec2e576 tanto en Kafka como en
+RabbitMQ. Los otros tres mensajes contienen referencia null.
+
+Kafka mostró claves iguales a match_id, JSON snake_case, minute 10, 11, 12, 13
+y 20; team_id del GOAL local termina en -home y el visitante en -away. Los tres
+eventos intermedios tienen team_id=null. Los cinco registros conservan timestamp
+textual ISO 8601 y los IDs de la tabla.
+
+### Extractos reales de RabbitMQ
+
+updated_at observados, en orden de la tabla:
+
+```text
+2026-11-15T02:19:37.600179Z
+2026-11-15T02:20:23.618912Z
+2026-11-15T02:23:03.197620Z
+2026-11-15T02:24:59.891291Z
+2026-11-15T02:25:52.191806Z
+```
+
+Payload completo del quinto mensaje observado:
+
+```json
+{"match_id":"phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc","home_score":0,"away_score":1,"event_id":"655071f7-955a-4a54-a615-6f4e808ecd27","event_type":"GOAL","updated_at":"2026-11-15T02:25:52.191806Z","var_status":"CLEAR","reference_event_id":null}
+```
+
+La primera consulta mostró redelivered=true para los cuatro primeros y false
+para el quinto. Una segunda consulta con reencolado mostró true para todos.
+Esto es consecuencia compatible con ack_requeue_true; no demuestra duplicación
+del productor. No se publicó ningún evento adicional ni se borraron mensajes.
+La inspección posterior de la cola mostró messages_ready=5 y
+messages_unacknowledged=0.
+
+### Comandos ejecutados y acceso
+
+El primer intento de Paso 25 desde el sandbox terminó con código 1:
+`permission denied while trying to connect to the docker API`. El mismo comando
+con acceso ampliado al daemon terminó con código 0:
+
+```sh
+docker exec live-jvg-test-rabbitmq-1 rabbitmqadmin get messages \
+  --queue phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-queue \
+  --count 5 --ack-mode ack_requeue_true
+```
+
+Se repitió una vez, usando Python para extraer los cinco payloads JSON de la
+tabla, exchange, routing_key y redelivered, y contar IDs únicos. Resultado:
+`unique_event_ids=5 messages=5`. La repetición mantuvo ack_requeue_true.
+
+Otras inspecciones ejecutadas, sin alterar offsets del grupo consumidor:
+
+```sh
+docker ps --format '{{.Names}} {{.Image}} {{.Status}}'
+ps -axo pid,comm | rg -i 'java|jshell'
+docker exec live-jvg-test-rabbitmq-1 rabbitmqctl list_queues name messages_ready messages_unacknowledged
+docker exec live-jvg-test-kafka-1 /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+docker exec live-jvg-test-kafka-1 /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-state
+docker exec live-jvg-test-kafka-1 /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic match_events --partition 0 --offset 0 --max-messages 5 --timeout-ms 10000 --property print.key=true --property print.offset=true --property print.timestamp=true
+docker logs --tail 30 live-jvg-test-kafka-1
+lsof -a -p 68834 -d 1,2
+```
+
+El lector Kafka terminó con `Processed a total of 5 messages`; leyó offsets 0–4
+sin utilizar el grupo de la aplicación. La descripción del grupo mostró
+CURRENT-OFFSET=5, LOG-END-OFFSET=5, LAG=0 y un consumidor activo.
+
+Se consultaron git status, el informe y nombres de archivos de logs bajo el
+repositorio y /private/tmp, sin encontrar una captura de logs de la aplicación.
+Los logs del broker muestran asignación del grupo y rebalances previos; no son
+logs del listener ni prueban ausencia de errores de aplicación.
+
+### Logs del consumidor: comprobación no disponible
+
+Los descriptores stdout/stderr del proceso Java PID 68834 apuntan a
+/dev/ttys003. No se dispone de una captura histórica de esa terminal ni se leyó
+su dispositivo para evitar interferir con la sesión del usuario. Por tanto,
+no se verificó retrospectivamente la ausencia de errores/excepciones del
+match-state-service. El lag 0 y los cinco resultados correctos demuestran el
+progreso y los efectos observados, no ausencia absoluta de errores previos.
+
+### Resultado global y pendientes
+
+**FASE 7E: PASS para la secuencia funcional de cinco eventos.** Se correlacionaron
+los cinco registros Kafka existentes con cinco salidas RabbitMQ y el resultado
+final 0–1 CLEAR. La invocación del bean real es la ejecución confirmada por el
+usuario; las lecturas Kafka/RabbitMQ son verificaciones directas de Codex.
+La revisión histórica de logs del consumidor queda expresamente no disponible;
+el PASS no incluye esa revisión ni la validación completa del sistema.
+
+Siguen pendientes: aprobación de contratos compartidos; deduplicación ante
+reenvíos; persistencia y reinicios con estado previo; fallos RabbitMQ y su
+recuperación; tratamiento de entradas inválidas y replay; integración con
+consumidores del resto del equipo. Esta prueba no demuestra endpoints HTTP,
+simulación automática ni garantías de entrega exactamente una vez.
+
+Único archivo modificado en esta continuación:
+docs/phase-7b-integration-report.md. Sin cambios de código, schemas, POM, Compose
+u otra documentación. Sin publicación, borrado de mensajes, resets de offsets,
+reinicios, eliminación de recursos, commits, merges ni pushes. Los contenedores
+y servicios se conservaron en ejecución. Trabajo detenido para revisión.
