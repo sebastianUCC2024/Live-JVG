@@ -2,6 +2,7 @@ package com.live_jgv.matchstate.infrastructure.rabbit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
+import com.live_jgv.matchstate.domain.model.StoredScoreUpdate;
 import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -44,22 +46,31 @@ public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
             log.warn("Score update serialization failed; failureType={}", failure.getClass().getName());
             throw new ScoreUpdatePublicationException("Could not serialize score update", failure);
         }
+        send(update, json, exchange, routingKeyPattern.replace("{matchId}", update.matchId()));
+    }
+
+    @Override
+    public void publishStored(StoredScoreUpdate publication) {
+        send(publication.update(), publication.payload().getBytes(StandardCharsets.UTF_8),
+                publication.exchange(), publication.routingKey());
+    }
+
+    private void send(ScoreUpdate update, byte[] json, String destination, String routingKey) {
         var properties = new MessageProperties();
         properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
         properties.setContentEncoding("UTF-8");
         properties.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
         properties.setMessageId(update.eventId());
         var correlation = new CorrelationData(UUID.randomUUID().toString());
-        var routingKey = routingKeyPattern.replace("{matchId}", update.matchId());
         try {
-            template.send(exchange, routingKey, new Message(json, properties), correlation);
+            template.send(destination, routingKey, new Message(json, properties), correlation);
             // A bounded wait is deliberate: Kafka must not commit before Rabbit acknowledges.
             var confirm = correlation.getFuture().get(confirmTimeoutMillis, TimeUnit.MILLISECONDS);
             if (!confirm.isAck() || correlation.getReturned() != null) {
                 throw new ScoreUpdatePublicationException("RabbitMQ rejected or could not route score update");
             }
             log.info("RabbitMQ publication acknowledged; eventId={}, exchange={}, routingKey={}",
-                    update.eventId(), exchange, routingKey);
+                    update.eventId(), destination, routingKey);
         } catch (InterruptedException failure) {
             Thread.currentThread().interrupt();
             throw new ScoreUpdatePublicationException("RabbitMQ confirmation interrupted", failure);

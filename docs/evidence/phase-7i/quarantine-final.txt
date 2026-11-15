@@ -1,0 +1,10 @@
+               case_id                |    reason_code    | review_state |                       event_id                       |                reference_event_id                 
+--------------------------------------+-------------------+--------------+------------------------------------------------------+---------------------------------------------------
+ 0497a534-4637-4b39-ad0c-d9579ba78210 | MALFORMED         | QUARANTINED  | phase7i-c7e3cf01-e98e-4677-8c71-a45ae4df3ac5-goal    | 
+ 065e5302-c6b1-4413-a224-f9eef097f83b | MALFORMED         | QUARANTINED  |                                                      | 
+ 21328e45-d8e9-4db4-9175-6fa2bd36c1d6 | WAITING_REFERENCE | RESOLVED     | phase7i-c7e3cf01-e98e-4677-8c71-a45ae4df3ac5-annul   | phase7i-c7e3cf01-e98e-4677-8c71-a45ae4df3ac5-goal
+ 64448649-c5a3-4d1c-8570-d6ca722a340d | MALFORMED         | QUARANTINED  |                                                      | 
+ bcf67762-3548-4343-ae5f-666cc76ebe00 | MALFORMED         | QUARANTINED  |                                                      | 
+ c11d4ba9-2344-4ee0-8938-4de1f597423f | UNKNOWN_TEAM      | QUARANTINED  | phase7i-c7e3cf01-e98e-4677-8c71-a45ae4df3ac5-foreign | 
+(6 rows)
+

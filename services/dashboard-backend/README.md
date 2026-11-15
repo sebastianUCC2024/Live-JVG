@@ -1,3 +1,7 @@
+> Integración con el MVP: el modo predeterminado conserva PostgreSQL y publica los snapshots confirmados al WebSocket del equipo. REST `/api/matches/{matchId}/score` y STOMP `/app/matches/{matchId}/snapshot` consultan la misma proyección durable. El frontend estático y los controles de publicación siguen en `/`.
+>
+> Para ejecutar la implementación original del equipo sin PostgreSQL, usa `SPRING_PROFILES_ACTIVE=memory` con los comandos de este documento. Ese perfil conserva su consumidor, DLQ y proyección en memoria; su estado es volátil. No actives este perfil en el contenedor MVP que requiere persistencia.
+
 ﻿# Dashboard backend — DEV 2
 
 Java 17, Spring Boot 3.5.7 y Maven. Recibe snapshots de marcador por RabbitMQ,

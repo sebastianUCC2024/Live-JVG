@@ -22,6 +22,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
+@org.springframework.test.context.ActiveProfiles("memory")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "spring.rabbitmq.listener.simple.auto-startup=false", "spring.rabbitmq.dynamic=false",
         "management.health.rabbit.enabled=false"

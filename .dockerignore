@@ -1,0 +1,11 @@
+.git
+.codex
+.agents
+.aws
+.m2
+.mvp
+docs
+**/node_modules
+**/.env*
+**/target/*
+!services/*/target/*-SNAPSHOT.jar

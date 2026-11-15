@@ -1,0 +1,124 @@
+RUN phase7f-f5820d90-8b2d-4b42-9841-c8807a7fd8a7
+21:33:50.172 [main] INFO org.springframework.amqp.rabbit.connection.CachingConnectionFactory -- Attempting to connect to: localhost:5672
+21:33:50.194 [main] INFO org.springframework.amqp.rabbit.connection.CachingConnectionFactory -- Created new connection: SpringAMQP#702657cc:0/SimpleConnection@f381794 [delegate=amqp://guest@127.0.0.1:5672/, localPort=63101]
+21:33:50.226 [main] INFO org.apache.kafka.clients.admin.AdminClientConfig -- AdminClientConfig values: 
+	auto.include.jmx.reporter = true
+	bootstrap.controllers = []
+	bootstrap.servers = [localhost:9092]
+	client.dns.lookup = use_all_dns_ips
+	client.id = 
+	connections.max.idle.ms = 300000
+	default.api.timeout.ms = 60000
+	enable.metrics.push = true
+	metadata.max.age.ms = 300000
+	metadata.recovery.strategy = none
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retries = 2147483647
+	retry.backoff.max.ms = 1000
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.header.urlencode = false
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+
+21:33:50.271 [main] INFO org.apache.kafka.common.utils.AppInfoParser -- Kafka version: 3.9.1
+21:33:50.271 [main] INFO org.apache.kafka.common.utils.AppInfoParser -- Kafka commitId: f745dfdcee2b9851
+21:33:50.271 [main] INFO org.apache.kafka.common.utils.AppInfoParser -- Kafka startTimeMs: 1794710030270
+21:33:50.431 [main] INFO org.springframework.amqp.rabbit.connection.CachingConnectionFactory -- Attempting to connect to: localhost:5672
+21:33:50.434 [main] INFO org.springframework.amqp.rabbit.connection.CachingConnectionFactory -- Created new connection: SpringAMQP#702657cc:1/SimpleConnection@1b7c473a [delegate=amqp://guest@127.0.0.1:5672/, localPort=63104]
+21:33:50.436 [kafka-admin-client-thread | adminclient-1] INFO org.apache.kafka.common.utils.AppInfoParser -- App info kafka.admin.client for adminclient-1 unregistered
+21:33:50.438 [kafka-admin-client-thread | adminclient-1] INFO org.apache.kafka.common.metrics.Metrics -- Metrics scheduler closed
+21:33:50.438 [kafka-admin-client-thread | adminclient-1] INFO org.apache.kafka.common.metrics.Metrics -- Closing reporter org.apache.kafka.common.metrics.JmxReporter
+21:33:50.438 [kafka-admin-client-thread | adminclient-1] INFO org.apache.kafka.common.metrics.Metrics -- Metrics reporters closed
+Exception in thread "main" org.springframework.amqp.AmqpIOException: java.io.IOException
+	at org.springframework.amqp.rabbit.support.RabbitExceptionTranslator.convertRabbitAccessException(RabbitExceptionTranslator.java:70)
+	at org.springframework.amqp.rabbit.connection.RabbitAccessor.convertRabbitAccessException(RabbitAccessor.java:118)
+	at org.springframework.amqp.rabbit.core.RabbitTemplate.doExecute(RabbitTemplate.java:2288)
+	at org.springframework.amqp.rabbit.core.RabbitTemplate.execute(RabbitTemplate.java:2234)
+	at org.springframework.amqp.rabbit.core.RabbitTemplate.execute(RabbitTemplate.java:2214)
+	at org.springframework.amqp.rabbit.core.RabbitAdmin.declareQueue(RabbitAdmin.java:302)
+	at Robustness.main(Robustness.java:66)
+Caused by: java.io.IOException
+	at com.rabbitmq.client.impl.AMQChannel.wrap(AMQChannel.java:140)
+	at com.rabbitmq.client.impl.AMQChannel.wrap(AMQChannel.java:136)
+	at com.rabbitmq.client.impl.AMQChannel.exnWrappingRpc(AMQChannel.java:158)
+	at com.rabbitmq.client.impl.ChannelN.queueDeclare(ChannelN.java:989)
+	at com.rabbitmq.client.impl.ChannelN.queueDeclare(ChannelN.java:47)
+	at org.springframework.amqp.rabbit.connection.PublisherCallbackChannelImpl.queueDeclare(PublisherCallbackChannelImpl.java:361)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.amqp.rabbit.connection.CachingConnectionFactory$CachedChannelInvocationHandler.invoke(CachingConnectionFactory.java:1201)
+	at jdk.proxy1/jdk.proxy1.$Proxy0.queueDeclare(Unknown Source)
+	at org.springframework.amqp.rabbit.core.RabbitAdmin.declareQueues(RabbitAdmin.java:851)
+	at org.springframework.amqp.rabbit.core.RabbitAdmin.lambda$declareQueue$4(RabbitAdmin.java:303)
+	at org.springframework.amqp.rabbit.core.RabbitTemplate.invokeAction(RabbitTemplate.java:2321)
+	at org.springframework.amqp.rabbit.core.RabbitTemplate.doExecute(RabbitTemplate.java:2282)
+	... 4 more
+Caused by: com.rabbitmq.client.ShutdownSignalException: connection error; protocol method: #method<connection.close>(reply-code=541, reply-text=INTERNAL_ERROR - Feature `transient_nonexcl_queues` is deprecated.
+By default, this feature is not permitted anymore.
+The feature will be removed from a future major RabbitMQ version, regardless of the configuration; actual version to be determined.
+To..., class-id=50, method-id=10)
+	at com.rabbitmq.utility.ValueOrException.getValue(ValueOrException.java:66)
+	at com.rabbitmq.utility.BlockingValueOrException.uninterruptibleGetValue(BlockingValueOrException.java:36)
+	at com.rabbitmq.client.impl.AMQChannel$BlockingRpcContinuation.getReply(AMQChannel.java:552)
+	at com.rabbitmq.client.impl.AMQChannel.privateRpc(AMQChannel.java:316)
+	at com.rabbitmq.client.impl.AMQChannel.exnWrappingRpc(AMQChannel.java:152)
+	... 17 more

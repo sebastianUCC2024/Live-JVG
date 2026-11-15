@@ -66,6 +66,17 @@ class RabbitScoreUpdatePublisherTest {
     }
 
     @Test
+    void publishesTheStoredWireImageToItsOriginalDestinationWithoutReserializing() throws Exception {
+        confirms(true, false);
+        String payload = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(update);
+        publisher.publishStored(new StoredScoreUpdate(update, payload, "original_exchange", "original.match-001"));
+        var message = org.mockito.ArgumentCaptor.forClass(Message.class);
+        verify(template).send(eq("original_exchange"), eq("original.match-001"), message.capture(), any(CorrelationData.class));
+        assertArrayEquals(payload.getBytes(StandardCharsets.UTF_8), message.getValue().getBody());
+        assertEquals(update.eventId(), message.getValue().getMessageProperties().getMessageId());
+    }
+
+    @Test
     void supportsConfiguredExchangeAndRoutingPattern() {
         confirms(true, false);
         publisher = new RabbitScoreUpdatePublisher(template, mapper, "custom_exchange", "custom.{matchId}", Duration.ofSeconds(1));

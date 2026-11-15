@@ -1,0 +1,3 @@
+
+GROUP               TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                         HOST            CLIENT-ID
+match-state-service match_events    0          11              11              0               consumer-match-state-service-1-f18f5962-d156-4dea-a165-5625b634b67b /172.19.0.7     consumer-match-state-service-1

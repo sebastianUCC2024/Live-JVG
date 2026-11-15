@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.interceptor.RetryOperationsInterceptor;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 
+@org.springframework.context.annotation.Profile("memory")
 @Configuration(proxyBeanMethods = false)
 public class DashboardRabbitConfiguration {
     private static final Logger log = LoggerFactory.getLogger(DashboardRabbitConfiguration.class);

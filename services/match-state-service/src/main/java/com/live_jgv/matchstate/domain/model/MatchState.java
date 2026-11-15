@@ -45,12 +45,12 @@ public final class MatchState {
         var previous = processedEvents.get(event.eventId());
         if (previous != null) {
             if (!previous.equals(event)) {
-                throw new InvalidMatchEventException("Event ID already used by a different payload");
+                throw new InvalidMatchEventException(InvalidMatchEventException.Reason.ID_CONFLICT, "Event ID already used by a different payload");
             }
             return this;
         }
         if (event.teamId() != null && !homeTeamId.equals(event.teamId()) && !awayTeamId.equals(event.teamId())) {
-            throw new InvalidMatchEventException("Unknown team for this match");
+            throw new InvalidMatchEventException(InvalidMatchEventException.Reason.UNKNOWN_TEAM, "Unknown team for this match");
         }
         var annulled = new HashSet<>(annulledGoalIds);
         var status = varStatus;
@@ -79,11 +79,14 @@ public final class MatchState {
 
     private MatchEvent activeGoal(String reference) {
         var goal = processedEvents.get(reference);
-        if (goal == null || goal.eventType() != EventType.GOAL) {
-            throw new InvalidMatchEventException("Reference must identify a previously accepted goal in this match");
+        if (goal == null) {
+            throw new InvalidMatchEventException(InvalidMatchEventException.Reason.WAITING_REFERENCE, "Reference has not been accepted in this match");
+        }
+        if (goal.eventType() != EventType.GOAL) {
+            throw new InvalidMatchEventException(InvalidMatchEventException.Reason.REFERENCE_NOT_GOAL, "Reference must identify a GOAL");
         }
         if (annulledGoalIds.contains(reference)) {
-            throw new InvalidMatchEventException("Goal has already been annulled");
+            throw new InvalidMatchEventException(InvalidMatchEventException.Reason.GOAL_ALREADY_ANNULLED, "Goal has already been annulled");
         }
         return goal;
     }

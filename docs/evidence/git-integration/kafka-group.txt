@@ -1,0 +1,2 @@
+
+Error: Consumer group 'match-state-service' does not exist.

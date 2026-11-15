@@ -26,7 +26,7 @@ test('backend real aislado: desconexión, reinicio y recuperación del navegador
   async function startBackend() {
     child = spawn(process.env.JAVA17_BIN || 'java', ['-jar',
       resolve('../dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar'),
-      `--server.port=${port}`, '--spring.rabbitmq.listener.simple.auto-startup=false',
+      `--server.port=${port}`, '--spring.profiles.active=memory', '--spring.rabbitmq.listener.simple.auto-startup=false',
       '--spring.rabbitmq.dynamic=false', '--management.health.rabbit.enabled=false',
     ], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
     let startupError: Error | undefined

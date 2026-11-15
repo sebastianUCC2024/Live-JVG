@@ -1,0 +1,29 @@
+                     match_id                     | home_score | away_score | var_status |            last_event_id             
+--------------------------------------------------+------------+------------+------------+--------------------------------------
+ integration-4143ec08-f6e6-4faf-8154-39a18718b40b |          0 |          1 | CLEAR      | 21acec5d-869d-469a-b15d-e23d77fe71be
+(1 row)
+
+ dashboard_unique_events 
+-------------------------
+                       5
+(1 row)
+
+ revision 
+----------
+        0
+(1 row)
+
+ accepted_unique 
+-----------------
+               0
+(1 row)
+
+ receipts 
+----------
+        0
+(1 row)
+
+ published | count 
+-----------+-------
+(0 rows)
+

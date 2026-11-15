@@ -1,0 +1,7 @@
+NAME                         IMAGE                                                                     COMMAND                  SERVICE       CREATED          STATUS                    PORTS
+live-jvg-mvp-dashboard-1     sha256:d914ec32e94ced303601ca2afe54aa0888a2df5566f238c782a3a252507bd560   "java -jar /app/appl…"   dashboard     7 minutes ago    Up 7 minutes (healthy)    127.0.0.1:18080->8080/tcp
+live-jvg-mvp-kafka-1         apache/kafka:3.9.1                                                        "/__cacert_entrypoin…"   kafka         15 minutes ago   Up 15 minutes (healthy)   127.0.0.1:19092->19092/tcp
+live-jvg-mvp-match-state-1   live-jvg-mvp-match-state                                                  "java -jar /app/appl…"   match-state   6 minutes ago    Up 6 minutes              
+live-jvg-mvp-postgres-1      postgres:17                                                               "docker-entrypoint.s…"   postgres      15 minutes ago   Up 15 minutes (healthy)   127.0.0.1:55434->5432/tcp
+live-jvg-mvp-producer-1      live-jvg-mvp-producer                                                     "java -jar /app/appl…"   producer      6 minutes ago    Up 6 minutes              127.0.0.1:18081->8080/tcp
+live-jvg-mvp-rabbitmq-1      rabbitmq:4-management                                                     "docker-entrypoint.s…"   rabbitmq      15 minutes ago   Up 15 minutes (healthy)   127.0.0.1:5673->5672/tcp, 127.0.0.1:15673->15672/tcp

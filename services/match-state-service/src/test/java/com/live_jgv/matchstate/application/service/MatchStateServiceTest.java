@@ -25,13 +25,13 @@ class MatchStateServiceTest {
 
     @Test
     void loadsAppliesAndAtomicallyStoresStateAndHistory() {
-        when(repository.findById("m1")).thenReturn(Optional.of(initial));
-        when(repository.compareAndSet(eq(initial), any(), any())).thenReturn(true);
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(initial, 0)));
+        when(repository.compareAndSet(eq(new LoadedMatch(initial, 0)), any(), any())).thenReturn(true);
         var updated = service.process(goal);
         var captured = ArgumentCaptor.forClass(MatchState.class);
         var order = inOrder(repository);
-        order.verify(repository).findById("m1");
-        order.verify(repository).compareAndSet(same(initial), captured.capture(), any());
+        order.verify(repository).load("m1");
+        order.verify(repository).compareAndSet(eq(new LoadedMatch(initial, 0)), captured.capture(), any());
         assertSame(updated, captured.getValue());
         assertEquals(new Score(1, 0), updated.score());
         assertEquals(goal, updated.processedEvents().get("g1"));
@@ -41,50 +41,50 @@ class MatchStateServiceTest {
     @Test
     void duplicateDoesNotWriteAgain() {
         var scored = initial.apply(goal);
-        when(repository.findById("m1")).thenReturn(Optional.of(scored));
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(scored, 1)));
         assertSame(scored, service.process(goal));
-        verify(repository).findById("m1");
+        verify(repository).load("m1");
         verifyNoMoreInteractions(repository);
     }
 
     @Test
     void rejectsUnknownMatchWithoutInferringTeamsFromAnEvent() {
-        when(repository.findById("m1")).thenReturn(Optional.empty());
+        when(repository.load("m1")).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> service.process(goal));
-        verify(repository).findById("m1");
+        verify(repository).load("m1");
         verifyNoMoreInteractions(repository);
     }
 
     @Test
     void invalidReferenceDoesNotWriteState() {
-        when(repository.findById("m1")).thenReturn(Optional.of(initial));
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(initial, 0)));
         var annulment = new MatchEvent("a1", "m1", EventType.GOAL_ANNULLED, null, 43, Instant.EPOCH, "g1");
         assertThrows(InvalidMatchEventException.class, () -> service.process(annulment));
-        verify(repository).findById("m1");
+        verify(repository).load("m1");
         verifyNoMoreInteractions(repository);
     }
 
     @Test
     void rejectsRepositoryReturningAnotherMatch() {
-        when(repository.findById("m1")).thenReturn(Optional.of(MatchState.start("other", "home", "away")));
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(MatchState.start("other", "home", "away"), 0)));
         assertThrows(InvalidMatchEventException.class, () -> service.process(goal));
-        verify(repository).findById("m1");
+        verify(repository).load("m1");
         verifyNoMoreInteractions(repository);
     }
 
     @Test
     void reportsConcurrentWriteConflictWithoutClaimingSuccess() {
-        when(repository.findById("m1")).thenReturn(Optional.of(initial));
-        when(repository.compareAndSet(eq(initial), any(), any())).thenReturn(false);
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(initial, 0)));
+        when(repository.compareAndSet(eq(new LoadedMatch(initial, 0)), any(), any())).thenReturn(false);
         assertThrows(ConcurrentModificationException.class, () -> service.process(goal));
         assertTrue(initial.processedEvents().isEmpty());
     }
 
     @Test
     void propagatesStorageFailureAndKeepsLoadedSnapshotUnchanged() {
-        when(repository.findById("m1")).thenReturn(Optional.of(initial));
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(initial, 0)));
         var failure = new IllegalStateException("Storage unavailable");
-        when(repository.compareAndSet(eq(initial), any(), any())).thenThrow(failure);
+        when(repository.compareAndSet(eq(new LoadedMatch(initial, 0)), any(), any())).thenThrow(failure);
         assertSame(failure, assertThrows(IllegalStateException.class, () -> service.process(goal)));
         assertTrue(initial.processedEvents().isEmpty());
     }

@@ -1,0 +1,27 @@
+7H PASS partition assigned
+7H PASS committed offset 1
+7H PASS committed offset 2
+7H PASS partition assigned
+7H PASS restart after GOAL retains 1-0 without republishing history
+7H PASS committed offset 3
+7H PASS committed offset 4
+7H PASS committed offset 5
+7H PASS committed offset 6
+7H PASS partition assigned
+7H PASS committed offset 7
+7H PASS restart after annulment; duplicate goal and annulment do not publish twice
+7H PASS committed offset 8
+7H PASS PostgreSQL down: Kafka offset frozen at 8, no output
+7H PASS PostgreSQL restored: offset 9
+7H PASS partition assigned
+7H PASS startup drains pending without new Kafka record; revision 7, score 2-1, queue 7
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":1,"away_score":0,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-home","event_type":"GOAL","updated_at":"2026-11-15T03:05:11.210029Z","var_status":"CLEAR","reference_event_id":null}
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":1,"away_score":1,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-away","event_type":"GOAL","updated_at":"2026-11-15T03:05:15.225607Z","var_status":"CLEAR","reference_event_id":null}
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":1,"away_score":1,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-review","event_type":"VAR_CHECK","updated_at":"2026-11-15T03:05:15.334677Z","var_status":"IN_PROGRESS","reference_event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-away"}
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":1,"away_score":0,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-annul","event_type":"GOAL_ANNULLED","updated_at":"2026-11-15T03:05:15.444064Z","var_status":"CLEAR","reference_event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-away"}
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":1,"away_score":0,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-continue","event_type":"MATCH_CONTINUES","updated_at":"2026-11-15T03:05:19.326409Z","var_status":"CLEAR","reference_event_id":null}
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":2,"away_score":0,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-during-outage","event_type":"GOAL","updated_at":"2026-11-15T03:05:22.291831Z","var_status":"CLEAR","reference_event_id":null}
+7H MESSAGE {"match_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match","home_score":2,"away_score":1,"event_id":"phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-pending-at-restart","event_type":"GOAL","updated_at":"2026-11-15T03:05:22.396914Z","var_status":"CLEAR","reference_event_id":null}
+7H RESOURCES phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-events phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-group phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-queue phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-updates phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match
+[INFO] Tests run: 86, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS

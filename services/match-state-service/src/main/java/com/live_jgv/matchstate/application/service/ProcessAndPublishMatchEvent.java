@@ -32,8 +32,18 @@ public final class ProcessAndPublishMatchEvent implements ProcessMatchEvent {
 
     private void flush(String matchId) {
         for (var update : outbox.pendingForMatch(matchId)) {
-            publisher.publish(update);
+            var stored = outbox.storedPublication(update);
+            if (stored.isPresent()) {
+                publisher.publishStored(stored.get());
+            } else {
+                publisher.publish(update);
+            }
             outbox.markPublished(update);
         }
+    }
+
+    /** Startup recovery uses the same publication lane, without applying history again. */
+    public synchronized void recoverPendingMatch(String matchId) {
+        flush(matchId);
     }
 }

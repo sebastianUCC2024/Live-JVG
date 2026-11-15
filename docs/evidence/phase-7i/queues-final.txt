@@ -1,0 +1,19 @@
+Timeout: 60.0 seconds ...
+Listing queues for vhost / ...
+name	messages_ready	messages_unacknowledged
+phase7f-ce8c1403-7c76-435c-82f8-c889dc65b2f2-network-queue	2	0
+phase7i-963651e7-6b51-4a48-ae77-901ff5b3dc6e-queue	4	0
+phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-queue	7	0
+phase7i-c7e3cf01-e98e-4677-8c71-a45ae4df3ac5-queue	4	0
+phase7h-f595537a-6c01-43f0-9ee8-25822487a15b-queue	7	0
+phase7f-62d7304b-3842-4914-b9bb-0132fe594a81-queue	4	0
+phase7h-c450d5bd-06e4-4dce-b5ba-17a642217d07-queue	7	0
+phase7f-d0d18339-f443-41c4-be6d-24fca76a3c4c-queue	17	0
+phase7h-dff81878-d82d-48f9-9ebb-61e3ca521c2e-queue	7	0
+phase7h-6cc8302a-7d97-465e-a73a-757b7a5e7ae3-queue	7	0
+phase7h-10cfaef2-340b-4b8d-a979-e80f29c2a58b-queue	7	0
+phase7e-f020cbf4-34f4-4514-b0ea-afac276164dc-queue	5	0
+phase7i-9e1ed027-ad57-4e11-9096-8b4f40c30ede-queue	4	0
+phase7h-e42015d8-7341-4d60-8c86-e4fcc8d9007b-queue	7	0
+phase7f-62d7304b-3842-4914-b9bb-0132fe594a81-connection-queue	1	0
+phase7i-386bfe0a-47b0-4262-aea0-7c1e9cfbee16-queue	4	0

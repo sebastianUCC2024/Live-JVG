@@ -1,3 +1,5 @@
+> Para conectar este frontend al MVP persistente existente: `VITE_WS_URL=ws://localhost:18080/ws VITE_MATCH_IDS=<match_id_de_/api/matches> npm run dev`. El backend permite los orígenes locales `:5173`. El `match_id` debe coincidir con el catálogo real; el valor predeterminado `match-001` no sustituye el identificador generado del MVP. No se necesitan endpoints nuevos ni cambios en contratos.
+
 # Live-JVG — Dashboard frontend DEV 2
 
 Frontend React + TypeScript + Vite con modo de tiempo real y demostración separada.
