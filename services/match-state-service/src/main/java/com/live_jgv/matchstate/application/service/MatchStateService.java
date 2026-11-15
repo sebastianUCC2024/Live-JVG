@@ -24,12 +24,23 @@ public final class MatchStateService implements ProcessMatchEvent {
 
     @Override
     public MatchState process(MatchEvent event) {
+        return process(event, null);
+    }
+
+    public MatchState processAtRevision(MatchEvent event, long expectedRevision) {
+        return process(event, Long.valueOf(expectedRevision));
+    }
+
+    private MatchState process(MatchEvent event, Long expectedRevision) {
         if (event == null) {
             throw new IllegalArgumentException("Event must not be null");
         }
         var loaded = repository.load(event.matchId())
                 .orElseThrow(() -> new IllegalArgumentException("Match has not been registered"));
         var current = loaded.state();
+        if (expectedRevision != null && loaded.revision() != expectedRevision) {
+            throw new ConcurrentModificationException("Approval revision changed");
+        }
         var updated = current.apply(event);
         if (updated == current) {
             return current;

@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
+import com.live_jgv.matchstate.domain.port.IncomingEventHandler;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +41,6 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import java.time.Duration;
-import java.util.Map;
-import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(MatchCatalogProperties.class)
@@ -82,33 +82,25 @@ public class MessagingConfiguration {
     }
 
     @Bean
-    public KafkaMatchEventListener kafkaMatchEventListener(ObjectMapper mapper, ProcessMatchEvent processor) {
-        return new KafkaMatchEventListener(mapper, processor);
+    public KafkaMatchEventListener kafkaMatchEventListener(ObjectMapper mapper, ProcessMatchEvent processor,
+            ObjectProvider<IncomingEventHandler> ingress, ObjectProvider<KafkaInputSource> sources,
+            @Value("${match-state.kafka.source-id:local/1}") String source) {
+        var resolver = sources.getIfAvailable();
+        return new KafkaMatchEventListener(mapper, processor, ingress.getIfAvailable(), resolver == null ? topic -> source : resolver::identity);
+    }
+
+    @Bean(destroyMethod = "close")
+    public BoundedRetryErrorHandler matchEventsErrorHandler(
+            @Value("${match-state.kafka.retry-interval:1s}") Duration interval,
+            @Value("${match-state.kafka.retry-cooldown:30s}") Duration cooldown) {
+        return new BoundedRetryErrorHandler(interval, cooldown);
     }
 
     @Bean
-    public DefaultErrorHandler matchEventsErrorHandler(@Value("${match-state.kafka.retry-interval:1s}") Duration interval) {
-        if (interval.toMillis() < 1) { throw new IllegalArgumentException("Retry interval must be positive"); }
-        var handler = new DefaultErrorHandler((record, failure) -> {
-            // Never recover by discarding a record or committing its offset.
-            throw new IllegalStateException("Kafka record must remain uncommitted", failure);
-        }, new FixedBackOff(interval.toMillis(), FixedBackOff.UNLIMITED_ATTEMPTS));
-        handler.setClassifications(Map.of(Exception.class, true), true);
-        handler.setAckAfterHandle(false);
-        handler.setCommitRecovered(false);
-        handler.setRetryListeners((record, failure, attempt) -> log.warn(
-                "Kafka record retry pending; partition={}, offset={}, attempt={}, failureType={}",
-                record.partition(), record.offset(), attempt, failure.getClass().getName()));
-        // Framework default error logging includes record contents and exception messages.
-        handler.setLogLevel(org.springframework.kafka.KafkaException.Level.TRACE);
-        return handler;
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> matchEventsContainerFactory(
+    public ConcurrentKafkaListenerContainerFactory<byte[], byte[]> matchEventsContainerFactory(
             KafkaProperties properties, DefaultErrorHandler matchEventsErrorHandler,
             Environment environment) {
-        var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
+        var factory = new ConcurrentKafkaListenerContainerFactory<byte[], byte[]>();
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties()));
         factory.setConcurrency(1);
         // Durable mode starts explicitly after migration, validation and outbox recovery.

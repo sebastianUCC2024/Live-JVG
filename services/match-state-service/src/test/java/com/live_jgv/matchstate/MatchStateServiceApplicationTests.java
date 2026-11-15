@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 class MatchStateServiceApplicationTests {
 
     @Autowired KafkaListenerEndpointRegistry registry;
-    @Autowired ConcurrentKafkaListenerContainerFactory<String, String> matchEventsContainerFactory;
+    @Autowired ConcurrentKafkaListenerContainerFactory<byte[], byte[]> matchEventsContainerFactory;
     @Autowired TopicExchange liveUpdatesExchange;
     @Autowired CachingConnectionFactory rabbitConnectionFactory;
     @Autowired RabbitProperties rabbitProperties;

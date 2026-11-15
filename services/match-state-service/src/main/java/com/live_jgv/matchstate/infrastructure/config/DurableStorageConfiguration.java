@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;
 import com.live_jgv.matchstate.infrastructure.jdbc.JdbcMatchStateStore;
+import com.live_jgv.matchstate.infrastructure.jdbc.DurableEventIngress;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -13,6 +14,10 @@ import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Duration;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.beans.factory.ObjectProvider;
 
 @Configuration(proxyBeanMethods = false)
 @Profile("!memory")
@@ -31,6 +36,18 @@ public class DurableStorageConfiguration {
     }
 
     private static boolean hasText(String value) { return value != null && !value.isBlank(); }
+
+    @Bean(destroyMethod = "close")
+    public KafkaInputSource kafkaInputSource(KafkaProperties properties, ObjectProvider<SslBundles> bundles,
+            @Value("${match-state.kafka.source-id:local/1}") String source) {
+        return new KafkaInputSource(AdminClient.create(properties.buildAdminProperties(bundles.getIfAvailable())), source);
+    }
+
+    @Bean
+    public DurableEventIngress durableEventIngress(JdbcTemplate jdbc, PlatformTransactionManager manager,
+            ObjectMapper mapper, JdbcMatchStateStore store, ProcessAndPublishMatchEvent processor) {
+        return new DurableEventIngress(jdbc, new TransactionTemplate(manager), mapper, store, processor);
+    }
 
     @Bean
     public DurableRecoveryRunner durableRecoveryRunner(JdbcMatchStateStore store, ProcessAndPublishMatchEvent processor,

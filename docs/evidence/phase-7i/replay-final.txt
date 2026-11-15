@@ -1,0 +1,8 @@
+              replay_id               |     actor     | expected_revision |     result      |                               detail                                
+--------------------------------------+---------------+-------------------+-----------------+---------------------------------------------------------------------
+ 1111199c-c4af-44a5-a268-fd9cf63c7348 | test-operator |                 0 | REVIEW_REQUIRED | Catalog or revision changed; new approval required
+ 5e4b44c5-8eb0-448a-b4bf-09056bfcd39b | test-operator |                 1 | APPLIED         | Accepted with outbox; delivery tracked separately
+ 656807fc-d2cf-4795-8688-d2a9cbfe5af7 | test-operator |                 2 | ALREADY_APPLIED | Already accepted; no new effect
+ 7e04ec14-6c9e-4e7b-bba1-ed1cd4b94dfa | test-operator |                 2 | REJECTED        | Not replayable; preserve original and submit correction with new ID
+(4 rows)
+
