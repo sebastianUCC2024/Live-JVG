@@ -1,0 +1,7 @@
+[
+{"match_id":"match-001","home_score":1,"away_score":0,"event_id":"00a6fa93-3f61-4c5b-8cb5-59c25cf3b021","event_type":"GOAL","updated_at":"2026-11-15T00:12:12.079218900Z","var_status":"CLEAR","reference_event_id":null},
+{"match_id":"match-001","home_score":1,"away_score":1,"event_id":"7f320bfd-72ac-4f74-a588-d04e33b7f6d5","event_type":"GOAL","updated_at":"2026-11-15T00:12:12.523727300Z","var_status":"CLEAR","reference_event_id":null},
+{"match_id":"match-001","home_score":1,"away_score":1,"event_id":"5a6397b3-f299-4c89-94b0-db1d167cbc74","event_type":"VAR_CHECK","updated_at":"2026-11-15T00:12:12.676960200Z","var_status":"IN_PROGRESS","reference_event_id":"7f320bfd-72ac-4f74-a588-d04e33b7f6d5"},
+{"match_id":"match-001","home_score":1,"away_score":0,"event_id":"1b975025-062a-4a45-9bd4-264b8e983e6c","event_type":"GOAL_ANNULLED","updated_at":"2026-11-15T00:12:12.815787600Z","var_status":"CLEAR","reference_event_id":"7f320bfd-72ac-4f74-a588-d04e33b7f6d5"},
+{"match_id":"match-001","home_score":1,"away_score":0,"event_id":"d2ab559d-d2f9-4dda-8494-1938647c0d3d","event_type":"MATCH_CONTINUES","updated_at":"2026-11-15T00:12:13.004654900Z","var_status":"CLEAR","reference_event_id":null}
+]
