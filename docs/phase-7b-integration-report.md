@@ -1,8 +1,8 @@
-# Fase 7 — Informe de integración (7C)
+# Fase 7 — Informe de integración (7D)
 
 Fecha: 2026-11-14 (America/Bogota).
 
-Estado: bloqueos del entorno diagnosticados; pruebas reales no ejecutadas por Codex.
+Estado: integracion Kafka a RabbitMQ reportada por el usuario; publicador real pendiente. Las secciones previas son historicas.
 
 ## 1. Objetivo
 
@@ -435,3 +435,154 @@ Compose ni servicios ajenos. Sin commits, merges o push.
 Siguiente paso: resolver acceso local a Central y al daemon/brokers, repetir
 builds, acordar contratos/recursos y aprobar la vía de publicación antes de
 retomar integración. Trabajo detenido a la espera de aprobación.
+
+## 11. Fase 7D — Consolidación de resultados posteriores del usuario
+
+### Procedencia y alcance de las evidencias
+
+| Categoría | Evidencia disponible | Alcance |
+|---|---|---|
+| Ejecutado por Codex | Inspección estática y logs locales de Fases 7B/7C en evidence/phase-7c | Diagnóstico de aquel entorno; no contiene una ejecución real con brokers |
+| Ejecutado por el usuario en macOS | Resultados comunicados expresamente en la solicitud de Fase 7D | Builds exitosos, contenedores temporales, secuencia real de tres eventos, inspección AMQP y limpieza |
+| Verificado por Codex mediante salidas crudas de terminal compartidas | No se adjuntaron salidas completas de la ejecución posterior en el material de esta fase | No se atribuye verificación independiente de esos logs; los valores comunicados se conservan como resultados reportados |
+| No ejecutado en la secuencia posterior reportada | Publicador live-feed-producer → Kafka, MATCH_CONTINUES y pruebas adicionales indicadas abajo | No se declara integración completa ni se extrapola éxito |
+
+El usuario informó que inspeccionó los tres mensajes en RabbitMQ mediante
+`rabbitmqadmin get messages`. Esa observación se registra con su atribución;
+no se crea una captura, transcripción de terminal ni payload completo sintético.
+Los archivos de evidencia 7C siguen documentando fallos históricos de Codex, no
+los éxitos posteriores del usuario. No se conocen los comandos completos de
+publicación, payloads de entrada completos, timestamps exactos ni conteos del
+productor; no se reconstruyen como si fueran evidencia capturada.
+
+### Maven y Java en la terminal local
+
+- Java 17 disponible y Maven instalado/operativo, según el usuario.
+- `mvn -f services/live-feed-producer/pom.xml clean verify`: exitoso reportado;
+  cantidad de pruebas, fallos, errores y omisiones no desglosados en el material
+  proporcionado. No se reutiliza el conteo histórico de 43 como resultado actual.
+- `mvn -f services/match-state-service/pom.xml clean verify`: exitoso reportado;
+  73 pruebas sin fallos. Errores y omisiones no desglosados explícitamente.
+
+Estos builds resuelven el bloqueo de ejecución local. No prueban que hayan
+cambiado el DNS, los permisos o el acceso a Docker del entorno de Codex.
+
+### Infraestructura temporal utilizada por el usuario
+
+| Recurso | Configuración reportada |
+|---|---|
+| Kafka | apache/kafka:3.9.1 |
+| RabbitMQ | rabbitmq:4-management |
+| Topic | match_events |
+| Grupo consumidor | match-state-service |
+| Exchange RabbitMQ | live_updates, tipo topic |
+| Cola de observación | score_test_queue |
+| Routing key | score.match-001 |
+
+No se atribuyen puertos, nombres de contenedor, particiones, retención, configuración
+de ZooKeeper o propiedades de durabilidad no comunicadas. El proyecto utilizó
+un Compose temporal externo al repositorio, `/tmp/live-jvg-compose.yml`.
+
+### Prueba real ejecutada por el usuario
+
+Flujo efectivamente cubierto: kafka-console-producer.sh → Kafka →
+match-state-service → RabbitMQ → inspección de score_test_queue.
+La inyección directa evita el adaptador de live-feed-producer; el build exitoso
+de ese servicio no completa su validación de transporte.
+
+| Evento | ID de entrada reportado | Esperado para esta secuencia | Observado por el usuario |
+|---|---|---|---|
+| GOAL local | goal-test-001 | 1–0, CLEAR | 1–0, CLEAR |
+| VAR_CHECK | var-check-001 | 1–0, IN_PROGRESS | 1–0, IN_PROGRESS |
+| GOAL_ANNULLED | goal-annulled-001 | 0–0, CLEAR | 0–0, CLEAR |
+
+Los tres mensajes se inspeccionaron en score_test_queue con
+`rabbitmqadmin get messages`, según el usuario. Del último mensaje se comunicaron
+estos campos (extracto de valores reportados, no captura literal):
+
+| Campo | Valor |
+|---|---|
+| match_id | match-001 |
+| home_score | 0 |
+| away_score | 0 |
+| event_type | GOAL_ANNULLED |
+| var_status | CLEAR |
+| reference_event_id | goal-test-001 |
+
+Se confirma a nivel de reporte la anulación del gol original y el retorno a 0–0.
+No hay evidencia cruda adicional para verificar independientemente clave Kafka,
+timestamps, partición/offset de cada evento válido o todos los campos de los tres
+mensajes. La coincidencia estática de esos campos está documentada en Fase 7C.
+
+### Incidencia y limpieza reportadas
+
+El primer mensaje Kafka tenía formato incorrecto y quedó en offset 0. El usuario
+detuvo el consumidor, ajustó el offset del grupo match-state-service a 1 y reinició
+el microservicio. Después se procesó el evento válido.
+
+Este procedimiento omitió el mensaje inválido en el entorno temporal; no lo
+reparó ni demuestra recuperación automática, cuarentena o replay. Tampoco es una
+prueba de persistencia ante reinicio de un estado ya procesado. No se reproduce
+el comando de ajuste porque no fue proporcionado. No se recomienda aplicar ese
+salto de offsets a un grupo compartido sin un procedimiento acordado.
+
+Al finalizar, el usuario ejecutó:
+
+```sh
+docker compose -p live-jvg-test -f /tmp/live-jvg-compose.yml down
+```
+
+Reportó eliminación de los dos contenedores temporales y de la red Docker.
+No se afirma eliminación de volúmenes ni imágenes. Codex no ejecutó la limpieza.
+La infraestructura de prueba ya no queda disponible como consecuencia de esta
+limpieza reportada.
+
+### Tabla final de bloqueos y pendientes
+
+| Elemento | Estado actual | Evidencia / condición restante |
+|---|---|---|
+| Java 17 y Maven local | RESUELTO | Disponibilidad y builds exitosos reportados por el usuario |
+| Dependencias de ambos servicios | RESUELTO en terminal local | clean verify exitoso reportado; sin nueva verificación en Codex |
+| Docker y brokers locales | RESUELTO para la prueba realizada | Contenedores reales utilizados y luego retirados |
+| Kafka → match-state-service → RabbitMQ | RESUELTO para los tres eventos reportados | GOAL, VAR_CHECK y GOAL_ANNULLED observados en cola |
+| Mensaje inválido en offset 0 | RESUELTO operativamente en esa prueba | Salto manual a offset 1; política general de errores sigue pendiente |
+| Endpoints REST del simulador | PENDIENTE como funcionalidad, no requisito obligatorio de mensajería | No existen; se puede validar el publicador por un mecanismo directo |
+| Contratos compartidos | PENDIENTE | Aprobación del equipo; schemas siguen vacíos según inspección previa |
+| live-feed-producer → Kafka | PENDIENTE | Publicar con el adaptador real y observar la cadena completa |
+| MATCH_CONTINUES | PENDIENTE | No se incluyó en la secuencia ejecutada |
+| Duplicados y resiliencia | PENDIENTE | No se reportaron duplicados de gol/anulación, caída RabbitMQ ni recuperación posterior |
+| Evidencia cruda de ejecución local | PENDIENTE | Incorporar salidas originales disponibles para revisión independiente |
+
+No se reabre como bloqueo local el fallo de acceso de Codex: son entornos
+distintos. Los recursos temporales pueden recrearse para completar los casos
+pendientes mediante el procedimiento de infraestructura del equipo.
+
+### Condiciones para cerrar la integración completa de Fase 7
+
+1. Ejecutar una secuencia usando el bean/adaptador real de live-feed-producer
+   contra Kafka y observar su consumo y salida RabbitMQ; REST es opcional para
+   esta validación. Registrar clave matchId, topic, IDs, JSON snake_case,
+   timestamps y referencias junto a las salidas correlacionadas.
+2. Completar MATCH_CONTINUES y el GOAL visitante de la secuencia original,
+   comprobando marcador y VAR después de cada evento.
+3. Ejecutar y registrar duplicados de gol/anulación, entradas inválidas y
+   recuperación de RabbitMQ en infraestructura aislada. Evaluar reinicios con
+   estado previo y documentar el límite del almacenamiento volátil. No equiparar
+   el reinicio tras saltar un mensaje inválido con esa prueba.
+4. Aprobar los contratos de entrada/salida con DEV 2/DEV 3 y acordar colas,
+   bindings, deduplicación, tratamiento de errores y recuperación. El éxito de
+   la cola de prueba no valida automáticamente consumidores de otros servicios.
+5. Incorporar las salidas de terminal originales disponibles, los conteos de
+   ambos builds y los mensajes observados, sin reconstruir logs faltantes.
+   Documentar cualquier caso que el equipo excluya expresamente del cierre.
+
+Conclusión de alcance: la comunicación Kafka → match-state-service → RabbitMQ
+queda respaldada por los resultados locales reportados para tres eventos. La
+integración completa de los dos microservicios permanece abierta por los puntos
+anteriores. Persistencia durable y garantías ante reinicios siguen siendo límites
+del diseño actual; cualquier aceptación para uso más amplio debe explicitarlos.
+
+En Fase 7D Codex solo modificó `docs/phase-7b-integration-report.md`. No ejecutó
+builds, diagnóstico de infraestructura ni pruebas de mensajería; no modificó
+código, contratos, Compose o dependencias. Sin commits, merges o push.
+Trabajo detenido a la espera de aprobación del usuario.
