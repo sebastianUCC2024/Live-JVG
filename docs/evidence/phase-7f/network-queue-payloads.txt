@@ -1,0 +1,2 @@
+{"match_id": "phase7f-ce8c1403-7c76-435c-82f8-c889dc65b2f2-network-match", "home_score": 1, "away_score": 0, "event_id": "4c485999-6608-4ff3-89de-777e3fe1f989", "event_type": "GOAL", "updated_at": "2026-11-15T02:40:28.683209Z", "var_status": "CLEAR", "reference_event_id": null}
+{"match_id": "phase7f-ce8c1403-7c76-435c-82f8-c889dc65b2f2-network-match", "home_score": 1, "away_score": 1, "event_id": "f9e3af04-2100-47d6-976b-12762d523619", "event_type": "GOAL", "updated_at": "2026-11-15T02:40:28.788956Z", "var_status": "CLEAR", "reference_event_id": null}
