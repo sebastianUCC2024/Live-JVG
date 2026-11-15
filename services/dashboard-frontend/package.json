@@ -10,7 +10,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:integration": "playwright test e2e/backend-reconnect.spec.ts --workers=1"
   },
   "dependencies": { "@stomp/stompjs": "^7.5.0", "react": "^19.2.0", "react-dom": "^19.2.0" },
   "devDependencies": {

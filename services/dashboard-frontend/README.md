@@ -6,6 +6,8 @@ los destinos verificados. La demostración sigue disponible mediante su botón o
 `/?mode=demo` y utiliza solo fixtures identificados, sin abrir STOMP al backend.
 
 Véase [Fase 6: protocolo, configuración y resultados](docs/phase6-realtime.md).
+La [auditoría de integración de Fase 7](docs/phase7-integration.md) registra los
+checks ejecutados y el bloqueo de la cadena completa por brokers pendientes de DEV 3.
 
 ## Inicio en tiempo real
 
