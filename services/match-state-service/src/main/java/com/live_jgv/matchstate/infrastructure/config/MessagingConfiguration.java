@@ -17,6 +17,8 @@ import com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;
 import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
 import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.domain.port.MatchStateRepository;
+import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
 import com.live_jgv.matchstate.entrypoint.kafka.KafkaMatchEventListener;
 import com.live_jgv.matchstate.infrastructure.memory.InMemoryMatchStateStore;
 import com.live_jgv.matchstate.infrastructure.rabbit.RabbitScoreUpdatePublisher;
@@ -29,13 +31,16 @@ import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.util.backoff.FixedBackOff;
 import java.time.Duration;
 import java.util.Map;
+import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(MatchCatalogProperties.class)
@@ -60,6 +65,7 @@ public class MessagingConfiguration {
     }
 
     @Bean
+    @Profile("memory")
     public InMemoryMatchStateStore matchStateStore(MatchCatalogProperties properties) {
         var definitions = properties.getMatches().stream().filter(definition ->
                 hasText(definition.matchId()) || hasText(definition.homeTeamId()) || hasText(definition.awayTeamId())).toList();
@@ -71,8 +77,8 @@ public class MessagingConfiguration {
     private static boolean hasText(String value) { return value != null && !value.isBlank(); }
 
     @Bean
-    public ProcessMatchEvent processMatchEvent(InMemoryMatchStateStore store, ScoreUpdatePublisher publisher) {
-        return new ProcessAndPublishMatchEvent(new MatchStateService(store), store, publisher);
+    public ProcessAndPublishMatchEvent processMatchEvent(MatchStateRepository repository, ScoreUpdateOutbox outbox, ScoreUpdatePublisher publisher) {
+        return new ProcessAndPublishMatchEvent(new MatchStateService(repository), outbox, publisher);
     }
 
     @Bean
@@ -100,11 +106,13 @@ public class MessagingConfiguration {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> matchEventsContainerFactory(
-            KafkaProperties properties, DefaultErrorHandler matchEventsErrorHandler) {
+            KafkaProperties properties, DefaultErrorHandler matchEventsErrorHandler,
+            Environment environment) {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties()));
         factory.setConcurrency(1);
-        factory.setAutoStartup(properties.getListener().isAutoStartup());
+        // Durable mode starts explicitly after migration, validation and outbox recovery.
+        factory.setAutoStartup(environment.acceptsProfiles(Profiles.of("memory")) && properties.getListener().isAutoStartup());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
         factory.getContainerProperties().setSyncCommits(true);
         factory.setCommonErrorHandler(matchEventsErrorHandler);

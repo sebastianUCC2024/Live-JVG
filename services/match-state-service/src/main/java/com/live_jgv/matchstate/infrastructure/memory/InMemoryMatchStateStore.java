@@ -1,6 +1,7 @@
 package com.live_jgv.matchstate.infrastructure.memory;
 
 import com.live_jgv.matchstate.domain.model.MatchState;
+import com.live_jgv.matchstate.domain.model.LoadedMatch;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 import com.live_jgv.matchstate.domain.port.MatchStateRepository;
 import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
@@ -24,18 +25,19 @@ public final class InMemoryMatchStateStore implements MatchStateRepository, Scor
     }
 
     @Override
-    public synchronized Optional<MatchState> findById(String matchId) {
+    public synchronized Optional<LoadedMatch> load(String matchId) {
         var entry = matches.get(matchId);
-        return entry == null ? Optional.empty() : Optional.of(entry.state());
+        return entry == null ? Optional.empty() : Optional.of(new LoadedMatch(entry.state(), entry.state().processedEvents().size()));
     }
 
     @Override
-    public synchronized boolean compareAndSet(MatchState expected, MatchState updated, ScoreUpdate update) {
+    public synchronized boolean compareAndSet(LoadedMatch loaded, MatchState updated, ScoreUpdate update) {
+        var expected = loaded.state();
         if (!expected.matchId().equals(updated.matchId()) || !updated.matchId().equals(update.matchId())) {
             throw new IllegalArgumentException("State and update must identify the same match");
         }
         var current = matches.get(expected.matchId());
-        if (current == null || current.state() != expected) {
+        if (current == null || current.state().processedEvents().size() != loaded.revision()) {
             return false;
         }
         var pending = new LinkedHashMap<>(current.pending());
@@ -45,6 +47,11 @@ public final class InMemoryMatchStateStore implements MatchStateRepository, Scor
         // Replace one entry after constructing both objects; readers see state and outbox together.
         matches.put(updated.matchId(), new Entry(updated, java.util.Collections.unmodifiableMap(pending)));
         return true;
+    }
+
+    /** Convenience for existing in-memory fixtures. Production uses an explicit LoadedMatch. */
+    public boolean compareAndSet(MatchState expected, MatchState updated, ScoreUpdate update) {
+        return compareAndSet(new LoadedMatch(expected, expected.processedEvents().size()), updated, update);
     }
 
     @Override
