@@ -39,3 +39,8 @@ logs/
 integration-test-tmp/
 integration-test-temp/
 fase7b-run-*/
+
+# Private isolated 9F runs: credentials, approvals, resource manifests and evidence.
+.9f/
+__pycache__/
+*.pyc

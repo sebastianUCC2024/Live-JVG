@@ -12,6 +12,7 @@ public final class ProcessAndPublishMatchEvent implements ProcessMatchEvent {
     private final ProcessMatchEvent processor;
     private final ScoreUpdateOutbox outbox;
     private final ScoreUpdatePublisher publisher;
+    private final java.util.concurrent.ConcurrentMap<String, Object> lanes = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ProcessAndPublishMatchEvent(ProcessMatchEvent processor, ScoreUpdateOutbox outbox,
                                       ScoreUpdatePublisher publisher) {
@@ -20,30 +21,39 @@ public final class ProcessAndPublishMatchEvent implements ProcessMatchEvent {
         this.publisher = Objects.requireNonNull(publisher);
     }
 
-    // One local processing lane; this is not a distributed lock.
     @Override
-    public synchronized MatchState process(MatchEvent event) {
+    public MatchState process(MatchEvent event) {
         Objects.requireNonNull(event, "Event is required");
-        flush(event.matchId());
-        var state = processor.process(event);
-        flush(event.matchId());
-        return state;
-    }
-
-    private void flush(String matchId) {
-        for (var update : outbox.pendingForMatch(matchId)) {
-            var stored = outbox.storedPublication(update);
-            if (stored.isPresent()) {
-                publisher.publishStored(stored.get());
-            } else {
-                publisher.publish(update);
-            }
-            outbox.markPublished(update);
+        synchronized (lanes.computeIfAbsent(event.matchId(), ignored -> new Object())) {
+            flush(event.matchId());
+            var state = processor.process(event);
+            flush(event.matchId());
+            return state;
         }
     }
 
+    private void flush(String matchId) {
+        outbox.withPublicationLock(matchId, () -> {
+            while (true) {
+                var pending = outbox.pendingForMatch(matchId);
+                if (pending.isEmpty()) return;
+                for (var update : pending) {
+                    var stored = outbox.storedPublication(update);
+                    if (stored.isPresent()) {
+                        publisher.publishStored(stored.get());
+                    } else {
+                        publisher.publish(update);
+                    }
+                    outbox.markPublished(update);
+                }
+            }
+        });
+    }
+
     /** Startup recovery uses the same publication lane, without applying history again. */
-    public synchronized void recoverPendingMatch(String matchId) {
-        flush(matchId);
+    public void recoverPendingMatch(String matchId) {
+        synchronized (lanes.computeIfAbsent(matchId, ignored -> new Object())) {
+            flush(matchId);
+        }
     }
 }

@@ -68,7 +68,7 @@ export class SnapshotStore {
     if (previous.snapshot && previous.snapshot.revision >= snapshot.revision) return
     const seen = this.seen.get(id) ?? new Set<string>()
     const duplicate = seen.has(snapshot.event_id)
-    // Backend bounds its volatile deduplication to 10,000 entries; retain only recent UI identities.
+    // Bound this client's visible-event identity cache; durable backend inbox history is retained.
     seen.add(snapshot.event_id)
     if (seen.size > 10000) seen.delete(seen.values().next().value!)
     this.seen.set(id, seen)

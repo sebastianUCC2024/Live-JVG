@@ -7,15 +7,20 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/matches")
 public class MatchSimulationController {
     private final MatchSimulationService simulator;
-    public MatchSimulationController(MatchSimulationService simulator){this.simulator=simulator;}
+    private final boolean writeEnabled;
+    public MatchSimulationController(MatchSimulationService simulator,
+            @Value("${simulator.write-enabled:false}") boolean writeEnabled){this.simulator=simulator;this.writeEnabled=writeEnabled;}
     public record EventRequest(String eventId,EventType eventType,String teamId,Integer minute,Instant timestamp,String referenceEventId){}
     @PostMapping("/{matchId}/events")
     public CompletableFuture<ResponseEntity<?>> publish(@PathVariable String matchId,@RequestBody EventRequest request){
+        if(!writeEnabled)return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error","El simulador de escritura está deshabilitado.")));
         if(request.minute()==null) throw new IllegalArgumentException("El minuto es obligatorio");
         return simulator.publish(matchId,request.eventId(),request.eventType(),request.teamId(),request.minute(),request.timestamp(),request.referenceEventId())
                 .<ResponseEntity<?>>thenApply(event->ResponseEntity.accepted().body(event))

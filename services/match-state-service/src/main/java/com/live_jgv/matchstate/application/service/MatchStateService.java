@@ -45,6 +45,7 @@ public final class MatchStateService implements ProcessMatchEvent {
         if (updated == current) {
             return current;
         }
+        requirePublishableReference(event);
         var score = updated.score();
         var update = new ScoreUpdate(updated.matchId(), score.home(), score.away(), event.eventId(),
                 event.eventType(), clock.instant(), updated.varStatus(), event.referenceEventId());
@@ -52,5 +53,12 @@ public final class MatchStateService implements ProcessMatchEvent {
             throw new ConcurrentModificationException("Match changed concurrently; reload and retry event");
         }
         return updated;
+    }
+
+    /** New outputs must satisfy the consumer contract; historical aggregate replay is unchanged. */
+    public static void requirePublishableReference(MatchEvent event) {
+        if (event.referenceEventId() != null && event.referenceEventId().isBlank()) {
+            throw new com.live_jgv.matchstate.domain.model.InvalidMatchEventException("reference_event_id must be null or nonblank");
+        }
     }
 }

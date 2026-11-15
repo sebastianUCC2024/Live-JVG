@@ -7,7 +7,6 @@ import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.*;
@@ -24,7 +23,9 @@ import java.util.function.BooleanSupplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Opt-in: dedicated PostgreSQL container/DB, new Kafka topic/group and Rabbit queue per execution. */
-@EnabledIfEnvironmentVariable(named = "MATCH_STATE_TEST_QUARANTINE", matches = "true")
+@org.junit.jupiter.api.Tag("external-integration")
+@org.junit.jupiter.api.Tag("broker-integration")
+@org.junit.jupiter.api.extension.ExtendWith(com.live_jgv.test.DurableIntegrationSafety.class)
 class QuarantineMessagingIntegrationTest {
     private final String id = "phase7i-" + UUID.randomUUID();
     private final String topic = id + "-events", group = id + "-group", exchange = id + "-updates", queue = id + "-queue";
@@ -33,6 +34,9 @@ class QuarantineMessagingIntegrationTest {
     private ConfigurableApplicationContext context;
 
     private String required(String key) { return Objects.requireNonNull(System.getenv(key), "Missing " + key); }
+    private com.live_jgv.test.IsolatedBrokerEnvironment brokers() {
+        return com.live_jgv.test.IsolatedBrokerEnvironment.from(System.getenv());
+    }
 
     private ConfigurableApplicationContext start() {
         return new SpringApplicationBuilder(MatchStateServiceApplication.class).web(WebApplicationType.NONE).run(
@@ -41,12 +45,13 @@ class QuarantineMessagingIntegrationTest {
                 "--spring.datasource.username=" + required("MATCH_STATE_TEST_DB_USERNAME"),
                 "--spring.datasource.password=" + required("MATCH_STATE_TEST_DB_PASSWORD"),
                 "--spring.datasource.hikari.connection-timeout=1000",
-                "--spring.kafka.bootstrap-servers=localhost:9092", "--match-state.kafka.topic=" + topic,
+                "--spring.kafka.bootstrap-servers="+brokers().kafka(), "--match-state.kafka.topic=" + topic,
                 "--spring.kafka.consumer.group-id=" + group, "--spring.kafka.consumer.auto-offset-reset=earliest",
                 "--spring.kafka.listener.auto-startup=true", "--match-state.kafka.retry-interval=50ms", "--match-state.kafka.retry-cooldown=2s",
                 "--match-state.rabbit.exchange=" + exchange,
-                "--spring.rabbitmq.host=localhost", "--spring.rabbitmq.port=5672",
-                "--spring.rabbitmq.username=guest", "--spring.rabbitmq.password=guest",
+                "--spring.rabbitmq.host="+brokers().rabbitHost(), "--spring.rabbitmq.port="+brokers().rabbitPort(),
+                "--spring.rabbitmq.username="+brokers().rabbitUser(), "--spring.rabbitmq.password="+brokers().rabbitPassword(),
+                "--spring.rabbitmq.virtual-host="+brokers().rabbitVhost(),
                 "--match-state.matches[0].match-id=" + match,
                 "--match-state.matches[0].home-team-id=home", "--match-state.matches[0].away-team-id=away");
     }
@@ -76,20 +81,19 @@ class QuarantineMessagingIntegrationTest {
         await(() -> committed(admin) == offset, "committed offset " + offset);
     }
     private void docker(String action, String name) throws Exception {
-        var process = new ProcessBuilder("docker", action, name).redirectErrorStream(true).start();
-        assertTrue(process.waitFor(30, TimeUnit.SECONDS));
-        assertEquals(0, process.exitValue(), new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+        assertEquals(brokers().postgres(),name);
+        brokers().docker(action);
     }
 
     @Test
     void invalidRecordsContinueDeferredReplayIsDurableAndDatabaseOutageDoesNotCommit() throws Exception {
         String postgres = required("MATCH_STATE_TEST_POSTGRES_CONTAINER");
-        assertTrue(postgres.startsWith("live-jvg-7h-"));
-        var cf = new CachingConnectionFactory("localhost", 5672); var rabbit = new RabbitTemplate(cf); var ra = new RabbitAdmin(cf);
-        var pf = new DefaultKafkaProducerFactory<String, String>(Map.of("bootstrap.servers", "localhost:9092",
+        assertEquals(brokers().postgres(),postgres);
+        var cf = brokers().rabbitConnection(); var rabbit = new RabbitTemplate(cf); var ra = new RabbitAdmin(cf);
+        var pf = new DefaultKafkaProducerFactory<String, String>(Map.of("bootstrap.servers", brokers().kafka(),
                 "key.serializer", "org.apache.kafka.common.serialization.StringSerializer", "value.serializer", "org.apache.kafka.common.serialization.StringSerializer", "acks", "all"));
         var kafka = new KafkaTemplate<String, String>(pf); boolean stopped = false;
-        try (var admin = AdminClient.create(Map.of("bootstrap.servers", "localhost:9092"))) {
+        try (var admin = AdminClient.create(Map.of("bootstrap.servers", brokers().kafka()))) {
             admin.createTopics(List.of(new NewTopic(topic, 1, (short)1))).all().get(10, TimeUnit.SECONDS);
             var ex = new TopicExchange(exchange, true, false); ra.declareExchange(ex);
             ra.declareQueue(new org.springframework.amqp.core.Queue(queue, true, false, false));

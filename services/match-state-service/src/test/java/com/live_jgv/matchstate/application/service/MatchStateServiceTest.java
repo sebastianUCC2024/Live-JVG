@@ -12,6 +12,25 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class MatchStateServiceTest {
+    @Test
+    void newBlankReferenceCannotCreateAnIncompatibleOutboxEntry() {
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(initial, 0)));
+        var incompatible = new MatchEvent("bad", "m1", EventType.GOAL, "home", 1, Instant.EPOCH, " ");
+        assertThrows(InvalidMatchEventException.class, () -> service.process(incompatible));
+        verify(repository).load("m1");
+        verifyNoMoreInteractions(repository);
+    }
+
+    @Test
+    void historicalBlankReferenceIsNotRewrittenOrPublishedAgain() {
+        var historical = new MatchEvent("old", "m1", EventType.GOAL, "home", 1, Instant.EPOCH, " ");
+        var state = initial.apply(historical);
+        when(repository.load("m1")).thenReturn(Optional.of(new LoadedMatch(state, 1)));
+        assertSame(state, service.process(historical));
+        assertEquals(" ", state.processedEvents().get("old").referenceEventId());
+        verify(repository).load("m1");
+        verifyNoMoreInteractions(repository);
+    }
     private MatchStateRepository repository;
     private MatchStateService service;
     private final MatchState initial = MatchState.start("m1", "home", "away");

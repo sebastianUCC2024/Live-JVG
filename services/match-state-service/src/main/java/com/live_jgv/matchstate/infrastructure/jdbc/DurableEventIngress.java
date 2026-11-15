@@ -20,6 +20,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
     private final ObjectMapper mapper;
     private final JdbcMatchStateStore store;
     private final ProcessAndPublishMatchEvent publisherLane;
+    private final java.util.concurrent.ConcurrentMap<String,Object> custodyLanes = new java.util.concurrent.ConcurrentHashMap<>();
 
     public DurableEventIngress(JdbcTemplate jdbc, TransactionTemplate tx, ObjectMapper mapper,
                                JdbcMatchStateStore store, ProcessAndPublishMatchEvent publisherLane) {
@@ -27,7 +28,17 @@ public final class DurableEventIngress implements IncomingEventHandler {
     }
 
     @Override
-    public synchronized void handle(InputRecord input) {
+    public void handle(InputRecord input) {
+        String key = input.key() == null ? "null" : Base64.getEncoder().encodeToString(input.key());
+        final String matchToDrain;
+        synchronized (custodyLanes.computeIfAbsent(key, ignored -> new Object())) {
+            matchToDrain = accept(input);
+        }
+        // Never hold the local custody monitor while awaiting RabbitMQ.
+        if (matchToDrain != null) publisherLane.recoverPendingMatch(matchToDrain);
+    }
+
+    private String accept(InputRecord input) {
         MatchEvent parsed = null;
         try {
             var wire = mapper.readValue(utf8(input.value()), MatchEventMessage.class);
@@ -80,7 +91,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
             receipt(input, event, "APPLIED", null); return event.matchId();
         });
         log.info("Input custody committed; topic={}, partition={}, offset={}, outcome={}", input.topic(), input.partition(), input.offset(), matchToDrain == null ? "PARKED" : "APPLIED");
-        if (matchToDrain != null) publisherLane.recoverPendingMatch(matchToDrain);
+        return matchToDrain;
     }
 
     private Map<String, Object> identity(MatchEvent event, boolean applied) {
@@ -90,7 +101,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
     }
 
     private String rejection(MatchState state, MatchEvent event) {
-        try { state.apply(event); return null; }
+        try { MatchStateService.requirePublishableReference(event); state.apply(event); return null; }
         catch (InvalidMatchEventException failure) { return failure.reason().name(); }
     }
 
@@ -138,7 +149,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
     }
 
     /** Explicit approval against a revision, never invoked automatically when a goal arrives. */
-    public synchronized String replay(ReplayRequest request) {
+    public String replay(ReplayRequest request) {
         String[] matchToDrain = new String[1];
         String result = tx.execute(status -> {
             var prior = jdbc.queryForList("SELECT * FROM match_state.replay_attempt WHERE replay_id=?", request.replayId());

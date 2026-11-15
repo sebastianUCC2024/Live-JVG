@@ -11,8 +11,8 @@
 	<groupId>com.live-jgv</groupId>
 	<artifactId>live-feed-producer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>live-feed-producer</name>
+	<description>Kafka match event producer and local simulator</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -62,5 +62,16 @@
 			</plugin>
 		</plugins>
 	</build>
+
+    <profiles>
+        <profile>
+            <id>isolated-package</id>
+            <properties>
+                <maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+                <audit.outputDirectory>${project.basedir}/target/audit-${maven.build.timestamp}</audit.outputDirectory>
+            </properties>
+            <build><directory>${audit.outputDirectory}</directory></build>
+        </profile>
+    </profiles>
 
 </project>

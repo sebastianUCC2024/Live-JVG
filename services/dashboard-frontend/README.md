@@ -2,14 +2,19 @@
 
 # Live-JVG — Dashboard frontend DEV 2
 
+Configuración vigente por modo: [MVP, host durable y memory](../../docs/MODOS_EJECUCION.md).
+También se puede omitir VITE_WS_URL y definir VITE_DASHBOARD_ORIGIN con el origen
+HTTP del dashboard; VITE_WS_URL conserva precedencia si ambas están definidas.
+
 Frontend React + TypeScript + Vite con modo de tiempo real y demostración separada.
 El modo predeterminado conecta con dashboard-backend por WebSocket/STOMP usando
 los destinos verificados. La demostración sigue disponible mediante su botón o
 `/?mode=demo` y utiliza solo fixtures identificados, sin abrir STOMP al backend.
 
 Véase [Fase 6: protocolo, configuración y resultados](docs/phase6-realtime.md).
-La [auditoría de integración de Fase 7](docs/phase7-integration.md) registra los
-checks ejecutados y el bloqueo de la cadena completa por brokers pendientes de DEV 3.
+La [auditoría de integración de Fase 7](docs/phase7-integration.md) registra evidencia
+histórica y bloqueos de aquella etapa. La configuración actual está en los modos
+de ejecución; la validación vigente está en el [informe 9E](../../docs/FASE_9E_CONTRATOS_CALIDAD_CI.md).
 La [revisión final de Fase 8](docs/phase8-final-review.md) consolida configuración,
 alcance autorizado, limitaciones y resultados de aceptación local.
 
@@ -25,7 +30,7 @@ VITE_MATCH_IDS=match-001
 La variable opcional VITE_MATCH_METADATA permite etiquetas de equipos aportadas
 por el operador; no son campos del JSON del servidor. Sin ellas se muestra Local
 y Visitante. El formulario permite seguir hasta 20 IDs de partidos. No existe un
-endpoint de catálogo que el frontend pueda consultar.
+catálogo automático en este cliente React; el backend durable sí ofrece `/api/matches`.
 
 ## Requisitos y ejecución
 

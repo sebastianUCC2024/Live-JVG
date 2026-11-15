@@ -15,6 +15,7 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
     private final ObjectMapper mapper;
     private final String exchange;
     private final String routingPattern;
+    private final ThreadLocal<JdbcTemplate> publicationSession = new ThreadLocal<>();
 
     public JdbcMatchStateStore(JdbcTemplate jdbc, TransactionTemplate transactions, ObjectMapper mapper,
                                String exchange, String routingPattern) {
@@ -32,8 +33,8 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
         transactions.executeWithoutResult(status -> {
             jdbc.update("INSERT INTO match_state.match_catalog(match_id,home_team_id,away_team_id) VALUES (?,?,?) ON CONFLICT DO NOTHING",
                     initial.matchId(), initial.homeTeamId(), initial.awayTeamId());
-            var existing = load(initial.matchId()).orElseThrow().state();
-            if (!existing.homeTeamId().equals(initial.homeTeamId()) || !existing.awayTeamId().equals(initial.awayTeamId())) {
+            var existing = jdbc.queryForMap("SELECT home_team_id,away_team_id FROM match_state.match_catalog WHERE match_id=?", initial.matchId());
+            if (!existing.get("home_team_id").equals(initial.homeTeamId()) || !existing.get("away_team_id").equals(initial.awayTeamId())) {
                 throw new IllegalStateException("Configured teams conflict with durable catalog");
             }
         });
@@ -46,14 +47,19 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
     @Override
     public Optional<LoadedMatch> load(String matchId) {
         // A single statement gives catalog + complete ordered history the same MVCC snapshot.
-        return jdbc.query("""
+        return transactions.execute(status -> jdbc.query(connection -> {
+            var statement = connection.prepareStatement("""
                 SELECT c.home_team_id,c.away_team_id,c.revision,c.rules_version,
                        e.event_id,e.application_seq,e.event_payload
                   FROM match_state.match_catalog c LEFT JOIN match_state.accepted_event e ON e.match_id=c.match_id
                  WHERE c.match_id=? ORDER BY e.application_seq
-                """, rs -> {
+                """);
+            statement.setString(1, matchId);
+            statement.setFetchSize(256); // PostgreSQL cursor inside this DB-only transaction.
+            return statement;
+        }, rs -> {
             if (!rs.next()) return Optional.empty();
-            var state = MatchState.start(matchId, rs.getString("home_team_id"), rs.getString("away_team_id"));
+            var replay = MatchState.rebuilder(matchId, rs.getString("home_team_id"), rs.getString("away_team_id"));
             long revision = rs.getLong("revision"), sequence = 0;
             if (rs.getInt("rules_version") != 1) throw new IllegalStateException("Unsupported stored rules version");
             do {
@@ -61,12 +67,12 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
                     if (rs.getLong("application_seq") != ++sequence) throw new IllegalStateException("Non-contiguous accepted history");
                     var event = decode(rs.getString("event_payload"), MatchEvent.class);
                     if (!event.eventId().equals(rs.getString("event_id"))) throw new IllegalStateException("Stored event identity mismatch");
-                    state = state.apply(event);
+                    replay.accept(event);
                 }
             } while (rs.next());
             if (sequence != revision) throw new IllegalStateException("Durable revision/history mismatch");
-            return Optional.of(new LoadedMatch(state, revision));
-        }, matchId);
+            return Optional.of(new LoadedMatch(replay.finish(), revision));
+        }));
     }
 
     @Override
@@ -98,14 +104,29 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
     }
 
     @Override
+    public void withPublicationLock(String matchId, Runnable publication) {
+        if (publicationSession.get() != null) throw new IllegalStateException("Nested publication session");
+        new PostgresPublicationLock(Objects.requireNonNull(jdbc.getDataSource())).execute(matchId, session -> {
+            publicationSession.set(session);
+            try { publication.run(); }
+            finally { publicationSession.remove(); }
+        });
+    }
+
+    private JdbcTemplate publicationJdbc() {
+        var session = publicationSession.get();
+        return session == null ? jdbc : session;
+    }
+
+    @Override
     public List<ScoreUpdate> pendingForMatch(String matchId) {
-        return jdbc.query("SELECT payload FROM match_state.score_outbox WHERE match_id=? AND NOT published ORDER BY application_seq",
+        return publicationJdbc().query("SELECT payload FROM match_state.score_outbox WHERE match_id=? AND NOT published ORDER BY application_seq LIMIT 128",
                 (rs, index) -> decode(rs.getString(1), ScoreUpdate.class), matchId);
     }
 
     @Override
     public Optional<StoredScoreUpdate> storedPublication(ScoreUpdate update) {
-        var results = jdbc.query("SELECT payload,exchange_name,routing_key FROM match_state.score_outbox WHERE match_id=? AND event_id=? AND NOT published",
+        var results = publicationJdbc().query("SELECT payload,exchange_name,routing_key FROM match_state.score_outbox WHERE match_id=? AND event_id=? AND NOT published",
                 (rs, index) -> new StoredScoreUpdate(decode(rs.getString(1), ScoreUpdate.class), rs.getString(1), rs.getString(2), rs.getString(3)),
                 update.matchId(), update.eventId());
         if (results.size() != 1 || !results.get(0).update().equals(update)) {
@@ -116,12 +137,14 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
 
     @Override
     public void markPublished(ScoreUpdate update) {
-        transactions.executeWithoutResult(status -> {
+        Runnable acknowledge = () -> {
             storedPublication(update); // validate the same logical payload before recording acknowledgement
-            int count = jdbc.update("UPDATE match_state.score_outbox SET published=TRUE WHERE match_id=? AND event_id=? AND NOT published",
+            int count = publicationJdbc().update("UPDATE match_state.score_outbox SET published=TRUE WHERE match_id=? AND event_id=? AND NOT published",
                     update.matchId(), update.eventId());
             if (count != 1) throw new IllegalStateException("Publication acknowledgement conflict");
-        });
+        };
+        if (publicationSession.get() != null) acknowledge.run();
+        else transactions.executeWithoutResult(status -> acknowledge.run());
     }
 
     private String encode(Object value) {

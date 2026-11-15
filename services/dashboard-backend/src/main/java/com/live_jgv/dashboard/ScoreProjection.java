@@ -32,7 +32,7 @@ public class ScoreProjection {
         if(!home.equals(row.get("home_team_id"))||!away.equals(row.get("away_team_id"))) throw new IllegalStateException("El catálogo persistido no coincide con los equipos configurados");
         jdbc.update("UPDATE dashboard.matches SET home_name=?,away_name=? WHERE match_id=?",homeName,awayName,match);
     }
-    @RabbitListener(queues="${live.queue}")
+    @RabbitListener(id="durableScores",queues="${live.queue}",containerFactory="durableScoresFactory")
     public synchronized void receive(Message message){
         decoder.decode(message.getBody());
         final JsonNode json;
@@ -45,7 +45,7 @@ public class ScoreProjection {
             jdbc.queryForMap("SELECT match_id FROM dashboard.matches WHERE match_id=? FOR UPDATE",match);
             var prior=jdbc.queryForList("SELECT payload FROM dashboard.inbox WHERE match_id=? AND event_id=?",match,event);
             if(!prior.isEmpty()){
-                try{if(!mapper.readTree((String)prior.get(0).get("payload")).equals(json))throw new IllegalStateException("ID de salida con contenido distinto");}
+                try{if(!mapper.readTree((String)prior.get(0).get("payload")).equals(json))throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("ID de salida con contenido distinto");}
                 catch(com.fasterxml.jackson.core.JsonProcessingException e){throw new IllegalStateException(e);}return;
             }
             jdbc.update("INSERT INTO dashboard.inbox(match_id,event_id,payload) VALUES (?,?,?)",match,event,payload);
@@ -56,21 +56,55 @@ public class ScoreProjection {
         snapshot(match).ifPresent(publisher::publish);
     }
     public synchronized Optional<MatchSnapshot> snapshot(String match) {
-        var rows=jdbc.query("SELECT seq,payload FROM dashboard.inbox WHERE match_id=? ORDER BY seq DESC LIMIT 1",
-            (rs,n)->new MatchSnapshot("durable-"+match,rs.getLong(1),
-                decoder.decode(rs.getString(2).getBytes(StandardCharsets.UTF_8))),match);
-        return rows.stream().findFirst();
+        return jdbc.query("""
+                SELECT e.epoch,i.seq,i.payload FROM dashboard.stream_epoch e
+                  LEFT JOIN LATERAL (SELECT seq,payload FROM dashboard.inbox
+                     WHERE match_id=? ORDER BY seq DESC LIMIT 1) i ON TRUE
+                 WHERE e.singleton=TRUE
+                """, (org.springframework.jdbc.core.ResultSetExtractor<Optional<MatchSnapshot>>) rs -> {
+            if (!rs.next()) throw new IllegalStateException("Dashboard stream epoch missing");
+            var epoch = java.util.UUID.fromString(rs.getString("epoch"));
+            if (rs.getString("payload") == null) return Optional.empty();
+            return Optional.of(new MatchSnapshot("durable-"+epoch+"-"+match,rs.getLong("seq"),
+                    decoder.decode(rs.getString("payload").getBytes(StandardCharsets.UTF_8))));
+        },match);
     }
     public List<Map<String,Object>> matches(){return jdbc.queryForList("SELECT * FROM dashboard.matches ORDER BY match_id");}
+    /** Confirmation by identity does not depend on the UI's last-30-events window. */
+    public boolean operationProcessed(String matchId,String eventId){
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM dashboard.inbox WHERE match_id=? AND event_id=?)",Boolean.class,matchId,eventId));
+    }
     public Map<String,Object> view(String id){
-        var rows=jdbc.queryForList("SELECT * FROM dashboard.matches WHERE match_id=?",id);
-        if(rows.isEmpty())throw new NoSuchElementException("Partido no encontrado");
-        var result=new LinkedHashMap<String,Object>(rows.get(0));
-        var history=jdbc.query("SELECT payload FROM dashboard.inbox WHERE match_id=? ORDER BY seq",(rs,n)->{try{return mapper.readTree(rs.getString(1));}catch(Exception e){throw new IllegalStateException(e);}},id);
-        var goals=new LinkedHashMap<String,JsonNode>();
-        for(var event:history){String type=event.get("event_type").asText();if(type.equals("GOAL"))goals.put(event.get("event_id").asText(),event);if(type.equals("GOAL_ANNULLED"))goals.remove(event.path("reference_event_id").asText());}
-        result.put("active_goals",List.copyOf(goals.values()));
-        var recent=new ArrayList<>(history.subList(Math.max(0,history.size()-30),history.size()));Collections.reverse(recent);result.put("events",recent);
+        // One PostgreSQL statement uses one MVCC snapshot, including at READ COMMITTED.
+        // A REQUIRED/read-only annotation alone would not make two statements consistent.
+        return jdbc.query("""
+                SELECT row_to_json(m)::text AS match_data,
+                       COALESCE((SELECT json_agg(i.payload ORDER BY i.seq)::text
+                                   FROM (SELECT seq,payload FROM dashboard.inbox
+                                          WHERE match_id=m.match_id ORDER BY seq DESC LIMIT 30) i),'[]') AS history_data,
+                       COALESCE((SELECT json_agg(g.payload ORDER BY g.seq)::text
+                                   FROM dashboard.inbox g
+                                  WHERE g.match_id=m.match_id AND g.payload::jsonb->>'event_type'='GOAL'
+                                    AND NOT EXISTS (SELECT 1 FROM dashboard.inbox a
+                                         WHERE a.match_id=g.match_id AND a.seq>g.seq
+                                           AND a.payload::jsonb->>'event_type'='GOAL_ANNULLED'
+                                           AND a.payload::jsonb->>'reference_event_id'=g.event_id)), '[]') AS goals_data
+                  FROM dashboard.matches m WHERE m.match_id=?
+                """, (org.springframework.jdbc.core.ResultSetExtractor<Map<String,Object>>) rs->{
+            if(!rs.next())throw new NoSuchElementException("Partido no encontrado");
+            try {
+                Map<String,Object> result=mapper.readValue(rs.getString("match_data"),new com.fasterxml.jackson.core.type.TypeReference<LinkedHashMap<String,Object>>(){});
+                var recent=payloads(rs.getString("history_data"));
+                Collections.reverse(recent);
+                result.put("events",recent);
+                result.put("active_goals",payloads(rs.getString("goals_data")));
+                return result;
+            }catch(com.fasterxml.jackson.core.JsonProcessingException e){throw new IllegalStateException("Invalid stored dashboard data",e);}
+        },id);
+    }
+    private ArrayList<JsonNode> payloads(String json) throws com.fasterxml.jackson.core.JsonProcessingException {
+        var result = new ArrayList<JsonNode>();
+        for (var payload : mapper.readTree(json)) result.add(mapper.readTree(payload.asText()));
         return result;
     }
 }

@@ -67,4 +67,39 @@ class ProcessAndPublishMatchEventTest {
         assertTrue(store.pendingForMatch("m1").isEmpty());
         verifyNoInteractions(publisher);
     }
+
+    @Test void stalledPublicationDoesNotBlockAnotherMatchOnTheSameService() throws Exception {
+        var both = new InMemoryMatchStateStore(List.of(MatchState.start("m1","home","away"),MatchState.start("m2","home","away")));
+        var entered = new java.util.concurrent.CountDownLatch(1);
+        var release = new java.util.concurrent.CountDownLatch(1);
+        doAnswer(call -> {
+            if (call.getArgument(0,ScoreUpdate.class).matchId().equals("m1")) {
+                entered.countDown();assertTrue(release.await(5,java.util.concurrent.TimeUnit.SECONDS));
+            }
+            return null;
+        }).when(publisher).publish(any());
+        var lane = new ProcessAndPublishMatchEvent(new MatchStateService(both),both,publisher);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            var first=pool.submit(()->lane.process(goal));
+            assertTrue(entered.await(5,java.util.concurrent.TimeUnit.SECONDS));
+            var second=pool.submit(()->lane.process(new MatchEvent("g2","m2",EventType.GOAL,"home",1,Instant.EPOCH,null)));
+            assertEquals(new Score(1,0),second.get(5,java.util.concurrent.TimeUnit.SECONDS).score());
+            release.countDown();first.get(5,java.util.concurrent.TimeUnit.SECONDS);
+        } finally { release.countDown();pool.shutdownNow(); }
+    }
+
+    @Test void drainsEveryBatchBeforeCompletingRecovery() {
+        var memory=new InMemoryMatchStateStore(List.of(MatchState.start("m1","home","away")));
+        var processor=new MatchStateService(memory);
+        for(int i=0;i<350;i++) processor.process(new MatchEvent("e"+i,"m1",EventType.MATCH_CONTINUES,null,1,Instant.EPOCH,null));
+        var batched=new com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox() {
+            public List<ScoreUpdate> pendingForMatch(String match){return memory.pendingForMatch(match).stream().limit(128).toList();}
+            public void markPublished(ScoreUpdate update){memory.markPublished(update);}
+        };
+        var lane=new ProcessAndPublishMatchEvent(processor,batched,publisher);
+        lane.recoverPendingMatch("m1");
+        assertTrue(memory.pendingForMatch("m1").isEmpty());
+        verify(publisher,times(350)).publish(any());
+    }
 }
