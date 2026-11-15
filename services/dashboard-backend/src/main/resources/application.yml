@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: dashboard-backend
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    connection-timeout: 5s
+    listener:
+      simple:
+        auto-startup: ${DASHBOARD_RABBIT_LISTENER_ENABLED:true}
+
+dashboard:
+  web:
+    allowed-origins: ${DASHBOARD_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  rabbit:
+    exchange: ${RABBITMQ_EXCHANGE:live_updates}
+    queue: dashboard.score-updates
+    binding-key: score.#
+    dead-letter-exchange: dashboard.score-updates.dlx
+    dead-letter-queue: dashboard.score-updates.dlq
+    dead-letter-key: rejected
+    max-attempts: 3
+    retry-interval-ms: 1000
+  projection:
+    max-events: 10000
+
+server:
+  port: ${DASHBOARD_PORT:8081}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
