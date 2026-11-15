@@ -3,14 +3,15 @@ package com.live_jgv.matchstate.infrastructure.jdbc;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Upgrade a populated 7H schema in a new namespace, without touching previous evidence. */
-@EnabledIfEnvironmentVariable(named = "MATCH_STATE_TEST_DB_URL", matches = ".+")
+@org.junit.jupiter.api.Tag("external-integration")
+@org.junit.jupiter.api.Tag("postgres-integration")
+@org.junit.jupiter.api.extension.ExtendWith(com.live_jgv.test.DurableIntegrationSafety.class)
 class QuarantineMigrationIntegrationTest {
     @Test
     void upgradePreservesV1LedgerAndPendingWireImageAndBackfillsAppliedIdentity() {

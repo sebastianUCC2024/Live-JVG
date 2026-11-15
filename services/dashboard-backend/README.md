@@ -1,15 +1,16 @@
-> Integración con el MVP: el modo predeterminado conserva PostgreSQL y publica los snapshots confirmados al WebSocket del equipo. REST `/api/matches/{matchId}/score` y STOMP `/app/matches/{matchId}/snapshot` consultan la misma proyección durable. El frontend estático y los controles de publicación siguen en `/`.
+> Configuración vigente: [modos de ejecución](../../docs/MODOS_EJECUCION.md). El dashboard durable usa 8080 en el host y 18080 publicado por Compose; memory conserva 8081. La escritura está deshabilitada por defecto; Compose la habilita explícitamente para el MVP local. REST y STOMP consultan la proyección durable. Los resultados históricos siguientes no sustituyen la validación de la rama actual.
 >
 > Para ejecutar la implementación original del equipo sin PostgreSQL, usa `SPRING_PROFILES_ACTIVE=memory` con los comandos de este documento. Ese perfil conserva su consumidor, DLQ y proyección en memoria; su estado es volátil. No actives este perfil en el contenedor MVP que requiere persistencia.
 
-﻿# Dashboard backend — DEV 2
+## Documentación original del modo memory — DEV 2
 
 Java 17, Spring Boot 3.5.7 y Maven. Recibe snapshots de marcador por RabbitMQ,
 los valida y los transmite al navegador mediante STOMP. Mantiene una proyección
 local en memoria y permite consultarla para recuperar la conexión.
 
-Estado de entrega: preparado para revisión; la aceptación de extremo a extremo
-continúa pendiente de los brokers y puertos que configure DEV 3.
+El texto de esta sección describe el modo memory original. El MVP durable y las
+correcciones 9A–9D están implementados; la validación externa de la rama actual
+sigue pendiente y no se sustituye por evidencia de fases anteriores.
 
 ## Arquitectura
 
@@ -114,9 +115,9 @@ se procesan de forma idempotente. El simple broker es local, sin historial durab
 
 | Variable | Predeterminado / efecto |
 |---|---|
-| DASHBOARD_PORT | 8081; también se puede usar SERVER_PORT |
+| DASHBOARD_PORT | 8080 durable / 8081 memory; precede a PORT; SERVER_PORT conserva precedencia de Spring |
 | RABBITMQ_HOST | localhost |
-| RABBITMQ_PORT | 5672, reemplazar por el puerto aprobado por DEV 3 |
+| RABBITMQ_PORT | 5673 durable host / 5672 memory; Compose usa 5672 interno |
 | RABBITMQ_USERNAME / RABBITMQ_PASSWORD | guest / guest, solo desarrollo local |
 | RABBITMQ_EXCHANGE | live_updates |
 | DASHBOARD_RABBIT_LISTENER_ENABLED | true |
@@ -149,26 +150,29 @@ configuración acordada; no se presentan como implementados en esta entrega.
 Desde la raíz, con JDK 17 y Maven disponibles:
 
 ```powershell
-mvn -B -ntp -f services/dashboard-backend/pom.xml clean verify
-java -jar services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar
+mvn -B -ntp -f services/dashboard-backend/pom.xml test
+# Para generar JAR: package/verify en un checkout nuevo o salida aislada; no limpiar JAR en uso.
+java -jar services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=memory
 Invoke-RestMethod http://localhost:8081/actuator/health
 ```
 
 Para uso real, proporcionar primero las variables Rabbit de DEV 3. El arranque
 normal habilita listener, declaraciones y salud Rabbit. Sin broker la salud puede
-indicar DOWN y el listener intentará conectarse. No se modificó Docker Compose.
+indicar DOWN y el listener intentará conectarse. Compose del MVP durable limita
+el dashboard a una instancia; STOMP simple sigue siendo local a la JVM.
 
 Para inspeccionar solo REST/STOMP sin broker (no valida la cadena completa):
 
 ```powershell
-java -jar services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar --spring.rabbitmq.listener.simple.auto-startup=false --spring.rabbitmq.dynamic=false --management.health.rabbit.enabled=false
+java -jar services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=memory --spring.rabbitmq.listener.simple.auto-startup=false --spring.rabbitmq.dynamic=false --management.health.rabbit.enabled=false
 ```
 
 Para perfil prod, configurar previamente credenciales autorizadas y ejecutar con
-`--spring.profiles.active=prod`, suministrando DASHBOARD_ALLOWED_ORIGINS. No poner
+`--spring.profiles.active=memory,prod` para este modo o `prod` para durable,
+suministrando DASHBOARD_ALLOWED_ORIGINS. No poner
 contraseñas en argumentos de terminal ni en documentación versionada.
 
-## Errores, duplicados y límites
+## Errores, duplicados y límites del perfil memory
 
 - Se deduplica por (match_id,event_id), comparando scores, evento, VAR y referencia.
   Un cambio exclusivo de updated_at se ignora sin reemplazar el snapshot actual.
@@ -190,10 +194,11 @@ contraseñas en argumentos de terminal ni en documentación versionada.
 Las pruebas incluyen modelo, casos de uso, decoder, compatibilidad con DEV 1,
 topología declarada, reintentos, duplicados, errores HTTP y WebSocket real local.
 Las pruebas de contexto desactivan Rabbit; no demuestran el consumo en broker.
-Los resultados actuales están en la [revisión final DEV 2](../dashboard-frontend/docs/phase8-final-review.md).
+La [revisión final DEV 2](../dashboard-frontend/docs/phase8-final-review.md) es
+evidencia histórica; la validación vigente está en el [informe 9E](../../docs/FASE_9E_CONTRATOS_CALIDAD_CI.md).
 Los resultados históricos permanecen en los documentos de cada fase.
 
 Con DEV 1: aprobar contratos, IDs/equipos, orden, replay y fuente de snapshots.
 Con DEV 3: puertos, credenciales seguras, permisos, topología, políticas de DLQ,
-retención y garantías de recuperación. La cadena completa sigue pendiente de los
-puertos que DEV 3 configure; el usuario confirmó que se esperará ese trabajo.
+retención y garantías de recuperación. La [guía durable](../../docs/PRUEBAS_INTEGRACION_DURABLE.md)
+separa las pruebas externas de la suite local. No se activan durante la auditoría.

@@ -1,16 +1,4 @@
-spring:
-  application:
-    name: dashboard-backend
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-    connection-timeout: 5s
-    listener:
-      simple:
-        auto-startup: ${DASHBOARD_RABBIT_LISTENER_ENABLED:true}
-
+# Common settings live in application.properties; these namespaces also support memory mode.
 dashboard:
   web:
     allowed-origins: ${DASHBOARD_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:18080,http://127.0.0.1:18080}
@@ -25,19 +13,3 @@ dashboard:
     retry-interval-ms: 1000
   projection:
     max-events: 10000
-
-server:
-  port: ${DASHBOARD_PORT:8081}
-  error:
-    include-message: never
-    include-stacktrace: never
-    include-binding-errors: never
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: never

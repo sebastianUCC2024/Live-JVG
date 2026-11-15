@@ -34,7 +34,29 @@ Microservicios orientados a eventos con arquitectura hexagonal.
 - betting-worker
 - Docker Compose
 
-## Ejecución
+## Validación local y CI (auditoría 9E)
+
+`mvn test` o `mvn verify` en la raíz **sin perfil** solo procesa el POM raíz.
+Para ejecutar los tres servicios implementados, sin infraestructura externa:
+
+```powershell
+mvn -Paudit-services test
+npm.cmd test --prefix services/dashboard-frontend
+node --test services/dashboard-backend/src/test/js/operations.test.cjs services/dashboard-backend/src/test/js/app.test.cjs services/dashboard-backend/src/test/js/loading.test.cjs
+```
+
+GitHub Actions ejecuta verify por cada servicio, pruebas/build React y scripts
+Node. No inicia brokers ni contenedores, no publica imágenes y no despliega.
+La [guía de integración durable](docs/PRUEBAS_INTEGRACION_DURABLE.md) explica las
+pruebas externas excluidas y su autorización separada. Los cuatro schemas están
+vacíos: véase la [propuesta de contratos](docs/CONTRATOS_VERSIONADOS_PROPUESTA.md),
+pendiente de aprobación del equipo. Los [permisos PostgreSQL propuestos](docs/POSTGRES_MINIMO_PRIVILEGIO_PROPUESTA.md)
+no se han aplicado a ningún servidor.
+
+## Ejecución del MVP (inicia infraestructura)
+
+Consulta los [modos de ejecución y su configuración](docs/MODOS_EJECUCION.md)
+para distinguir Compose, procesos en el host y el perfil histórico `memory`.
 
 El MVP local conecta simulador REST → Kafka → estado durable → RabbitMQ → dashboard web.
 

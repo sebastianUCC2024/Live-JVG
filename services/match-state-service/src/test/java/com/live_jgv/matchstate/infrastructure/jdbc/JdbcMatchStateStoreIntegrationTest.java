@@ -5,7 +5,6 @@ import com.live_jgv.matchstate.domain.model.*;
 import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -16,8 +15,39 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Opt-in real PostgreSQL tests. Use a dedicated database, never a shared deployment. */
-@EnabledIfEnvironmentVariable(named = "MATCH_STATE_TEST_DB_URL", matches = ".+")
+@org.junit.jupiter.api.Tag("external-integration")
+@org.junit.jupiter.api.Tag("postgres-integration")
+@org.junit.jupiter.api.extension.ExtendWith(com.live_jgv.test.DurableIntegrationSafety.class)
 class JdbcMatchStateStoreIntegrationTest {
+    @Test void twoPostgresPublishersExcludeSameMatchWhileAnotherMatchProgresses() throws Exception {
+        var entered = new CountDownLatch(1); var release = new CountDownLatch(1);
+        var sends = new java.util.concurrent.atomic.AtomicInteger();
+        String other=match+"-other";
+        store.register(MatchState.start(other,"home","away"));
+        new MatchStateService(store).process(new MatchEvent("g",match,EventType.GOAL,"home",1,TIME,null));
+        new MatchStateService(store).process(new MatchEvent("g",other,EventType.GOAL,"home",1,TIME,null));
+        com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher publisher=update->{
+            if(update.matchId().equals(match)) {
+                entered.countDown();
+                try { assertTrue(release.await(5,TimeUnit.SECONDS)); }
+                catch(InterruptedException e){throw new AssertionError(e);}
+            }
+            sends.incrementAndGet();
+        };
+        var lane1=new com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent(new MatchStateService(store),store,publisher);
+        var store2=newStore();
+        var lane2=new com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent(new MatchStateService(store2),store2,publisher);
+        var pool=Executors.newFixedThreadPool(2);
+        try {
+            var first=pool.submit(()->lane1.recoverPendingMatch(match));
+            assertTrue(entered.await(5,TimeUnit.SECONDS));
+            assertThrows(IllegalStateException.class,()->lane2.recoverPendingMatch(match));
+            pool.submit(()->lane1.recoverPendingMatch(other)).get(5,TimeUnit.SECONDS);
+            release.countDown();first.get(5,TimeUnit.SECONDS);
+            lane2.recoverPendingMatch(match);
+            assertEquals(2,sends.get());assertTrue(store.pendingForMatch(match).isEmpty());
+        } finally {release.countDown();pool.shutdownNow();}
+    }
     private static JdbcTemplate jdbc;
     private static TransactionTemplate transactions;
     private JdbcMatchStateStore store;

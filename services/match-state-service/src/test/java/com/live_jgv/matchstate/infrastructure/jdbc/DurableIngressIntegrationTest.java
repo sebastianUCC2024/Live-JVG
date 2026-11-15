@@ -6,7 +6,6 @@ import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
 import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,7 +16,9 @@ import java.time.Instant;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@EnabledIfEnvironmentVariable(named = "MATCH_STATE_TEST_DB_URL", matches = ".+")
+@org.junit.jupiter.api.Tag("external-integration")
+@org.junit.jupiter.api.Tag("postgres-integration")
+@org.junit.jupiter.api.extension.ExtendWith(com.live_jgv.test.DurableIntegrationSafety.class)
 class DurableIngressIntegrationTest {
     private static JdbcTemplate jdbc;
     private static TransactionTemplate tx;

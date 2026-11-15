@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.live_jgv.live_feed_producer.domain.model.MatchEvent;
 import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.service.OutgoingReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,7 @@ public final class KafkaMatchEventPublisher implements MatchEventPublisher {
         final String payload;
         try {
             Objects.requireNonNull(event, "event must not be null");
+            OutgoingReferencePolicy.validate(event.referenceEventId());
             payload = mapper.writeValueAsString(event);
         } catch (Exception failure) {
             log.warn("Event preparation failed; failureType={}", failure.getClass().getSimpleName());

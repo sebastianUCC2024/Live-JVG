@@ -1,4 +1,7 @@
 name: live-jvg-mvp
+# Explicit opt-in for this loopback-only local MVP, never a public deployment policy.
+x-simulator: &simulator
+  SIMULATOR_WRITE_ENABLED: "true"
 x-rabbit: &rabbit
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: 5672
@@ -70,18 +73,24 @@ services:
       context: .
       args: {JAR_FILE: services/live-feed-producer/target/live-feed-producer-0.0.1-SNAPSHOT.jar}
     environment:
-      <<: *match
+      <<: [*match, *simulator]
+      PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports: ["127.0.0.1:18081:8080"]
     depends_on:
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 384m
   dashboard:
+    # MVP: STOMP simple broker is local to this one JVM. Do not scale horizontally.
+    container_name: live-jvg-mvp-dashboard
+    deploy:
+      replicas: 1
     build:
       context: .
       args: {JAR_FILE: services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar}
     environment:
-      <<: [*match, *rabbit]
+      <<: [*match, *rabbit, *simulator]
+      PORT: "8080"
       DASHBOARD_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
       DB_USERNAME: live_jvg
       DB_PASSWORD: ${MVP_DB_PASSWORD}

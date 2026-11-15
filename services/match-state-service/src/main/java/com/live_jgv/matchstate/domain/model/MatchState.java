@@ -17,11 +17,16 @@ public final class MatchState {
 
     private MatchState(String matchId, String homeTeamId, String awayTeamId,
                        Map<String, MatchEvent> events, Set<String> annulled, VarStatus status) {
+        this(matchId, homeTeamId, awayTeamId, events, annulled, status, true);
+    }
+
+    private MatchState(String matchId, String homeTeamId, String awayTeamId,
+                       Map<String, MatchEvent> events, Set<String> annulled, VarStatus status, boolean copy) {
         this.matchId = matchId;
         this.homeTeamId = homeTeamId;
         this.awayTeamId = awayTeamId;
-        this.processedEvents = Map.copyOf(events);
-        this.annulledGoalIds = Set.copyOf(annulled);
+        this.processedEvents = copy ? Map.copyOf(events) : events;
+        this.annulledGoalIds = copy ? Set.copyOf(annulled) : annulled;
         this.varStatus = status;
     }
 
@@ -36,6 +41,10 @@ public final class MatchState {
     }
 
     public MatchState apply(MatchEvent event) {
+        return apply(event, true);
+    }
+
+    private MatchState apply(MatchEvent event, boolean copy) {
         if (event == null) {
             throw new InvalidMatchEventException("Event must not be null");
         }
@@ -52,7 +61,7 @@ public final class MatchState {
         if (event.teamId() != null && !homeTeamId.equals(event.teamId()) && !awayTeamId.equals(event.teamId())) {
             throw new InvalidMatchEventException(InvalidMatchEventException.Reason.UNKNOWN_TEAM, "Unknown team for this match");
         }
-        var annulled = new HashSet<>(annulledGoalIds);
+        var annulled = copy ? new HashSet<>(annulledGoalIds) : annulledGoalIds;
         var status = varStatus;
         switch (event.eventType()) {
             case GOAL -> { /* Score is derived from the accepted goal ledger. */ }
@@ -72,9 +81,32 @@ public final class MatchState {
             }
             case MATCH_CONTINUES -> status = VarStatus.CLEAR;
         }
-        var events = new HashMap<>(processedEvents);
+        var events = copy ? new HashMap<>(processedEvents) : processedEvents;
         events.put(event.eventId(), event);
-        return new MatchState(matchId, homeTeamId, awayTeamId, events, annulled, status);
+        return new MatchState(matchId, homeTeamId, awayTeamId, events, annulled, status, copy);
+    }
+
+    /** One mutable, private replay buffer; every event uses the same domain validations. */
+    public static Rebuilder rebuilder(String matchId, String homeTeamId, String awayTeamId) {
+        var initial = start(matchId, homeTeamId, awayTeamId);
+        return new Rebuilder(new MatchState(initial.matchId, initial.homeTeamId, initial.awayTeamId,
+                new HashMap<>(), new HashSet<>(), VarStatus.CLEAR, false));
+    }
+
+    public static final class Rebuilder {
+        private MatchState state;
+        private Rebuilder(MatchState state) { this.state = state; }
+        public void accept(MatchEvent event) {
+            if (state == null) throw new IllegalStateException("Replay already finished");
+            state = state.apply(event, false);
+        }
+        public MatchState finish() {
+            if (state == null) throw new IllegalStateException("Replay already finished");
+            var result = new MatchState(state.matchId, state.homeTeamId, state.awayTeamId,
+                    state.processedEvents, state.annulledGoalIds, state.varStatus);
+            state = null;
+            return result;
+        }
     }
 
     private MatchEvent activeGoal(String reference) {

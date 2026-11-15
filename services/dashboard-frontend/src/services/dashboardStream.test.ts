@@ -89,6 +89,24 @@ describe('STOMP y recuperación', () => {
     harness.send(recovery, { available: false, snapshot: null })
     expect(state.matches['match-001'].snapshot).toBeNull()
   })
+  it('conserva época al reconectar y acepta revisión reiniciada solo después de rotación explícita', () => {
+    const original = 'durable-550e8400-e29b-41d4-a716-446655440000-match-001'
+    const rotated = 'durable-550e8400-e29b-41d4-a716-446655440001-match-001'
+    harness.send(live, snapshot({ stream_id: original, revision: 9000, event_id: 'old', home_score: 7 }))
+    harness.close(); harness.connect()
+    harness.send(recovery, { available: true, snapshot: snapshot({ stream_id: original, revision: 1, home_score: 0 }) })
+    expect(state.matches['match-001'].snapshot?.revision).toBe(9000)
+    const oldHandler = harness.handlers.get(live)!
+    harness.close(); harness.connect()
+    harness.send(live, snapshot({ stream_id: original, revision: 9001, home_score: 9 }))
+    harness.send(live, snapshot({ stream_id: rotated, revision: 2, event_id: 'after', home_score: 1 }))
+    harness.send(recovery, { available: true, snapshot: snapshot({ stream_id: rotated, revision: 1, home_score: 0 }) })
+    oldHandler({ body: JSON.stringify(snapshot({ stream_id: original, revision: 9999, home_score: 99 })) })
+    expect(state.matches['match-001'].snapshot?.stream_id).toBe(rotated)
+    expect(state.matches['match-001'].snapshot?.revision).toBe(2)
+    expect(state.matches['match-001'].snapshot?.home_score).toBe(1)
+    expect(state.matches['match-001'].events).toHaveLength(2)
+  })
   it('limita los fallos consecutivos de conexión a ocho', () => {
     for (let i = 0; i < 8; i++) harness.close()
     expect(state.status).toBe('failed')

@@ -16,6 +16,7 @@ public class MatchSimulationService {
         this.publisher=publisher;this.matchId=matchId;this.home=home;this.away=away;
     }
     public CompletableFuture<MatchEvent> publish(String match, String id, EventType type, String team, int minute, Instant timestamp, String reference) {
+        OutgoingReferencePolicy.validate(reference);
         if (!matchId.equals(match)) throw new IllegalArgumentException("Partido no registrado en el simulador");
         if(team!=null && !team.equals(home) && !team.equals(away)) throw new IllegalArgumentException("Equipo ajeno al partido");
         if((id==null)!=(timestamp==null)) throw new IllegalArgumentException("event_id y timestamp deben enviarse juntos");
