@@ -5,6 +5,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.http.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
+@org.springframework.context.annotation.Profile("!memory")
 @Component
 public class ProducerGateway{
  private final RestClient client;

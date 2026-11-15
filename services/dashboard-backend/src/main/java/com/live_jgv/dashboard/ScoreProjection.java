@@ -1,6 +1,10 @@
 package com.live_jgv.dashboard;
 
 import com.fasterxml.jackson.databind.*;
+import com.live_jgv.dashboard.domain.model.MatchSnapshot;
+import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.infrastructure.amqp.ScoreUpdateMessageDecoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,21 +15,26 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.core.Message;
 import java.util.*;
 
+@org.springframework.context.annotation.Profile("!memory")
 @Repository
 @DependsOnDatabaseInitialization
 public class ScoreProjection {
+    private final MatchSnapshotPublisher publisher;
+    private final ScoreUpdateMessageDecoder decoder = new ScoreUpdateMessageDecoder();
     private final JdbcTemplate jdbc; private final TransactionTemplate tx; private final ObjectMapper mapper;
     public ScoreProjection(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
+            MatchSnapshotPublisher publisher,
             @Value("${live.match-id}") String match,@Value("${live.home-team-id}") String home,@Value("${live.away-team-id}") String away,
             @Value("${live.home-name}") String homeName,@Value("${live.away-name}") String awayName){
-        this.jdbc=jdbc;this.tx=new TransactionTemplate(manager);this.mapper=mapper;
+        this.publisher=publisher;this.jdbc=jdbc;this.tx=new TransactionTemplate(manager);this.mapper=mapper;
         jdbc.update("INSERT INTO dashboard.matches(match_id,home_team_id,away_team_id,home_name,away_name) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",match,home,away,homeName,awayName);
         var row=jdbc.queryForMap("SELECT * FROM dashboard.matches WHERE match_id=?",match);
         if(!home.equals(row.get("home_team_id"))||!away.equals(row.get("away_team_id"))) throw new IllegalStateException("El catálogo persistido no coincide con los equipos configurados");
         jdbc.update("UPDATE dashboard.matches SET home_name=?,away_name=? WHERE match_id=?",homeName,awayName,match);
     }
     @RabbitListener(queues="${live.queue}")
-    public void receive(Message message){
+    public synchronized void receive(Message message){
+        decoder.decode(message.getBody());
         final JsonNode json;
         try{json=mapper.readTree(message.getBody());}catch(Exception e){throw new IllegalArgumentException("ScoreUpdate no válido",e);}
         for(String field:List.of("match_id","event_id","event_type","home_score","away_score","var_status","updated_at"))
@@ -42,6 +51,15 @@ public class ScoreProjection {
             jdbc.update("INSERT INTO dashboard.inbox(match_id,event_id,payload) VALUES (?,?,?)",match,event,payload);
             jdbc.update("UPDATE dashboard.matches SET home_score=?,away_score=?,var_status=?,last_event_id=?,updated_at=? WHERE match_id=?",json.get("home_score").asInt(),json.get("away_score").asInt(),json.get("var_status").asText(),event,json.get("updated_at").asText(),match);
         });
+        // Publish only committed state. A redelivery publishes the latest snapshot,
+        // never the older duplicate payload. Clients deduplicate its durable revision.
+        snapshot(match).ifPresent(publisher::publish);
+    }
+    public synchronized Optional<MatchSnapshot> snapshot(String match) {
+        var rows=jdbc.query("SELECT seq,payload FROM dashboard.inbox WHERE match_id=? ORDER BY seq DESC LIMIT 1",
+            (rs,n)->new MatchSnapshot("durable-"+match,rs.getLong(1),
+                decoder.decode(rs.getString(2).getBytes(StandardCharsets.UTF_8))),match);
+        return rows.stream().findFirst();
     }
     public List<Map<String,Object>> matches(){return jdbc.queryForList("SELECT * FROM dashboard.matches ORDER BY match_id");}
     public Map<String,Object> view(String id){

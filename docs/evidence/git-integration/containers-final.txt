@@ -1,0 +1,15 @@
+live-jvg-integration-kafka-1	Up 10 minutes (healthy)	127.0.0.1:19492->19492/tcp
+live-jvg-integration-producer-1	Up 10 minutes	127.0.0.1:18083->8080/tcp
+live-jvg-integration-match-state-1	Up 6 minutes	
+live-jvg-integration-postgres-1	Up 10 minutes (healthy)	127.0.0.1:19534->5432/tcp
+live-jvg-integration-rabbitmq-1	Up 10 minutes (healthy)	127.0.0.1:19573->5672/tcp, 127.0.0.1:19673->15672/tcp
+live-jvg-mvp-producer-1	Up About an hour	127.0.0.1:18081->8080/tcp
+live-jvg-mvp-match-state-1	Up About an hour	
+live-jvg-mvp-dashboard-1	Up About an hour (healthy)	127.0.0.1:18080->8080/tcp
+live-jvg-mvp-postgres-1	Up 2 hours (healthy)	127.0.0.1:55434->5432/tcp
+live-jvg-mvp-rabbitmq-1	Up 2 hours (healthy)	127.0.0.1:5673->5672/tcp, 127.0.0.1:15673->15672/tcp
+live-jvg-mvp-kafka-1	Up 2 hours (healthy)	127.0.0.1:19092->19092/tcp
+live-jvg-7h-7i-postgres	Up 2 hours	127.0.0.1:55433->5432/tcp
+live-jvg-7h-postgres	Up 3 hours	127.0.0.1:55432->5432/tcp
+live-jvg-test-rabbitmq-1	Up 3 hours	0.0.0.0:5672->5672/tcp, [::]:5672->5672/tcp, 0.0.0.0:15672->15672/tcp, [::]:15672->15672/tcp
+live-jvg-test-kafka-1	Up 3 hours	0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp

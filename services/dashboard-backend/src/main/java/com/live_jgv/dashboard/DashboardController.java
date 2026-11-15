@@ -2,6 +2,7 @@ package com.live_jgv.dashboard;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
 import java.util.*;
+@org.springframework.context.annotation.Profile("!memory")
 @RestController
 @RequestMapping("/api")
 public class DashboardController{

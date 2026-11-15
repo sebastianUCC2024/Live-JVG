@@ -3,6 +3,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+@org.springframework.context.annotation.Profile("!memory")
 @Configuration(proxyBeanMethods=false)
 @EnableRabbit
 public class MessagingConfiguration{

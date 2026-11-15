@@ -1,0 +1,210 @@
+{
+  "match": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+  "initial": {
+    "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+    "home_team_id": "home",
+    "away_team_id": "away",
+    "home_name": "Atlético Local",
+    "away_name": "Deportivo Visitante",
+    "home_score": 0,
+    "away_score": 0,
+    "var_status": "CLEAR",
+    "last_event_id": null,
+    "updated_at": null,
+    "active_goals": [],
+    "events": []
+  },
+  "steps": [
+    {
+      "event": {
+        "event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7",
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "event_type": "GOAL",
+        "team_id": "home",
+        "minute": 10,
+        "timestamp": "2026-11-15T05:31:22.367Z",
+        "reference_event_id": null
+      },
+      "snapshot": {
+        "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "revision": 3,
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "home_score": 1,
+        "away_score": 0,
+        "event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7",
+        "event_type": "GOAL",
+        "updated_at": "2026-11-15T05:31:22.730152803Z",
+        "var_status": "CLEAR",
+        "reference_event_id": null
+      }
+    },
+    {
+      "event": {
+        "event_id": "b2fbdea2-c7a5-4e9a-8c0a-5888e2db6244",
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "event_type": "VAR_CHECK",
+        "team_id": null,
+        "minute": 10,
+        "timestamp": "2026-11-15T05:31:23.782Z",
+        "reference_event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7"
+      },
+      "snapshot": {
+        "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "revision": 4,
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "home_score": 1,
+        "away_score": 0,
+        "event_id": "b2fbdea2-c7a5-4e9a-8c0a-5888e2db6244",
+        "event_type": "VAR_CHECK",
+        "updated_at": "2026-11-15T05:31:23.803544512Z",
+        "var_status": "IN_PROGRESS",
+        "reference_event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7"
+      }
+    },
+    {
+      "event": {
+        "event_id": "a06f631c-7cc7-4897-8310-9dbe792adc46",
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "event_type": "GOAL_ANNULLED",
+        "team_id": null,
+        "minute": 10,
+        "timestamp": "2026-11-15T05:31:24.869Z",
+        "reference_event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7"
+      },
+      "snapshot": {
+        "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "revision": 5,
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "home_score": 0,
+        "away_score": 0,
+        "event_id": "a06f631c-7cc7-4897-8310-9dbe792adc46",
+        "event_type": "GOAL_ANNULLED",
+        "updated_at": "2026-11-15T05:31:24.881094970Z",
+        "var_status": "CLEAR",
+        "reference_event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7"
+      }
+    },
+    {
+      "event": {
+        "event_id": "e2aa0c8c-6369-4fef-916e-ebee7d1f0431",
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "event_type": "MATCH_CONTINUES",
+        "team_id": null,
+        "minute": 10,
+        "timestamp": "2026-11-15T05:31:25.567Z",
+        "reference_event_id": null
+      },
+      "snapshot": {
+        "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "revision": 6,
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "home_score": 0,
+        "away_score": 0,
+        "event_id": "e2aa0c8c-6369-4fef-916e-ebee7d1f0431",
+        "event_type": "MATCH_CONTINUES",
+        "updated_at": "2026-11-15T05:31:25.594988929Z",
+        "var_status": "CLEAR",
+        "reference_event_id": null
+      }
+    },
+    {
+      "event": {
+        "event_id": "21acec5d-869d-469a-b15d-e23d77fe71be",
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "event_type": "GOAL",
+        "team_id": "away",
+        "minute": 10,
+        "timestamp": "2026-11-15T05:31:26.651Z",
+        "reference_event_id": null
+      },
+      "snapshot": {
+        "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "revision": 7,
+        "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+        "home_score": 0,
+        "away_score": 1,
+        "event_id": "21acec5d-869d-469a-b15d-e23d77fe71be",
+        "event_type": "GOAL",
+        "updated_at": "2026-11-15T05:31:26.676911930Z",
+        "var_status": "CLEAR",
+        "reference_event_id": null
+      }
+    }
+  ],
+  "frames": [
+    {
+      "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "revision": 3,
+      "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "home_score": 1,
+      "away_score": 0,
+      "event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7",
+      "event_type": "GOAL",
+      "updated_at": "2026-11-15T05:31:22.730152803Z",
+      "var_status": "CLEAR",
+      "reference_event_id": null
+    },
+    {
+      "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "revision": 4,
+      "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "home_score": 1,
+      "away_score": 0,
+      "event_id": "b2fbdea2-c7a5-4e9a-8c0a-5888e2db6244",
+      "event_type": "VAR_CHECK",
+      "updated_at": "2026-11-15T05:31:23.803544512Z",
+      "var_status": "IN_PROGRESS",
+      "reference_event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7"
+    },
+    {
+      "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "revision": 5,
+      "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "home_score": 0,
+      "away_score": 0,
+      "event_id": "a06f631c-7cc7-4897-8310-9dbe792adc46",
+      "event_type": "GOAL_ANNULLED",
+      "updated_at": "2026-11-15T05:31:24.881094970Z",
+      "var_status": "CLEAR",
+      "reference_event_id": "9d8d121b-e994-40f3-a0c7-73b6c9ff4ef7"
+    },
+    {
+      "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "revision": 6,
+      "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "home_score": 0,
+      "away_score": 0,
+      "event_id": "e2aa0c8c-6369-4fef-916e-ebee7d1f0431",
+      "event_type": "MATCH_CONTINUES",
+      "updated_at": "2026-11-15T05:31:25.594988929Z",
+      "var_status": "CLEAR",
+      "reference_event_id": null
+    },
+    {
+      "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "revision": 7,
+      "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+      "home_score": 0,
+      "away_score": 1,
+      "event_id": "21acec5d-869d-469a-b15d-e23d77fe71be",
+      "event_type": "GOAL",
+      "updated_at": "2026-11-15T05:31:26.676911930Z",
+      "var_status": "CLEAR",
+      "reference_event_id": null
+    }
+  ],
+  "after_restart": {
+    "stream_id": "durable-integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+    "revision": 7,
+    "match_id": "integration-4143ec08-f6e6-4faf-8154-39a18718b40b",
+    "home_score": 0,
+    "away_score": 1,
+    "event_id": "21acec5d-869d-469a-b15d-e23d77fe71be",
+    "event_type": "GOAL",
+    "updated_at": "2026-11-15T05:31:26.676911930Z",
+    "var_status": "CLEAR",
+    "reference_event_id": null
+  },
+  "page_errors": [],
+  "observer_queue": "integration-observer-1794720680424"
+}
