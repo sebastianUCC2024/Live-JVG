@@ -13,6 +13,8 @@
 **/.env
 .env.local
 **/.env.local
+.env.*
+!.env.example
 
 # IDE
 .idea/
@@ -26,3 +28,12 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+*.temp
+tmp/
+temp/
+logs/
+
+# Temporary integration test workspaces
+integration-test-tmp/
+integration-test-temp/
+fase7b-run-*/
