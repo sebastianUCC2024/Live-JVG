@@ -1,4 +1,4 @@
-# Live-JVG — Dashboard frontend, Fase 6
+# Live-JVG — Dashboard frontend DEV 2
 
 Frontend React + TypeScript + Vite con modo de tiempo real y demostración separada.
 El modo predeterminado conecta con dashboard-backend por WebSocket/STOMP usando
@@ -8,6 +8,8 @@ los destinos verificados. La demostración sigue disponible mediante su botón o
 Véase [Fase 6: protocolo, configuración y resultados](docs/phase6-realtime.md).
 La [auditoría de integración de Fase 7](docs/phase7-integration.md) registra los
 checks ejecutados y el bloqueo de la cadena completa por brokers pendientes de DEV 3.
+La [revisión final de Fase 8](docs/phase8-final-review.md) consolida configuración,
+alcance autorizado, limitaciones y resultados de aceptación local.
 
 ## Inicio en tiempo real
 
@@ -43,6 +45,10 @@ usa el puerto que imprime Vite (habitualmente 4173). `dist/` es la compilación.
 No se publicaron sitios ni se realizaron commits o push.
 
 Scripts adicionales: `test:watch` (Vitest interactivo) y `test:e2e` (Playwright).
+`test:integration` ejecuta los reinicios de un backend aislado con un worker;
+requiere REAL_BACKEND_RESTART=1, JAVA17_BIN y VITE_WS_URL con un puerto local
+exclusivo. Las instrucciones están en el informe de Fase 7. Los smoke tests
+opcionales se omiten explícitamente si no se prepara su entorno.
 Las pruebas E2E utilizan Google Chrome local mediante `channel: 'chrome'`, sin
 descargar navegadores automáticamente. Si no está instalado, instalar Chrome o
 ajustar el canal conscientemente. Playwright arranca y cierra su servidor Vite.
@@ -52,12 +58,26 @@ principales resueltas: React/React DOM 19.3.1, Vite 7.3.8, TypeScript 5.9.3,
 Vitest 4.1.12, React Testing Library 16.3.3 y Playwright 1.65.1. El lockfile
 contiene las versiones exactas transitivas.
 
+### Variables y seguridad
+
+VITE_WS_URL, VITE_MATCH_IDS y VITE_MATCH_METADATA se incorporan al bundle durante
+desarrollo/compilación y son públicos. No guardar contraseñas, tokens ni credenciales
+RabbitMQ en variables VITE_. El frontend solo conecta con el dashboard-backend.
+Vite carga .env.local, ignorado por Git; reiniciar Vite o recompilar tras cambiarlo.
+
+El origen del navegador debe estar autorizado mediante DASHBOARD_ALLOWED_ORIGINS
+en el backend. El puerto de preview 4173 no está en la lista local por defecto:
+si se revisa ese preview con conexión real, añadir explícitamente su origen a la
+configuración externa del backend. En un despliegue HTTPS configurar wss://.
+La aplicación no incorpora autenticación por usuario ni persistencia de favoritos.
+
 ## Organización
 
 ```text
 src/
   components/    MatchCard, Scoreboard, VarEvent, StatePanel, Icon
   pages/         DashboardPage y pruebas de interacción
+                 LiveDashboardPage: snapshots, conexión y eventos recientes
   hooks/         useMatches: carga, validación y cancelación
                  useDashboardStream: conexión y limpieza de suscripciones
   services/      dashboardStream: STOMP, recuperación y estado por partido
@@ -66,6 +86,7 @@ src/
   types/         MatchSnapshot, SnapshotReply, enums y modelo visual
   test/          configuración de React Testing Library
   main.tsx
+  App.tsx        selección tiempo real / demostración
   styles.css
 e2e/             pruebas Playwright en escritorio y móvil
 ```
