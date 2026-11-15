@@ -1,0 +1,7 @@
+KAFKA_BOOTSTRAP_SERVERS: no definida
+RABBITMQ_HOST: no definida
+RABBITMQ_PORT: no definida
+localhost:9092: PermissionError: [Errno 1] Operation not permitted
+localhost:5672: PermissionError: [Errno 1] Operation not permitted
+localhost:2181: PermissionError: [Errno 1] Operation not permitted
+localhost:15672: PermissionError: [Errno 1] Operation not permitted
