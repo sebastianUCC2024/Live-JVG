@@ -10,6 +10,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 /** Preserves Spring MVC status codes and avoids exposing invalid input values. */
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(com.live_jgv.dashboard.ProducerGateway.PublicationFailure.class)
+    public org.springframework.http.ResponseEntity<java.util.Map<String,Object>> handlePublicationFailure(
+            com.live_jgv.dashboard.ProducerGateway.PublicationFailure failure) {
+        return org.springframework.http.ResponseEntity.status(failure.getStatusCode())
+                .cacheControl(org.springframework.http.CacheControl.noStore()).body(failure.body());
+    }
     @ExceptionHandler(InvalidScoreUpdateException.class)
     public ProblemDetail handleInvalidScoreUpdate(InvalidScoreUpdateException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid score update");
