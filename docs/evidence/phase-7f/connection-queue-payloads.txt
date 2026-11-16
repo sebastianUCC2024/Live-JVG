@@ -1,1 +1,0 @@
-{"match_id": "phase7f-62d7304b-3842-4914-b9bb-0132fe594a81-connection", "home_score": 1, "away_score": 0, "event_id": "connection-goal", "event_type": "GOAL", "updated_at": "2026-11-15T02:35:16.498870Z", "var_status": "CLEAR", "reference_event_id": null}

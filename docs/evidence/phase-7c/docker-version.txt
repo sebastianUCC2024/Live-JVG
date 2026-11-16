@@ -1,9 +1,0 @@
-Client:
- Version:           29.8.0
- API version:       1.56
- Go version:        go1.26.8
- Git commit:        88096ef
- Built:             Thu Sep  3 21:49:43 2026
- OS/Arch:           darwin/arm64
- Context:           desktop-linux
-failed to connect to the docker API at unix:///Users/valeriaestefaniagongoratorres/.docker/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/valeriaestefaniagongoratorres/.docker/run/docker.sock: connect: no such file or directory
