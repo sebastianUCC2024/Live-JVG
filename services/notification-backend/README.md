@@ -1,5 +1,11 @@
 # Notification Backend — DEV 2, Fase 3B.1
 
+Current local validation and version decision:
+[advanced Notification validation](docs/advanced-notification-validation.md).
+Deployment/CI review artifacts and offline scripts:
+[operational preparation](docs/operational-preparation.md).
+These updates do not certify real PostgreSQL/RabbitMQ or approve VAR V2.
+
 External integration preparation (not executed): see
 [Fase 3B.4 isolated tests](docs/phase3b4-isolated-tests.md) for mandatory guards,
 provisioning dependencies, future commands and safe stopping. Normal `verify`
