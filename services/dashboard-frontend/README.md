@@ -2,6 +2,14 @@
 
 # Live-JVG — Dashboard frontend DEV 2
 
+Alertas persistidas opcionales: [Fase 4 — integración de notificaciones](docs/phase4-notification-alerts.md).
+Definir `VITE_NOTIFICATION_ORIGIN` con el origen HTTP aprobado habilita su consulta
+en la selección durable desde catálogo. Sin esa variable no se consulta el servicio;
+demo y selección manual/memory conservan su funcionamiento anterior.
+
+Validación local de alertas, concurrencia, escritorio/móvil y límites de estas
+pruebas: [Fase 4.1 — validación y endurecimiento](docs/phase41-alert-validation.md).
+
 Configuración vigente por modo: [MVP, host durable y memory](../../docs/MODOS_EJECUCION.md).
 También se puede omitir VITE_WS_URL y definir VITE_DASHBOARD_ORIGIN con el origen
 HTTP del dashboard; VITE_WS_URL conserva precedencia si ambas están definidas.

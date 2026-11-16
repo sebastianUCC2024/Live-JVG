@@ -6,11 +6,12 @@ import { MatchCard } from '../components/MatchCard'
 import { Icon } from '../components/Icon'
 import { createDashboardApi, type CatalogMatch } from '../services/dashboardApi'
 import { mergeRecovery, useMatchRecovery } from '../hooks/useMatchRecovery'
+import { NotificationAlerts } from '../components/NotificationAlerts'
 
 export const eventLabels = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa' }
 const statusLabels = { connecting: 'Conectando', connected: 'Conectado', reconnecting: 'Reconectando', failed: 'Sin conexión' }
 
-export function LiveDashboardPage({ factory, url = defaultWebSocketUrl }: { factory?: TransportFactory; url?: string }) {
+export function LiveDashboardPage({ factory, url = defaultWebSocketUrl, notificationOrigin = import.meta.env.VITE_NOTIFICATION_ORIGIN }: { factory?: TransportFactory; url?: string; notificationOrigin?: string }) {
   const [ids, setIds] = useState<string[]>(initialMatchIds)
   const [input, setInput] = useState(initialMatchIds.join(', '))
   const [formError, setFormError] = useState('')
@@ -87,6 +88,8 @@ export function LiveDashboardPage({ factory, url = defaultWebSocketUrl }: { fact
           </div>
         })}</div></section>
         {detail && selectedDetail?.snapshot && <section className="detail-panel" aria-label="Eventos deportivos"><h2>Últimos eventos · {detail}</h2><button className="secondary-button" onClick={() => setDetail(null)}>Cerrar detalle</button><p>Hasta 30 eventos recientes, sin paginación.</p><ol className="event-list">{selectedDetail.events.map(event => <li key={event.event_id}><strong>{eventLabels[event.event_type]}</strong><span>{event.home_score} – {event.away_score}</span><time dateTime={event.updated_at}>{new Intl.DateTimeFormat('es-CO', { timeStyle: 'medium', timeZone: 'America/Bogota' }).format(new Date(event.updated_at))}</time></li>)}</ol></section>}
+        {!manual && catalogStatus === 'ready' && ids.length === 1 && catalog.some(match => match.match_id === ids[0])
+          && <NotificationAlerts matchId={ids[0]} origin={notificationOrigin} />}
         <footer className="page-footer">Los snapshots son la fuente del marcador. La recuperación depende del estado disponible en el servidor.</footer>
       </main>
     </div>
