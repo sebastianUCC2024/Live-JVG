@@ -1,0 +1,50 @@
+DEV 3 Fase 6 — betting-worker
+Fecha 2026-11-16, America/Bogota
+Temurin 17.0.20.1 / Boot 3.5.7 / Maven 3.10.0
+JAVA_HOME fijado antes de PATH.
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml test
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml package
+
+=== test ===
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.36 s -- in com.live_jgv.worker.BettingWorkerApplicationTests
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.live_jgv.worker.integration.PreparedPostgresIntegrationTest
+[WARNING] Tests run: 11, Failures: 0, Errors: 0, Skipped: 11, Time elapsed: 0 s -- in com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.300 s -- in com.live_jgv.worker.entrypoint.OperationControllerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s -- in com.live_jgv.worker.entrypoint.WorkerRabbitListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in com.live_jgv.worker.application.WorkerServiceTest
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.072 s -- in com.live_jgv.worker.infrastructure.JdbcWorkerStoreTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in com.live_jgv.worker.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s -- in com.live_jgv.worker.infrastructure.StorageReadinessTest
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s -- in com.live_jgv.worker.infrastructure.JsonCommandDecoderTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s -- in com.live_jgv.worker.infrastructure.JdbcAtomicAuthorizationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.034 s -- in com.live_jgv.worker.infrastructure.RabbitRetryTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in com.live_jgv.worker.domain.AcceptancePolicyTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.live_jgv.worker.domain.OperationTest
+[WARNING] Tests run: 98, Failures: 0, Errors: 0, Skipped: 12
+[INFO] BUILD SUCCESS
+[INFO] Total time:  15.952 s
+[INFO] Finished at: 2026-11-16T00:40:11-05:00
+=== package ===
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.22 s -- in com.live_jgv.worker.BettingWorkerApplicationTests
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.live_jgv.worker.integration.PreparedPostgresIntegrationTest
+[WARNING] Tests run: 11, Failures: 0, Errors: 0, Skipped: 11, Time elapsed: 0 s -- in com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.404 s -- in com.live_jgv.worker.entrypoint.OperationControllerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.live_jgv.worker.entrypoint.WorkerRabbitListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in com.live_jgv.worker.application.WorkerServiceTest
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.103 s -- in com.live_jgv.worker.infrastructure.JdbcWorkerStoreTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in com.live_jgv.worker.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in com.live_jgv.worker.infrastructure.StorageReadinessTest
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s -- in com.live_jgv.worker.infrastructure.JsonCommandDecoderTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s -- in com.live_jgv.worker.infrastructure.JdbcAtomicAuthorizationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.040 s -- in com.live_jgv.worker.infrastructure.RabbitRetryTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in com.live_jgv.worker.domain.AcceptancePolicyTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.live_jgv.worker.domain.OperationTest
+[WARNING] Tests run: 98, Failures: 0, Errors: 0, Skipped: 12
+[INFO] BUILD SUCCESS
+[INFO] Total time:  15.305 s
+[INFO] Finished at: 2026-11-16T00:44:35-05:00
+
+Totales XML finales: {"tests": 98, "failures": 0, "errors": 0, "skipped": 12, "executed": 86}
+Ejecuciones repetidas no se suman como tests distintos.
+JAR SHA-256: fc868232933306bcb9cec5e826959160f8dfd60df47e8eb0c7753b61f9d56e4f
+No se habilitaron tests PostgreSQL ni migraciones. Mocks no certifican SQL, roles, locks ni atomicidad real. Sin contenedores/brokers.

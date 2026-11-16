@@ -1,0 +1,12 @@
+Revisión final — Fase 4
+Rama integration/Valeria-mvp-dev; HEAD 9d8aae20a5371d41b18bda7f10bfd66f42f22094.
+Archivos existentes del módulo modificados: 3; nuevos: 37.
+Inventario fuera del módulo: 541; diferencias externas comprometidas: 0.
+Historical Archiver, Betting Suspension Service y diseño: 90 hashes idénticos.
+Los cambios rastreados pendientes fuera del worker coinciden con los preexistentes e intactos.
+git diff --check: PASS. Archivos nuevos sin espacios finales ni marcadores de conflicto.
+Patrones de credenciales/tokens privados: ninguno; placeholders de password vacíos.
+No se leyó ni copió .mvp/local.env. test-private-error/private-user son datos sintéticos de test.
+Sin contenedores, migraciones ni comandos Git de escritura. No se modificó Compose ni contratos.
+Flyway, consumidor y aceptación desactivados. Proveedor de evidencia predeterminado UNKNOWN, sin HTTP inseguro.
+Revisión por patrones; no auditoría de secretos exhaustiva.
