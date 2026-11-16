@@ -12,8 +12,17 @@ public final class ConfirmedDlqRecovery {
     private final String exchange;
     private final long timeoutMillis;
     public ConfirmedDlqRecovery(RabbitTemplate template, String exchange, Duration timeout) {
-        if (timeout.isNegative() || timeout.isZero()) throw new IllegalArgumentException("Positive confirm timeout required");
-        this.template = template; this.exchange = exchange; this.timeoutMillis = timeout.toMillis();
+        this.template = template; this.exchange = exchange; this.timeoutMillis = timeoutMillis(timeout);
+    }
+    static long timeoutMillis(Duration timeout) {
+        if (timeout == null || timeout.compareTo(Duration.ofMillis(1))<0)
+            throw new IllegalArgumentException("Confirm timeout must be at least 1 ms");
+        try {
+            long millis=timeout.toMillis();
+            return timeout.minusMillis(millis).isZero() ? millis : Math.addExact(millis,1);
+        } catch (ArithmeticException overflow) {
+            throw new IllegalArgumentException("Confirm timeout exceeds supported milliseconds",overflow);
+        }
     }
     public void transfer(Message original, Throwable failure) {
         var copy = MessageBuilder.fromClonedMessage(original).setDeliveryMode(MessageDeliveryMode.PERSISTENT)
