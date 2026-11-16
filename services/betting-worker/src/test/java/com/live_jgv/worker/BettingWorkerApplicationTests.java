@@ -14,7 +14,8 @@ import com.live_jgv.worker.domain.*;
 import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(properties={"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"})
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+@SpringBootTest(properties={"management.endpoint.health.group.readiness.include=readinessState,messagingReadiness","spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"})
 class BettingWorkerApplicationTests {
     @MockitoBean JdbcTemplate jdbc;@MockitoBean PlatformTransactionManager tx;
     @Autowired ApplicationContext context;@Autowired RabbitListenerEndpointRegistry registry;
@@ -27,5 +28,12 @@ class BettingWorkerApplicationTests {
         assertEquals("false",environment.getProperty("worker.acceptance.enabled"));
         assertEquals("disabled",environment.getProperty("worker.authorization.mode"));
         assertEquals(MarketEvidence.Status.UNKNOWN,evidence.fetch("m").status());
+    }
+    @Autowired org.springframework.test.web.servlet.MockMvc http;
+    @Test void inactiveTransportIsNotReadyWhileProcessRemainsLive() throws Exception {
+        http.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/health/liveness"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        http.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/health/readiness"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isServiceUnavailable());
     }
 }

@@ -12,7 +12,8 @@ import com.live_jgv.betting.application.SuspensionPublisher;
 import com.live_jgv.betting.infrastructure.OutboxDispatcher;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(properties={"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration","spring.kafka.admin.auto-create=false"})
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+@SpringBootTest(properties={"management.endpoint.health.group.readiness.include=readinessState,messagingReadiness","spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration","spring.kafka.admin.auto-create=false"})
 class BettingSuspensionServiceApplicationTests {
     @MockitoBean JdbcTemplate jdbc;
     @MockitoBean PlatformTransactionManager transactions;
@@ -26,5 +27,12 @@ class BettingSuspensionServiceApplicationTests {
         assertTrue(context.getBeansOfType(OutboxDispatcher.class).isEmpty());
         assertFalse(context.getBean(com.live_jgv.betting.application.LeaseSourceVerifier.class).verify("m",1,"unverified-checkpoint"));
         assertTrue(context.getBeansOfType(com.live_jgv.betting.infrastructure.JdbcOpenLeaseIssuer.class).isEmpty());
+    }
+    @Autowired org.springframework.test.web.servlet.MockMvc http;
+    @Test void inactiveTransportIsNotReadyWhileProcessRemainsLive() throws Exception {
+        http.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/health/liveness"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        http.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/health/readiness"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isServiceUnavailable());
     }
 }
