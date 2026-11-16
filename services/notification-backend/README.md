@@ -1,5 +1,10 @@
 # Notification Backend — DEV 2, Fase 3B.1
 
+External integration preparation (not executed): see
+[Fase 3B.4 isolated tests](docs/phase3b4-isolated-tests.md) for mandatory guards,
+provisioning dependencies, future commands and safe stopping. Normal `verify`
+continues to run local tests only; it compiles the disabled external suites.
+
 Java 17 / Spring Boot 4.1.2. Consumes the existing Match State ScoreUpdate wire,
 persists inbox and internal alerts in PostgreSQL, and exposes a read-only REST API.
 Code is in English; visible notification content and API errors are in Spanish.
@@ -110,11 +115,20 @@ integration. Do not silently change source namespace to bypass deduplication.
   `notification.` prefix; `mvp-dashboard-scores` is rejected.
 - Binding per authorized `NOTIFICATION_MATCH_IDS`: `score.{matchId}`. No wildcard
   subscriptions; no generated match default.
+- The complete routing key, including `score.`, must fit 255 UTF-8 bytes. The
+  existing ASCII explicit-ID allowlist remains unchanged; multibyte byte-budget
+  tests exercise the independent length validator without widening that policy.
 - Owned direct DLX: `<queue>.dlx`, durable; DLQ: `<queue>.dlq`, durable; key `rejected`.
 - One consumer, prefetch 1, MANUAL ACK; no competing dashboard consumer.
 - Correlated confirms, publisher returns and mandatory publication are required.
 
 Three attempts total by default, waiting 1s and 2s between transient failures.
+`ProcessingFailurePolicy` distinguishes permanent input/identity and non-transient
+JDBC errors (integrity, syntax, permission), transient connection/lock/transaction
+failures, and unknown failures. Resource availability failures remain retryable
+even when Spring wraps them as non-transient. Wrapped causes are inspected with
+cycle/depth protection; a known permanent cause takes precedence. Unknown runtime
+failures receive bounded retries before confirmed DLQ transfer.
 Configuration is bounded to 1..10 attempts, 1..10000ms base delay, maximum 30s
 per delay. Validation/identity failures skip retries. After failure, a persistent
 copy of the original body is transferred to DLQ, preserving original routing
@@ -176,6 +190,41 @@ authentication is added; current scope is internal/local and not a public servic
 Frontend integration is not part of 3B.1.
 
 ## Local verification (no infrastructure)
+
+### Functional readiness (Fase 3B.3)
+
+`GET /actuator/health/liveness` reports process liveness independently of external
+dependencies. `GET /actuator/health/readiness` requires startup completion, enabled
+storage, a valid PostgreSQL connection, enabled messaging and an operational owned
+consumer. Its boolean details expose `service_started`, `storage_enabled`,
+`postgres_available`, `consumer_enabled`, `consumer_registered`,
+`consumer_operational` and `ready`, without endpoints, credentials or exception text.
+The current durable-consumer service mode requires both storage and consumer;
+there is no profile that silently makes either dependency optional.
+
+Disabled dependencies/startup pending yield OUT_OF_SERVICE; unavailable enabled
+dependencies yield DOWN; only all required conditions yield UP (ready=true).
+Consequently the inactive default configuration is deliberately not READY. Health
+readiness uses the normal Actuator non-UP HTTP status mapping (503).
+
+Consumer readiness requires the owned queue's ConsumeOk event, a running/active
+container and a positive active-consumer count. Consumer failure/stop/restart,
+connection closure/shutdown and explicit DLQ custody stop invalidate that state;
+fresh acceptance is required after recovery. Publisher-only connections are
+excluded from the input-consumer connection listener. These are observations of
+the client's current state, not proof of future delivery or DLQ routing health.
+
+When storage is explicitly enabled, an actual readiness request obtains a pooled
+connection and calls JDBC isValid(2); normal Hikari acquisition timeout also
+applies. Default-disabled health and all local readiness tests use no external
+connections. Process liveness stays independent to avoid DB outages triggering
+unnecessary process restarts.
+
+Confirm timeouts below 1 ms are rejected, including positive submillisecond values.
+Fractional values at or above 1 ms round upward; overflow is rejected. No positive
+timeout silently becomes zero or is shortened by truncation.
+
+The proposed 9F integration approval scope is in [phase3b3-9f-proposal.md](docs/phase3b3-9f-proposal.md).
 
 With JDK 17 and Maven available in the current session:
 

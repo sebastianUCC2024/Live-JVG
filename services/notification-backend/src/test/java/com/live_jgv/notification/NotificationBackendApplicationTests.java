@@ -9,6 +9,14 @@ class NotificationBackendApplicationTests {
     @org.springframework.beans.factory.annotation.Autowired
     org.springframework.context.ApplicationContext context;
 
+    @Test void readinessIsUnavailableWhileLivenessRemainsUpWithInfrastructureDisabled() {
+        var endpoint=context.getBean(org.springframework.boot.health.actuate.endpoint.HealthEndpoint.class);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.boot.health.contributor.Status.OUT_OF_SERVICE,
+                endpoint.healthForPath("readiness").getStatus());
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.boot.health.contributor.Status.UP,
+                endpoint.healthForPath("liveness").getStatus());
+    }
+
 	@Test
 	void contextLoads() {
 		org.junit.jupiter.api.Assertions.assertTrue(context.getBeansOfType(javax.sql.DataSource.class).isEmpty());
