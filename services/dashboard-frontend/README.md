@@ -10,6 +10,9 @@ demo y selección manual/memory conservan su funcionamiento anterior.
 Validación local de alertas, concurrencia, escritorio/móvil y límites de estas
 pruebas: [Fase 4.1 — validación y endurecimiento](docs/phase41-alert-validation.md).
 
+Cierre local actual y requisitos pendientes de integración conjunta:
+[DEV 2 — cierre y preparación E2E](docs/dev2-local-closure-and-e2e.md).
+
 Configuración vigente por modo: [MVP, host durable y memory](../../docs/MODOS_EJECUCION.md).
 También se puede omitir VITE_WS_URL y definir VITE_DASHBOARD_ORIGIN con el origen
 HTTP del dashboard; VITE_WS_URL conserva precedencia si ambas están definidas.
