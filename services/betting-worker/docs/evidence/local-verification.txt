@@ -1,0 +1,27 @@
+Betting Worker — Fase 4 — verificación local real
+Fecha: 2026-11-15, America/Bogota
+Java: Temurin 17.0.20.1; Maven 3.10.0; Boot 3.5.7
+
+Comandos (fijar JAVA_HOME antes de PATH):
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml test
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml package
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml dependency:tree -DoutputFile=target/dependency-tree.txt
+
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.59 s -- in com.live_jgv.worker.BettingWorkerApplicationTests
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.160 s -- in com.live_jgv.worker.entrypoint.OperationControllerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in com.live_jgv.worker.entrypoint.WorkerRabbitListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in com.live_jgv.worker.application.WorkerServiceTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.029 s -- in com.live_jgv.worker.infrastructure.JdbcWorkerStoreTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in com.live_jgv.worker.infrastructure.StorageReadinessTest
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.020 s -- in com.live_jgv.worker.infrastructure.JsonCommandDecoderTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.051 s -- in com.live_jgv.worker.infrastructure.RabbitRetryTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.live_jgv.worker.domain.AcceptancePolicyTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.live_jgv.worker.domain.OperationTest
+[INFO] Tests run: 73, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  13.858 s
+[INFO] Finished at: 2026-11-15T23:53:19-05:00
+
+Totales Surefire XML: {"tests": 73, "failures": 0, "errors": 0, "skipped": 0}
+JAR SHA-256: d2c96cadfc1d6322867e7d9083300d6a397c29aee3683409c0336291e7661269
+Sin contenedores, brokers o PostgreSQL real; sin migraciones. Mocks de JDBC/consumer/source para pruebas locales. Reinicio simulado por nueva instancia del adaptador; no certificación real de recuperación.

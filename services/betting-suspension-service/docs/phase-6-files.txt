@@ -1,0 +1,20 @@
+MODIFICADOS EN FASE 6:
+docs/INTEGRATION.md
+docs/README.md
+src/main/java/com/live_jgv/betting/infrastructure/StorageReadiness.java
+src/main/java/com/live_jgv/betting/infrastructure/SuspensionConfiguration.java
+src/test/java/com/live_jgv/betting/infrastructure/StorageReadinessTest.java
+src/test/java/com/live_jgv/betting/integration/IsolatedPostgres.java
+
+CREADOS EN FASE 6:
+docs/contracts/betting-state.v1.proposed.schema.json
+docs/contracts/final-contract-proposal.md
+docs/contracts/match-event.v1.proposed.schema.json
+docs/evidence/phase-6-local-verification.txt
+docs/phase-6-atomic-security.md
+docs/phase-6-files.txt
+docs/phase-6-results.md
+docs/phase-6-static-review.txt
+src/main/java/com/live_jgv/betting/infrastructure/JdbcOpenLeaseIssuer.java
+src/main/resources/db/migration/V2__atomic_authority.sql
+src/test/java/com/live_jgv/betting/infrastructure/JdbcOpenLeaseIssuerTest.java

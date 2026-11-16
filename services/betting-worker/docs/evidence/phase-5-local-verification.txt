@@ -1,0 +1,46 @@
+DEV 3 — Fase 5 — betting-worker
+Fecha: 2026-11-16 (America/Bogota)
+Java: Temurin 17.0.20.1; Spring Boot 3.5.7; Maven 3.10.0
+Comandos ejecutados con JAVA_HOME de Temurin 17 y PATH correspondiente:
+mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml test
+mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml package
+
+=== test-final ===
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.16 s -- in com.live_jgv.worker.BettingWorkerApplicationTests
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.001 s -- in com.live_jgv.worker.integration.PreparedPostgresIntegrationTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.230 s -- in com.live_jgv.worker.entrypoint.OperationControllerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in com.live_jgv.worker.entrypoint.WorkerRabbitListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in com.live_jgv.worker.application.WorkerServiceTest
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.067 s -- in com.live_jgv.worker.infrastructure.JdbcWorkerStoreTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.live_jgv.worker.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in com.live_jgv.worker.infrastructure.StorageReadinessTest
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.076 s -- in com.live_jgv.worker.infrastructure.JsonCommandDecoderTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.029 s -- in com.live_jgv.worker.infrastructure.RabbitRetryTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.live_jgv.worker.domain.AcceptancePolicyTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.live_jgv.worker.domain.OperationTest
+[WARNING] Tests run: 76, Failures: 0, Errors: 0, Skipped: 1
+[INFO] BUILD SUCCESS
+[INFO] Total time:  14.793 s
+[INFO] Finished at: 2026-11-16T00:06:35-05:00
+=== package ===
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.14 s -- in com.live_jgv.worker.BettingWorkerApplicationTests
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.002 s -- in com.live_jgv.worker.integration.PreparedPostgresIntegrationTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.285 s -- in com.live_jgv.worker.entrypoint.OperationControllerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s -- in com.live_jgv.worker.entrypoint.WorkerRabbitListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in com.live_jgv.worker.application.WorkerServiceTest
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.081 s -- in com.live_jgv.worker.infrastructure.JdbcWorkerStoreTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in com.live_jgv.worker.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.037 s -- in com.live_jgv.worker.infrastructure.StorageReadinessTest
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in com.live_jgv.worker.infrastructure.JsonCommandDecoderTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.047 s -- in com.live_jgv.worker.infrastructure.RabbitRetryTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.live_jgv.worker.domain.AcceptancePolicyTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in com.live_jgv.worker.domain.OperationTest
+[WARNING] Tests run: 76, Failures: 0, Errors: 0, Skipped: 1
+[INFO] BUILD SUCCESS
+[INFO] Total time:  14.995 s
+[INFO] Finished at: 2026-11-16T00:09:27-05:00
+
+Totales finales XML: {"tests": 76, "failures": 0, "errors": 0, "skipped": 1, "executed": 75}
+Las ejecuciones repetidas no se suman como pruebas distintas.
+JAR SHA-256: b1e9d2cb31862bc7b809e251cccc75f02b469cc082e20534f296fcf04a919e93
+La clase PreparedPostgresIntegrationTest quedó omitida: no se ejecutaron conexiones/migraciones reales. Sin Docker, Kafka o RabbitMQ reales. Los tests DB/consumer usan mocks locales.

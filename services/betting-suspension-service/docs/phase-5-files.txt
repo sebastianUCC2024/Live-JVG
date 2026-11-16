@@ -1,0 +1,19 @@
+MODIFICADOS EN FASE 5 (respecto del inventario previo):
+docs/README.md
+src/main/java/com/live_jgv/betting/domain/MarketState.java
+src/main/resources/application.properties
+src/test/java/com/live_jgv/betting/domain/MarketStateTest.java
+
+CREADOS EN FASE 5:
+docs/INTEGRATION.md
+docs/evidence/phase-5-local-verification.txt
+docs/integration.env.example
+docs/phase-5-files.txt
+docs/phase-5-integration-preparation.md
+docs/phase-5-results.md
+docs/phase-5-static-review.txt
+src/main/resources/application-dev3-integration.properties
+src/test/java/com/live_jgv/betting/infrastructure/CapturedSequenceContractTest.java
+src/test/java/com/live_jgv/betting/infrastructure/SafeIntegrationProfileTest.java
+src/test/java/com/live_jgv/betting/integration/IsolatedPostgres.java
+src/test/java/com/live_jgv/betting/integration/PreparedPostgresIntegrationTest.java

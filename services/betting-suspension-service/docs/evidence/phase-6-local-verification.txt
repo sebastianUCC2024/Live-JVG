@@ -1,0 +1,52 @@
+DEV 3 Fase 6 — betting-suspension-service
+Fecha 2026-11-16, America/Bogota
+Temurin 17.0.20.1 / Boot 3.5.7 / Maven 3.10.0
+JAVA_HOME fijado antes de PATH.
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml test
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH" mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml package
+
+=== test ===
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.003 s -- in com.live_jgv.betting.integration.PreparedPostgresIntegrationTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.70 s -- in com.live_jgv.betting.entrypoint.StatusControllerTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s -- in com.live_jgv.betting.entrypoint.SuspensionKafkaListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in com.live_jgv.betting.application.SuspensionServiceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.204 s -- in com.live_jgv.betting.infrastructure.RabbitSuspensionPublisherTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s -- in com.live_jgv.betting.infrastructure.CapturedSequenceContractTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.113 s -- in com.live_jgv.betting.infrastructure.JdbcOpenLeaseIssuerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.104 s -- in com.live_jgv.betting.infrastructure.SuspensionErrorHandlerTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in com.live_jgv.betting.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s -- in com.live_jgv.betting.infrastructure.JsonEventDecoderTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s -- in com.live_jgv.betting.infrastructure.JdbcSuspensionStoreTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s -- in com.live_jgv.betting.infrastructure.StorageReadinessTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in com.live_jgv.betting.infrastructure.OutboxDispatcherTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.live_jgv.betting.domain.MarketStateTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.629 s -- in com.live_jgv.betting.BettingSuspensionServiceApplicationTests
+[WARNING] Tests run: 94, Failures: 0, Errors: 0, Skipped: 1
+[INFO] BUILD SUCCESS
+[INFO] Total time:  15.261 s
+[INFO] Finished at: 2026-11-16T00:40:10-05:00
+=== package ===
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.001 s -- in com.live_jgv.betting.integration.PreparedPostgresIntegrationTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.79 s -- in com.live_jgv.betting.entrypoint.StatusControllerTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in com.live_jgv.betting.entrypoint.SuspensionKafkaListenerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in com.live_jgv.betting.application.SuspensionServiceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.169 s -- in com.live_jgv.betting.infrastructure.RabbitSuspensionPublisherTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in com.live_jgv.betting.infrastructure.CapturedSequenceContractTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.081 s -- in com.live_jgv.betting.infrastructure.JdbcOpenLeaseIssuerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.093 s -- in com.live_jgv.betting.infrastructure.SuspensionErrorHandlerTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in com.live_jgv.betting.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.094 s -- in com.live_jgv.betting.infrastructure.JsonEventDecoderTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s -- in com.live_jgv.betting.infrastructure.JdbcSuspensionStoreTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in com.live_jgv.betting.infrastructure.StorageReadinessTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in com.live_jgv.betting.infrastructure.OutboxDispatcherTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.live_jgv.betting.domain.MarketStateTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.663 s -- in com.live_jgv.betting.BettingSuspensionServiceApplicationTests
+[WARNING] Tests run: 94, Failures: 0, Errors: 0, Skipped: 1
+[INFO] BUILD SUCCESS
+[INFO] Total time:  14.428 s
+[INFO] Finished at: 2026-11-16T00:44:34-05:00
+
+Totales XML finales: {"tests": 94, "failures": 0, "errors": 0, "skipped": 1, "executed": 93}
+Ejecuciones repetidas no se suman como tests distintos.
+JAR SHA-256: 2065f31b89157ee20c63c753d1be7bcf51de76c0eb7ddb43002d5bd2ceac4a8c
+No se habilitaron tests PostgreSQL ni migraciones. Mocks no certifican SQL, roles, locks ni atomicidad real. Sin contenedores/brokers.
