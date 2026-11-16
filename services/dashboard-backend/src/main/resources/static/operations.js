@@ -75,20 +75,41 @@ class PendingOperations {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: operation.body,
       });
       const result = response.data;
-      if (response.ok && result.event_id === JSON.parse(operation.body).event_id) {
+      if (response.ok && result?.event_id === JSON.parse(operation.body).event_id) {
         this.save({ ...operation, phase: 'accepted', uncertain: true,
           message: 'Kafka confirmó el envío. Esperando su procesamiento en el marcador.' });
       } else {
         const definite = !operation.uncertain && [400, 401, 403, 404, 405, 415, 422].includes(response.status);
         this.save({ ...operation, phase: definite ? 'rejected' : 'uncertain', uncertain: !definite,
           message: definite ? 'Solicitud rechazada. Revisa el evento antes de iniciar otra operación.'
-            : 'Resultado incierto. Consulta o reintenta la misma operación; no generes otro evento.' });
+            : this.recoveryMessage(response, operation) });
       }
     } catch {
       this.save({ ...operation, phase: 'uncertain', uncertain: true,
         message: 'No se pudo confirmar la respuesta. El evento puede haberse publicado; conserva esta operación.' });
     }
     return true;
+  }
+
+  recoveryMessage(response, operation) {
+    const code = response.data?.code;
+    const preparation = response.status === 500 && code === 'EVENT_PREPARATION_FAILED';
+    const unconfirmed = response.status === 503 && code === 'PUBLICATION_UNCONFIRMED';
+    if (preparation || unconfirmed) {
+      const returned = response.data.event;
+      const original = JSON.parse(operation.body);
+      if (returned != null && (typeof returned !== 'object' || Array.isArray(returned)
+          || returned.match_id !== operation.matchId
+          || ['event_id', 'timestamp', 'event_type', 'team_id', 'minute', 'reference_event_id']
+            .some(field => returned[field] !== (original[field] ?? null)))) {
+        return 'El productor devolvió un evento incompatible. Se conserva la operación original sin cambiar su identidad.';
+      }
+      // Never display arbitrary upstream error text or replace the saved wire body.
+      return preparation
+        ? 'No se pudo preparar el evento. Se conserva la operación; revisa la causa antes de reintentar el mismo evento.'
+        : 'Publicación no confirmada. Se conserva la operación; consulta o reintenta el mismo evento sin cambiar su identidad.';
+    }
+    return 'Resultado incierto. Consulta o reintenta la misma operación; no generes otro evento.';
   }
 
   async checkProcessed(operation) {

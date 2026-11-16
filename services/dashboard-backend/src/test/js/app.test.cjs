@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '../../main/resources/static');
 
 // Executes the real scripts and button handlers with a minimal DOM and simulated HTTP.
 // This is not a browser or broker integration test.
-async function page({ enabled = true, pending = null, hold = false, catalogFails = 0 } = {}) {
+async function page({ enabled = true, pending = null, hold = false, catalogFails = 0, publicationStatus = 202 } = {}) {
   class Element {
     constructor() { this.value = ''; this.disabled = false; this.textContent = ''; this.children = []; this.classList = { toggle() {}, add() {}, remove() {} }; }
     replaceChildren() { this.children = []; this.value = ''; }
@@ -39,6 +39,10 @@ async function page({ enabled = true, pending = null, hold = false, catalogFails
       if (init.method === 'POST') {
         assert.equal(JSON.parse(storage.get('live-jvg.pending-operation.v1')).body, init.body);
         const event = JSON.parse(init.body);
+        if (publicationStatus !== 202) return { ok: false, status: publicationStatus, json: async () => ({
+          code: publicationStatus === 500 ? 'EVENT_PREPARATION_FAILED' : 'PUBLICATION_UNCONFIRMED',
+          error: 'private-exception-details', event: { ...event, match_id: 'm' },
+        }) };
         const finish = () => {
           state.events = [{ ...event, home_score: 1, away_score: 0, updated_at: event.timestamp }];
           state.home_score = 1; state.last_event_id = event.event_id;
@@ -108,3 +112,19 @@ test('catalog recovery retains the pending body and never publishes during recov
  assert.equal(ui.storage.get('live-jvg.pending-operation.v1'),before);
  assert.equal(ui.uuids(),0);assert.equal(ui.requests.filter(r=>r.method==='POST').length,0);
 });
+
+for (const publicationStatus of [500, 503]) {
+  test(`real button displays safe HTTP ${publicationStatus} feedback while retaining the original operation`, async t => {
+    const ui = await page({ publicationStatus }); t.after(ui.dispose);
+    await ui.elements.get('goal-home').onclick();
+    const saved = JSON.parse(ui.storage.get('live-jvg.pending-operation.v1'));
+    assert.equal(saved.phase, 'uncertain'); assert.equal(saved.uncertain, true);
+    assert.equal(JSON.parse(saved.body).event_id, 'ui-1'); assert.equal(ui.uuids(), 1);
+    assert.equal(ui.requests.filter(request => request.method === 'POST').length, 1);
+    assert.match(ui.elements.get('feedback').textContent, publicationStatus === 500 ? /preparar/ : /no confirmada/);
+    assert.doesNotMatch(ui.elements.get('feedback').textContent, /private-exception-details|Kafka confirmó/);
+    assert.match(ui.elements.get('pending-operation').textContent, /ui-1/);
+    assert.equal(ui.elements.get('goal-home').disabled, true);
+    assert.equal(ui.elements.get('retry-operation').disabled, false);
+  });
+}

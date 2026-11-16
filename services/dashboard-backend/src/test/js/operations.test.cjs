@@ -171,3 +171,52 @@ test('forgetting an uncertain operation requires explicit confirmation and does 
   await h.instance.discard(warning => { assert.match(warning, /duplicar/); return true; });
   assert.equal(h.instance.read(), null); assert.equal(h.requests.length, 1); assert.equal(h.ids(), 1);
 });
+
+for (const status of [500, 503]) {
+  test(`HTTP ${status} recovery retains the saved identity and never confirms or automatically republishes`, async () => {
+    const h = harness({ fetch: async (url, init) => init.method !== 'POST' ? response(200, { processed: false })
+      : response(status, { code: status === 500 ? 'EVENT_PREPARATION_FAILED' : 'PUBLICATION_UNCONFIRMED',
+        error: 'private-stack-trace', event: { ...JSON.parse(init.body), match_id: 'm' } }) });
+    await h.instance.begin('m', fields);
+    const saved = h.instance.read();
+    assert.equal(saved.phase, 'uncertain'); assert.equal(saved.uncertain, true);
+    assert.doesNotMatch(saved.message, /private-stack-trace|Kafka confirmó/);
+    assert.match(saved.message, status === 500 ? /preparar/ : /no confirmada/);
+    assert.equal(h.requests.length, 1);
+    const reloaded = harness({ storage: h.storage, locks: h.coordinator });
+    assert.equal(reloaded.instance.read().body, saved.body);
+    assert.equal(reloaded.requests.length, 0); assert.equal(reloaded.ids(), 0);
+    await h.instance.retry();
+    assert.deepEqual(h.requests.filter(r => r.method === 'POST').map(r => r.body), [saved.body, saved.body]);
+    assert.equal(h.ids(), 1); assert.equal(h.timestamps(), 1);
+  });
+}
+test('409 stays pending without inventing a definitive conflict policy', async () => {
+  const h = harness({ fetch: async () => response(409, { error: 'private-conflict', event: { event_id: 'other' } }) });
+  await h.instance.begin('m', fields);
+  assert.equal(h.instance.read().phase, 'uncertain'); assert.equal(h.requests.length, 1);
+  assert.equal(JSON.parse(h.instance.read().body).event_id, 'id-1');
+  assert.doesNotMatch(h.instance.read().message, /private-conflict/);
+});
+test('a lost HTTP body preserves the operation without manufacturing recovered data', async () => {
+  const h = harness({ fetch: async () => ({ ok: false, status: 503, json: async () => { throw new Error('private-body-error'); } }) });
+  await h.instance.begin('m', fields);
+  assert.equal(h.instance.read().phase, 'uncertain'); assert.equal(h.ids(), 1);
+  assert.doesNotMatch(h.instance.read().message, /private-body-error/); assert.equal(h.requests.length, 1);
+});
+test('202 with an incompatible ID never overwrites the saved operation or confirms acceptance', async () => {
+  const h = harness({ fetch: async () => response(202, { event_id: 'other' }) });
+  await h.instance.begin('m', fields);
+  assert.equal(h.instance.read().phase, 'uncertain');
+  assert.equal(JSON.parse(h.instance.read().body).event_id, 'id-1');
+  assert.equal(h.ids(), 1); assert.equal(h.timestamps(), 1); assert.equal(h.requests.length, 1);
+});
+for (const field of ['event_id', 'timestamp', 'minute', 'match_id']) {
+  test(`incompatible recovery ${field} is detected without replacing the original body`, async () => {
+    const h = harness({ fetch: async (url, init) => response(503, { code: 'PUBLICATION_UNCONFIRMED', error: 'private-error',
+      event: { ...JSON.parse(init.body), match_id: 'm', [field]: field === 'minute' ? 11 : 'other' } }) });
+    await h.instance.begin('m', fields);
+    assert.match(h.instance.read().message, /incompatible/); assert.equal(h.instance.read().phase, 'uncertain');
+    assert.equal(JSON.parse(h.instance.read().body).event_id, 'id-1'); assert.equal(h.requests.length, 1);
+  });
+}

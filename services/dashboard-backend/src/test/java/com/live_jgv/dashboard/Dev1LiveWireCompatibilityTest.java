@@ -32,6 +32,7 @@ class Dev1LiveWireCompatibilityTest {
             try (var paths = Files.walk(dir)) { paths.filter(p -> p.toString().endsWith(".java")).forEach(p -> files.add(p.toString())); }
         }
         files.add(producer.resolve("application/service/OutgoingReferencePolicy.java").toString());
+        files.add(producer.resolve("application/service/EventPreparationException.java").toString());
         files.add(producer.resolve("infrastructure/kafka/KafkaMatchEventPublisher.java").toString());
         files.add(state.resolve("application/service/MatchStateService.java").toString());
         files.add(state.resolve("infrastructure/memory/InMemoryMatchStateStore.java").toString());

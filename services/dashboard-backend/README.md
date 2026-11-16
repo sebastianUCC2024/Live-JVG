@@ -2,6 +2,9 @@
 >
 > Para ejecutar la implementación original del equipo sin PostgreSQL, usa `SPRING_PROFILES_ACTIVE=memory` con los comandos de este documento. Ese perfil conserva su consumidor, DLQ y proyección en memoria; su estado es volátil. No actives este perfil en el contenedor MVP que requiere persistencia.
 
+Compatibilidad HTTP del PR #18, recuperación de identidad y análisis de lectura
+VAR V2: [Fase 5D](docs/phase5d-publication-recovery-and-var-readiness.md).
+
 ## Documentación original del modo memory — DEV 2
 
 Java 17, Spring Boot 3.5.7 y Maven. Recibe snapshots de marcador por RabbitMQ,
