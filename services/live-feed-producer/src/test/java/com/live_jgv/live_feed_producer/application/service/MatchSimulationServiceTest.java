@@ -4,11 +4,48 @@ import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 class MatchSimulationServiceTest{
+ @ParameterizedTest @NullAndEmptySource @ValueSource(strings={" ", "\t\n"})
+ void rejectsInvalidConfiguredMatchId(String matchId){
+  var publisher=mock(MatchEventPublisher.class);
+  assertThrows(IllegalArgumentException.class,()->new MatchSimulationService(publisher,matchId,"h","a"));
+  verifyNoInteractions(publisher);
+ }
+ @ParameterizedTest @NullAndEmptySource @ValueSource(strings={" ", "\t\n"})
+ void rejectsInvalidConfiguredHomeTeamId(String home){
+  var publisher=mock(MatchEventPublisher.class);
+  assertThrows(IllegalArgumentException.class,()->new MatchSimulationService(publisher,"m",home,"a"));
+  verifyNoInteractions(publisher);
+ }
+ @ParameterizedTest @NullAndEmptySource @ValueSource(strings={" ", "\t\n"})
+ void rejectsInvalidConfiguredAwayTeamId(String away){
+  var publisher=mock(MatchEventPublisher.class);
+  assertThrows(IllegalArgumentException.class,()->new MatchSimulationService(publisher,"m","h",away));
+  verifyNoInteractions(publisher);
+ }
+ @Test void rejectsIdenticalConfiguredTeams(){
+  var publisher=mock(MatchEventPublisher.class);
+  assertThrows(IllegalArgumentException.class,()->new MatchSimulationService(publisher,"m","same","same"));
+  verifyNoInteractions(publisher);
+ }
+ @Test void validConfigurationPublishesForEitherConfiguredTeam(){
+  var publisher=mock(MatchEventPublisher.class);
+  when(publisher.publish(any())).thenReturn(CompletableFuture.completedFuture(null));
+  var service=assertDoesNotThrow(()->new MatchSimulationService(publisher,"m","h","a"));
+  verifyNoInteractions(publisher);
+  for(var team:new String[]{"h","a"}){
+   var expected=new MatchEvent("goal-"+team,"m",EventType.GOAL,team,1,Instant.EPOCH,null);
+   assertEquals(expected,service.publish("m",expected.eventId(),EventType.GOAL,team,1,Instant.EPOCH,null).join());
+   verify(publisher).publish(expected);
+  }
+  verifyNoMoreInteractions(publisher);
+ }
  @ParameterizedTest @EnumSource(EventType.class)
  void rejectsBlankReferencesBeforePublication(EventType type){
   var publisher=mock(MatchEventPublisher.class);var service=new MatchSimulationService(publisher,"m","h","a");
