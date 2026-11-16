@@ -242,4 +242,18 @@ describe('Polling incremental aislado del marcador', () => {
     expect(new URL(fetcher.mock.calls[1][0]).searchParams.has('after')).toBe(false)
     expect(result.current.items.map(item => item.source_event_id)).toEqual(['event-2'])
   })
+  it('conserva una alerta atrasada según el cursor recibido sin reordenar por fecha ni recalcular el estado VAR', async () => {
+    const latest = liveAlert(1, { alert_type: 'VAR_CHECK', reference_event_id: 'goal-1', var_status: 'IN_PROGRESS' })
+    const delayed = liveAlert(2, { alert_type: 'GOAL_ANNULLED', reference_event_id: 'goal-1', var_status: 'IN_PROGRESS',
+      source_updated_at: '2026-11-15T15:00:00Z', created_at: '2026-11-15T15:00:01Z', home_score: 0 })
+    const fetcher = vi.fn().mockResolvedValueOnce(jsonResponse(alertPage([latest], 'committed-1')))
+      .mockResolvedValueOnce(jsonResponse(alertPage([latest, delayed], 'committed-2')))
+    vi.stubGlobal('fetch', fetcher)
+    const { result } = renderHook(() => useNotificationAlerts('match-001', origin))
+    await flush(); await advance(ALERT_POLL_MS)
+    expect(result.current.items).toEqual([latest, delayed])
+    expect(new URL(fetcher.mock.calls[1][0]).searchParams.get('after')).toBe('committed-1')
+    expect(result.current.items[1].var_status).toBe('IN_PROGRESS')
+    expect(result.current.items[1].home_score).toBe(0)
+  })
 })

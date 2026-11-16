@@ -28,4 +28,18 @@ class NotificationPolicyTest {
     @Test void annulmentRequiresReference() {
         assertThrows(InvalidUpdateException.class,()->new ScoreUpdate("m","e",ScoreUpdate.EventType.GOAL_ANNULLED,0,0,ScoreUpdate.VarStatus.CLEAR,Instant.EPOCH,null));
     }
+    @ParameterizedTest @EnumSource(value=ScoreUpdate.EventType.class,names={"GOAL","GOAL_ANNULLED"})
+    void pendingVarUsesTheAuthoritativeAggregateWithoutClaimingConfirmation(ScoreUpdate.EventType type) {
+        var update=new ScoreUpdate("m","event-1",type,1,0,ScoreUpdate.VarStatus.IN_PROGRESS,
+                Instant.EPOCH,type==ScoreUpdate.EventType.GOAL_ANNULLED?"goal-1":null);
+        var alert=new NotificationPolicy().create(update,Instant.EPOCH).orElseThrow();
+        assertEquals(update,alert.source());
+        assertTrue(alert.content().message().contains("Revisión VAR en curso"));
+        assertTrue(alert.content().message().contains("Marcador actualizado: 1–0"));
+        assertFalse(alert.content().message().contains("confirmado"));
+    }
+    @Test void clearGoalRetainsTheExistingConfirmationText() {
+        assertEquals("Marcador confirmado: 1–0.",new NotificationPolicy()
+                .create(Fixtures.update(ScoreUpdate.EventType.GOAL),Instant.EPOCH).orElseThrow().content().message());
+    }
 }

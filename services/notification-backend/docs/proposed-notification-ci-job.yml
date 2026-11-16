@@ -1,0 +1,42 @@
+# REVIEW ARTIFACT ONLY. DEV 1 must add/adapt this job in the shared workflow.
+# This file is not under .github/workflows and cannot activate a workflow.
+notification:
+  name: Java 17 / notification-backend local tests
+  runs-on: ubuntu-24.04
+  timeout-minutes: 15
+  permissions:
+    contents: read
+  env:
+    NOTIFICATION_STORAGE_ENABLED: 'false'
+    NOTIFICATION_MESSAGING_ENABLED: 'false'
+    SPRING_FLYWAY_ENABLED: 'false'
+  steps:
+    # Same major actions as the existing validation.yml; review/pin exact SHAs before adoption.
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '17'
+        cache: maven
+        cache-dependency-path: services/notification-backend/pom.xml
+    - name: Verify without external infrastructure
+      shell: bash
+      run: >-
+        mvn -B -ntp -f services/notification-backend/pom.xml
+        '-P!notification-integration'
+        -Dnotification.it.profile.enabled=false -DskipITs=true
+        -Dnotification.storage.enabled=false -Dnotification.messaging.enabled=false
+        -Dspring.flyway.enabled=false -Dspring.sql.init.mode=never
+        -Dspring.rabbitmq.dynamic=false -Dspring.rabbitmq.listener.simple.auto-startup=false
+        -Dmanagement.health.rabbit.enabled=false verify
+    - name: Preserve local test reports
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: notification-local-tests-${{ github.run_id }}-${{ github.run_attempt }}
+        path: services/notification-backend/target/surefire-reports/
+        if-no-files-found: error
+        include-hidden-files: false
+        retention-days: 14
