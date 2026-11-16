@@ -15,6 +15,8 @@ import java.util.HashMap;
 
 @Configuration(proxyBeanMethods=false)
 public class SuspensionConfiguration {
+    @Bean @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(LeaseSourceVerifier.class)
+    LeaseSourceVerifier unavailableLeaseSourceVerifier(){return new UnavailableLeaseSourceVerifier();}
     @Bean EventDecoder eventDecoder() { return new JsonEventDecoder(); }
     @Bean Clock suspensionClock() { return Clock.systemUTC(); }
     @Bean SuspensionStore suspensionStore(JdbcTemplate jdbc,PlatformTransactionManager manager,Clock clock) {

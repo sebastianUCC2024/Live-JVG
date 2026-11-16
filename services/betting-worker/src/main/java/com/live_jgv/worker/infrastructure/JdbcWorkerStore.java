@@ -32,7 +32,7 @@ public final class JdbcWorkerStore implements WorkerStore {
                 var prior=jdbc.queryForMap("SELECT * FROM betting_worker.command_inbox WHERE command_id=? FOR UPDATE",c.commandId());
                 if(!decoded.canonicalPayload().equals(prior.get("canonical_payload"))){audit(message,c.commandId(),"COMMAND_ID_REUSED");return Outcome.IDENTITY_CONFLICT;}
                 if("PENDING".equals(prior.get("outcome")))throw new IllegalStateException("Incomplete command receipt");
-                jdbc.update("UPDATE betting_worker.command_inbox SET delivery_attempts=delivery_attempts+1 WHERE command_id=?",c.commandId());
+                persistOne("UPDATE betting_worker.command_inbox SET delivery_attempts=delivery_attempts+1 WHERE command_id=?",c.commandId());
                 return "IDENTITY_CONFLICT".equals(prior.get("outcome"))?Outcome.IDENTITY_CONFLICT:Outcome.DUPLICATE;
             }
             var session=atomic.lock(c);

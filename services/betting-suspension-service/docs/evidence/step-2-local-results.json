@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-16",
+  "branch": "integration/Valeria-mvp-dev",
+  "head": "77c219f76ac3919abf9c039882d0eb11f23c2312",
+  "external_infrastructure_executed": false,
+  "atomicity_certified": false,
+  "modules": {
+    "historical-archiver": {
+      "results": {
+        "tests": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 68
+      },
+      "test_java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.archiver.integration.PreparedPostgresIntegrationTest.v1UpgradePreservesEvidenceAndV2SupportsMatchScopedIdentityAndRecovery"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-step2/historical-archiver-test.log",
+          "sha256": "18db9d2a4c9b2dd00e6b7761eb5782fca22a9e4386b9ac8ce613b55c057273c7",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-step2/historical-archiver-package.log",
+          "sha256": "6132726654c1cb93a27b6c31115ebc39ee0823e5a9d61bff42ba7fb826da5632",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml package"
+        }
+      }
+    },
+    "betting-suspension-service": {
+      "results": {
+        "tests": 106,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 105
+      },
+      "test_java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.betting.integration.PreparedPostgresIntegrationTest.stateReviewClosureDedupAndOutboxSurviveNewAdapter"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-step2/betting-suspension-service-test.log",
+          "sha256": "67c5337ad3630b23b64bd09598c2d93801e6de0546432cd81b510843cbf06e64",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-step2/betting-suspension-service-package.log",
+          "sha256": "3e7f436026822701978e7dc040d65582fadcf9e65d34b9eceb20c815ece6ff45",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml package"
+        }
+      }
+    },
+    "betting-worker": {
+      "results": {
+        "tests": 107,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 12,
+        "passed": 95
+      },
+      "test_java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.deadlockVictimCanRetryInANewTransaction",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.unknownAndExpiredOpenCannotAccept",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.unavailableAuthorityCannotLeaveCommittedOperation",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.directAcceptedWithoutCurrentTransactionGrantFailsAtCommit",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.leaseExpiringAfterGrantRollsBackAtDeferredCommitCheck",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.rollbackAfterAuthorizationRemovesOperationAndGrantTogether",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.grantCannotCommitSeparatelyFromItsAcceptance",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.versionMismatchAndRestartCannotReuseOldPermission",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.twoConcurrentOperationsSerializeAndDuplicatesRemainUnique",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.suspensionBeforeAuthorizationBlocksAfterWaitingForItsCommit",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.authorizationBeforeSuspensionKeepsSourceLockUntilOperationCommit",
+        "com.live_jgv.worker.integration.PreparedPostgresIntegrationTest.blockedOperationsAndSuspensionFenceSurviveNewAdapterAndDuplicate"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-step2/betting-worker-test.log",
+          "sha256": "9bf7a5eef8c40de762d8b2de8154ecf2af681af2974a5f9941b585277dc0cddd",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-step2/betting-worker-package.log",
+          "sha256": "10dccd97e7696ea75fd2ed5d3ac30c364b709d332b8531254dfff1945878db6d",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml package"
+        }
+      }
+    }
+  },
+  "initial_failure": {
+    "log": "/private/tmp/live-jvg-step2-suspension-test.log",
+    "sha256": "c53f50fc694e58a7f994d0af7c0fe4aba4af2fef06dd27a2c7ef2bfaf27b9f3f",
+    "reason": "CapturedSequenceContractTest expected 1 pending review; new conservative GOAL holds produce 3. Assertion updated to verify the two original GOAL identities and VAR identity; fixtures unchanged."
+  }
+}

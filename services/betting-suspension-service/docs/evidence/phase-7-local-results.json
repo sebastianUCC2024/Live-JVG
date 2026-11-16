@@ -1,0 +1,106 @@
+{
+  "date": "2026-11-16",
+  "branch": "integration/Valeria-mvp-dev",
+  "head": "3e89b862b2572922d00b21f7d9f2142cf28c9c5a",
+  "external_tests_executed": false,
+  "modules": {
+    "historical-archiver": {
+      "results": {
+        "tests": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 68
+      },
+      "test_java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.archiver.integration.PreparedPostgresIntegrationTest.v1UpgradePreservesEvidenceAndV2SupportsMatchScopedIdentityAndRecovery"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-phase7/historical-archiver-test.log",
+          "sha256": "c5addb0ac56fb9d60c5b0c1101521348ebd46bb093bdf7151512e61f57881a46",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-phase7/historical-archiver-package.log",
+          "sha256": "233371eaa42305ae114e9d6f8d337632b9237c1a54b112b1d19598cfd6d5a45c",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml package"
+        }
+      }
+    },
+    "betting-suspension-service": {
+      "results": {
+        "tests": 94,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 93
+      },
+      "test_java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.betting.integration.PreparedPostgresIntegrationTest.stateReviewClosureDedupAndOutboxSurviveNewAdapter"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-phase7/betting-suspension-service-test.log",
+          "sha256": "acb4ba515fc09670eb2980755965a5c5699c34600475958367b18d8be234aa8d",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-phase7/betting-suspension-service-package.log",
+          "sha256": "4eb2f517ccdcb18dcd480e96f9b9a005c64dccccee33f99d884afdf1e58107b2",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml package"
+        }
+      }
+    },
+    "betting-worker": {
+      "results": {
+        "tests": 98,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 12,
+        "passed": 86
+      },
+      "test_java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.deadlockVictimCanRetryInANewTransaction",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.unknownAndExpiredOpenCannotAccept",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.unavailableAuthorityCannotLeaveCommittedOperation",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.directAcceptedWithoutCurrentTransactionGrantFailsAtCommit",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.leaseExpiringAfterGrantRollsBackAtDeferredCommitCheck",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.rollbackAfterAuthorizationRemovesOperationAndGrantTogether",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.grantCannotCommitSeparatelyFromItsAcceptance",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.versionMismatchAndRestartCannotReuseOldPermission",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.twoConcurrentOperationsSerializeAndDuplicatesRemainUnique",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.suspensionBeforeAuthorizationBlocksAfterWaitingForItsCommit",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.authorizationBeforeSuspensionKeepsSourceLockUntilOperationCommit",
+        "com.live_jgv.worker.integration.PreparedPostgresIntegrationTest.blockedOperationsAndSuspensionFenceSurviveNewAdapterAndDuplicate"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-phase7/betting-worker-test.log",
+          "sha256": "bfa0918d5f567b92cf2a7a60a3dd1f261ec54d3c0469878fb4ebc3a883fe502a",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-phase7/betting-worker-package.log",
+          "sha256": "2f02ae8a5aaaf2b85226228a8eff2f8f8d78341bb6d378f16abff7b7ff8dce0f",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml package"
+        }
+      }
+    }
+  }
+}
