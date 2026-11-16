@@ -56,6 +56,22 @@ class ScoreUpdateListenerTest {
         verify(store,times(2)).accept(any(),any()); verify(sleeper).sleep(1); verify(channel).basicAck(42,false);
         verifyNoInteractions(template);
     }
+    @Test void permanentDatabaseErrorTransfersToDlqWithoutRetry() throws Exception {
+        when(store.accept(any(),any())).thenThrow(new org.springframework.dao.DataIntegrityViolationException("constraint"));
+        listener.receive(message(Fixtures.JSON),channel);
+        verify(store).accept(any(),any()); verifyNoInteractions(sleeper);
+        var order=inOrder(template,channel);
+        order.verify(template).send(anyString(),eq("rejected"),any(Message.class),any(CorrelationData.class));
+        order.verify(channel).basicAck(42,false);
+    }
+    @Test void unknownProcessingErrorIsRetriedAndThenTransferredBeforeAck() throws Exception {
+        when(store.accept(any(),any())).thenThrow(new IllegalStateException("unknown"));
+        listener.receive(message(Fixtures.JSON),channel);
+        verify(store,times(3)).accept(any(),any()); verify(sleeper).sleep(1); verify(sleeper).sleep(2);
+        var order=inOrder(template,channel);
+        order.verify(template).send(anyString(),eq("rejected"),any(Message.class),any(CorrelationData.class));
+        order.verify(channel).basicAck(42,false);
+    }
     @Test void exhaustedRetriesTransferBeforeAck() throws Exception {
         when(store.accept(any(),any())).thenThrow(new DataAccessResourceFailureException("temporary"));
         listener.receive(message(Fixtures.JSON),channel);

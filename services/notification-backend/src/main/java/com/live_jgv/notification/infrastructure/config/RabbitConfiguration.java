@@ -3,7 +3,9 @@ package com.live_jgv.notification.infrastructure.config;
 import com.live_jgv.notification.application.ProcessScoreUpdateService;
 import com.live_jgv.notification.infrastructure.amqp.*;
 import com.live_jgv.notification.infrastructure.json.ScoreUpdateCodec;
+import com.live_jgv.notification.infrastructure.health.ConsumerReadiness;
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
@@ -19,6 +21,14 @@ import org.springframework.context.annotation.*;
 @EnableRabbit
 @ConditionalOnProperty(name="notification.messaging.enabled", havingValue="true")
 public class RabbitConfiguration {
+    /** Byte budget is separate from the existing explicit-ID allowlist. */
+    public static String scoreRoutingKey(String matchId) {
+        if (matchId == null || matchId.isBlank()) throw new IllegalArgumentException("Match ID required");
+        String key="score."+matchId;
+        if (key.getBytes(StandardCharsets.UTF_8).length>255)
+            throw new IllegalArgumentException("Score routing key exceeds 255 UTF-8 bytes");
+        return key;
+    }
     public static Declarables topology(String exchange, String queue, String matchIds) {
         if (!queue.startsWith("notification.") || !queue.matches("[A-Za-z0-9_.-]{1,200}"))
             throw new IllegalArgumentException("A notification-owned queue is required");
@@ -29,8 +39,9 @@ public class RabbitConfiguration {
         declarations.add(topic); declarations.add(input);
         for (String match : new LinkedHashSet<>(Arrays.asList(matchIds.split(",", -1)))) {
             match = match.trim();
+            String routingKey=scoreRoutingKey(match);
             if (!match.matches("[A-Za-z0-9_.-]+")) throw new IllegalArgumentException("Explicit safe match IDs required");
-            declarations.add(BindingBuilder.bind(input).to(topic).with("score."+match));
+            declarations.add(BindingBuilder.bind(input).to(topic).with(routingKey));
         }
         String dlx=queue+".dlx", dlq=queue+".dlq";
         declarations.add(new DirectExchange(dlx,true,false));
@@ -44,7 +55,14 @@ public class RabbitConfiguration {
         if (!storage) throw new IllegalArgumentException("Durable storage must be enabled before messaging");
         return topology(exchange,queue,ids);
     }
-    @Bean RabbitAdmin notificationAdmin(ConnectionFactory connectionFactory) { return new RabbitAdmin(connectionFactory); }
+    @Bean RabbitAdmin notificationAdmin(ConnectionFactory connectionFactory, ConsumerReadiness consumer) {
+        connectionFactory.addConnectionListener(consumer);
+        // Spring propagates listeners to its publisher factory. Publisher-only
+        // connections must not invalidate an otherwise healthy input consumer.
+        var publisher=connectionFactory.getPublisherConnectionFactory();
+        if (publisher!=null && publisher!=connectionFactory) publisher.removeConnectionListener(consumer);
+        return new RabbitAdmin(connectionFactory);
+    }
     @Bean public RabbitTemplate notificationRabbitTemplate(ConnectionFactory connectionFactory) {
         var publisher=connectionFactory.getPublisherConnectionFactory();
         if (publisher==null) publisher=connectionFactory;
@@ -63,9 +81,10 @@ public class RabbitConfiguration {
         return new ConfirmedDlqRecovery(template,queue+".dlx",timeout);
     }
     @Bean ScoreUpdateListener notificationListener(ProcessScoreUpdateService processor, ScoreUpdateCodec codec,
-            ConfirmedDlqRecovery recovery, RabbitListenerEndpointRegistry registry,
+            ConfirmedDlqRecovery recovery, RabbitListenerEndpointRegistry registry, ConsumerReadiness consumer,
             @Value("${notification.messaging.max-attempts:3}") int attempts,@Value("${notification.messaging.retry-interval-ms:1000}") long interval) {
         return new ScoreUpdateListener(processor,codec,recovery,()->{
+            consumer.invalidate();
             var container=registry.getListenerContainer("notificationScores");
             if (container != null) container.stop(()->{});
         },Thread::sleep,attempts,interval);

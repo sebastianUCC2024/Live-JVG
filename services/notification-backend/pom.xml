@@ -62,11 +62,33 @@
 
 	<build>
 		<plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId>
+                <configuration><excludedGroups>external-integration</excludedGroups></configuration>
+            </plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
+    <profiles>
+        <profile>
+            <id>notification-integration</id>
+            <build><plugins><plugin>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-failsafe-plugin</artifactId><version>3.5.6</version>
+                <configuration>
+                    <includes><include>**/*IT.java</include></includes>
+                    <groups>external-integration</groups><failIfNoTests>true</failIfNoTests>
+                    <systemPropertyVariables>
+                        <notification.it.profile.enabled>true</notification.it.profile.enabled>
+                        <junit.jupiter.execution.parallel.enabled>false</junit.jupiter.execution.parallel.enabled>
+                        <logback.configurationFile>${project.basedir}/src/test/resources/logback-integration.xml</logback.configurationFile>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions><execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
+            </plugin></plugins></build>
+        </profile>
+    </profiles>
 
 </project>

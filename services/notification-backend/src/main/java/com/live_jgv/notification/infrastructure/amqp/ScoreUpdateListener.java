@@ -20,6 +20,7 @@ public final class ScoreUpdateListener {
     private final Sleeper sleeper;
     private final int attempts;
     private final long interval;
+    private final ProcessingFailurePolicy failurePolicy=new ProcessingFailurePolicy();
     public ScoreUpdateListener(ProcessScoreUpdateService processor, ScoreUpdateCodec codec,
             ConfirmedDlqRecovery recovery, Runnable stop, Sleeper sleeper, int attempts, long interval) {
         if (attempts < 1 || attempts > 10 || interval < 1 || interval > 10000) throw new IllegalArgumentException("Invalid bounded retry settings");
@@ -41,9 +42,9 @@ public final class ScoreUpdateListener {
                     LOG.info("Notification input processed; result={}, matchId={}, eventId={}",result,update.matchId(),update.eventId());
                     break;
                 }
-                catch (IllegalArgumentException permanent) { throw permanent; }
-                catch (RuntimeException transientFailure) {
-                    if (attempt >= attempts) throw transientFailure;
+                catch (RuntimeException processingFailure) {
+                    if (!failurePolicy.retry(processingFailure,attempt,attempts)) throw processingFailure;
+                    LOG.warn("Notification processing retry; category={}, attempt={}",failurePolicy.classify(processingFailure),attempt);
                     sleeper.sleep(Math.min(30000, interval * (1L << (attempt - 1))));
                 }
             }

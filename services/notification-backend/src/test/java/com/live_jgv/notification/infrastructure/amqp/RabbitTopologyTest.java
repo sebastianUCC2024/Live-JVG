@@ -6,6 +6,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.*;
 
 class RabbitTopologyTest {
+    @Test void asciiRoutingKeysIncludePrefixIn255ByteLimit() {
+        assertDoesNotThrow(()->RabbitConfiguration.topology("live_updates","notification.scores","a".repeat(249)));
+        assertThrows(IllegalArgumentException.class,()->RabbitConfiguration.topology("live_updates","notification.scores","a".repeat(250)));
+    }
+    @Test void byteBudgetHandlesMultibyteTextWithoutBroadeningIdAllowlist() {
+        assertEquals(255,RabbitConfiguration.scoreRoutingKey("é".repeat(124)+"a").getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+        assertThrows(IllegalArgumentException.class,()->RabbitConfiguration.scoreRoutingKey("é".repeat(125)));
+        assertEquals(254,RabbitConfiguration.scoreRoutingKey("😀".repeat(62)).getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+        assertThrows(IllegalArgumentException.class,()->RabbitConfiguration.scoreRoutingKey("😀".repeat(63)));
+        // Existing topology policy intentionally still rejects non-ASCII identifiers.
+        assertThrows(IllegalArgumentException.class,()->RabbitConfiguration.topology("live_updates","notification.scores","é"));
+    }
     @Test void queueIsIndependentDurableAndBoundToExplicitMatch() {
         var declarations=RabbitConfiguration.topology("live_updates","notification.score-updates","match-001");
         var queues=declarations.getDeclarablesByType(Queue.class);
