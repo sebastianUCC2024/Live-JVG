@@ -1,10 +1,13 @@
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LiveDashboardPage } from './LiveDashboardPage'
 import { snapshot, stompHarness } from '../test/stompHarness'
 
 describe('Dashboard conectado', () => {
+  // These original tests exercise memory mode; REST is deliberately unavailable.
+  beforeEach(() => vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))))
+  afterEach(() => vi.unstubAllGlobals())
   it('muestra marcador, VAR, eventos únicos y estado de conexión', async () => {
     const harness = stompHarness()
     const user = userEvent.setup()

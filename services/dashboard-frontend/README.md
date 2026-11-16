@@ -1,4 +1,4 @@
-> Para conectar este frontend al MVP persistente existente: `VITE_WS_URL=ws://localhost:18080/ws VITE_MATCH_IDS=<match_id_de_/api/matches> npm run dev`. El backend permite los orígenes locales `:5173`. El `match_id` debe coincidir con el catálogo real; el valor predeterminado `match-001` no sustituye el identificador generado del MVP. No se necesitan endpoints nuevos ni cambios en contratos.
+> MVP persistente: configura `VITE_DASHBOARD_ORIGIN=http://127.0.0.1:18080` en `.env.local` y ejecuta `npm.cmd run dev`. React descubre IDs y nombres mediante `/api/matches`. No se necesitan endpoints nuevos ni cambios en contratos. La integración REST/STOMP se describe en [Fase 2 durable](docs/phase2-durable-react.md).
 
 # Live-JVG — Dashboard frontend DEV 2
 
@@ -23,14 +23,22 @@ alcance autorizado, limitaciones y resultados de aceptación local.
 Configurar `.env.local` a partir de `.env.example`, sin versionar credenciales:
 
 ```text
-VITE_WS_URL=ws://127.0.0.1:8081/ws
-VITE_MATCH_IDS=match-001
+VITE_DASHBOARD_ORIGIN=http://127.0.0.1:18080
 ```
 
-La variable opcional VITE_MATCH_METADATA permite etiquetas de equipos aportadas
-por el operador; no son campos del JSON del servidor. Sin ellas se muestra Local
-y Visitante. El formulario permite seguir hasta 20 IDs de partidos. No existe un
-catálogo automático en este cliente React; el backend durable sí ofrece `/api/matches`.
+El catálogo permite seleccionar un partido y utiliza sus nombres reales. El detalle
+REST recupera hasta 30 eventos persistidos; STOMP mantiene el marcador actualizado.
+La selección manual permite seguir hasta 20 IDs y conserva el modo memory, que no
+ofrece catálogo ni historial REST. Para memory usa origen `http://127.0.0.1:8081`
+y los IDs reales mediante `VITE_MATCH_IDS` o el formulario. Sin configuración se
+conserva el fallback histórico a memory 8081. Demostración usa `/?mode=demo` y no
+consulta REST ni abre STOMP.
+
+VITE_MATCH_METADATA aporta etiquetas opcionales para memory; los nombres REST
+tienen prioridad. VITE_WS_URL prevalece sobre VITE_DASHBOARD_ORIGIN y determina
+también el origen HTTP(S) de REST, evitando conectar catálogo y STOMP a servidores
+distintos. Se requiere un endpoint WS(S) terminado en `/ws`, sin credenciales ni
+query. Reinicia Vite después de cambiar `.env.local`.
 
 ## Requisitos y ejecución
 

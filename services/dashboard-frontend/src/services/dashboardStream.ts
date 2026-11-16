@@ -73,7 +73,7 @@ export class SnapshotStore {
     if (seen.size > 10000) seen.delete(seen.values().next().value!)
     this.seen.set(id, seen)
     this.entries = { ...this.entries, [id]: { ...previous, snapshot, recovery: 'ready',
-      events: duplicate ? previous.events : [snapshot, ...previous.events].slice(0, 20) } }
+      events: duplicate ? previous.events : [snapshot, ...previous.events].slice(0, 30) } }
   }
 }
 

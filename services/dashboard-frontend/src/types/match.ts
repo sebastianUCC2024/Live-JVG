@@ -20,7 +20,7 @@ export type SnapshotReply =
   | { available: true; snapshot: MatchSnapshot }
   | { available: false; snapshot: null }
 
-/** Demo-only metadata: the backend does not currently supply teams or minutes. */
+/** Presentation model; live names come from REST, minutes remain demo-only. */
 export interface MatchView {
   snapshot: MatchSnapshot
   home: { name: string; initials: string; color: string }

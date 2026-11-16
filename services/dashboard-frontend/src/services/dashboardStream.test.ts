@@ -128,12 +128,12 @@ describe('STOMP y recuperación', () => {
 })
 
 describe('Aislamiento de partidos', () => {
-  it('conserva snapshots independientes y como máximo veinte eventos visibles', () => {
+  it('conserva snapshots independientes y como máximo treinta eventos visibles', () => {
     const store = new SnapshotStore(initialStreamState(['match-001', 'match-002']).matches)
     store.begin(); store.recover('match-001', null); store.recover('match-002', null)
-    for (let revision = 1; revision <= 25; revision++) store.live('match-001', snapshot({ revision, event_id: `e${revision}` }))
+    for (let revision = 1; revision <= 40; revision++) store.live('match-001', snapshot({ revision, event_id: `e${revision}` }))
     store.live('match-002', snapshot({ match_id: 'match-002', home_score: 7 }))
-    expect(store.matches['match-001'].events).toHaveLength(20)
+    expect(store.matches['match-001'].events).toHaveLength(30)
     expect(store.matches['match-001'].snapshot?.home_score).toBe(0)
     expect(store.matches['match-002'].snapshot?.home_score).toBe(7)
   })
