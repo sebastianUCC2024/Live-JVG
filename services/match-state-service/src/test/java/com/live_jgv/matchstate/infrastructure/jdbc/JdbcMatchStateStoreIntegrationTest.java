@@ -19,6 +19,24 @@ import static org.junit.jupiter.api.Assertions.*;
 @org.junit.jupiter.api.Tag("postgres-integration")
 @org.junit.jupiter.api.extension.ExtendWith(com.live_jgv.test.DurableIntegrationSafety.class)
 class JdbcMatchStateStoreIntegrationTest {
+    @Test void overlappingV1ReviewsRecoverWithoutChangingHistoricalRulesOrScore() {
+        var service = new MatchStateService(store, Clock.fixed(TIME, ZoneOffset.UTC));
+        service.process(event("g", EventType.GOAL, "home", null));
+        service.process(event("v1", EventType.VAR_CHECK, null, "g"));
+        service.process(event("v2", EventType.VAR_CHECK, null, null));
+        var restoredOpen = newStore().load(match).orElseThrow();
+        assertEquals(new Score(1, 0), restoredOpen.state().score());
+        assertEquals(VarStatus.IN_PROGRESS, restoredOpen.state().varStatus());
+        var closure = event("c", EventType.MATCH_CONTINUES, null, "v1");
+        new MatchStateService(newStore()).process(closure);
+        new MatchStateService(newStore()).process(closure);
+        var restoredClosed = newStore().load(match).orElseThrow();
+        assertEquals(4, restoredClosed.revision());
+        assertEquals(new Score(1, 0), restoredClosed.state().score());
+        assertEquals(VarStatus.CLEAR, restoredClosed.state().varStatus());
+        assertEquals(4, count("accepted_event"));
+        assertEquals(4, count("score_outbox"));
+    }
     @Test void twoPostgresPublishersExcludeSameMatchWhileAnotherMatchProgresses() throws Exception {
         var entered = new CountDownLatch(1); var release = new CountDownLatch(1);
         var sends = new java.util.concurrent.atomic.AtomicInteger();

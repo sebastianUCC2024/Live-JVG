@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class JdbcHistoryReplayTest {
     @Test @SuppressWarnings("unchecked")
     void corruptSequencesIdentitiesRevisionsAndRulesStillFailClosed() throws Exception {
-        for (String corruption : java.util.List.of("sequence","identity","revision","rules")) {
+        for (String corruption : java.util.List.of("sequence","identity","revision","rules","unapproved-v2")) {
             var jdbc=mock(JdbcTemplate.class);var manager=mock(PlatformTransactionManager.class);
             when(manager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
             var rows=mock(ResultSet.class);when(rows.next()).thenReturn(true,false);
@@ -24,7 +24,7 @@ class JdbcHistoryReplayTest {
             when(rows.getString("event_id")).thenReturn("g");
             when(rows.getLong("application_seq")).thenReturn(corruption.equals("sequence")?2L:1L);
             when(rows.getLong("revision")).thenReturn(corruption.equals("revision")?2L:1L);
-            when(rows.getInt("rules_version")).thenReturn(corruption.equals("rules")?99:1);
+            when(rows.getInt("rules_version")).thenReturn(corruption.equals("rules")?99:corruption.equals("unapproved-v2")?2:1);
             var mapper=new MessagingConfiguration().messagingObjectMapper();
             when(rows.getString("event_payload")).thenReturn(mapper.writeValueAsString(new MatchEvent(
                     corruption.equals("identity")?"different":"g","m",EventType.GOAL,"h",1,Instant.EPOCH,null)));

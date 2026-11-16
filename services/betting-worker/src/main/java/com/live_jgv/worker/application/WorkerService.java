@@ -6,6 +6,11 @@ import java.util.Optional;
 public final class WorkerService {
     private final WorkerStore store;private final CommandDecoder decoder;
     public WorkerService(WorkerStore store,CommandDecoder decoder){this.store=store;this.decoder=decoder;}
+    /** Internal application entry point; does not publish or enable the provisional Rabbit adapter. */
+    public WorkerStore.Outcome submit(SimulatedCommand command){
+        var input=DomainCommandPreparation.prepare(command);
+        return store.handle(input.message(),input.decoded());
+    }
     public WorkerStore.Outcome receive(TransportMessage message){return store.handle(message,decoder.decode(message));}
     public WorkerStore.Outcome reject(TransportMessage message,String reason){return store.handle(message,DecodedCommand.invalid(reason));}
     public Optional<Operation> find(String id){

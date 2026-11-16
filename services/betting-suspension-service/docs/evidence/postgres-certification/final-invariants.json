@@ -1,0 +1,7 @@
+{
+  "invariants": {
+    "accepted_without_grant": 0,
+    "grant_without_accepted": 0
+  },
+  "container_inspection": "healthy {\"5432/tcp\":[{\"HostIp\":\"127.0.0.1\",\"HostPort\":\"19634\"}]} live-jvg-dev3-pg17-a693ce20-data:/var/lib/postgresql/data"
+}

@@ -13,6 +13,33 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JdbcWorkerStoreTest {
+    @Test void missingDuplicateReceiptUpdateMustRollbackRatherThanAcknowledge(){
+        when(jdbc.update(contains("INSERT INTO betting_worker.command_inbox"),any(Object[].class))).thenReturn(0);
+        when(jdbc.queryForMap(contains("command_inbox"),eq("c"))).thenReturn(Map.of("canonical_payload","canonical","outcome","PROCESSED"));
+        when(jdbc.update(contains("delivery_attempts=delivery_attempts+1"),eq("c"))).thenReturn(0);
+        assertThrows(IllegalStateException.class,()->store.handle(message,decoded));
+        verify(tx).rollback(any());verify(tx,never()).commit(any());verifyNoInteractions(source);
+    }
+    @Test void domainWorkflowPersistsUnknownAndSuspendedAsBlocked(){
+        for(var status:List.of(MarketEvidence.Status.UNKNOWN,MarketEvidence.Status.SUSPENDED)){
+            clearInvocations(jdbc,tx);
+            when(source.fetch("m")).thenReturn(status==MarketEvidence.Status.UNKNOWN?MarketEvidence.unavailable("m"):
+                    new MarketEvidence("m","a","e",1,status,now.minusSeconds(1),now.plusSeconds(3)));
+            assertEquals(WorkerStore.Outcome.PROCESSED,new WorkerService(store,new JsonCommandDecoder()).submit(command));
+            verify(jdbc).update(contains("UPDATE betting_worker.operation SET"),eq("BLOCKED"),anyString(),eq(1L),anyString(),eq("o"),eq(0L));
+            verify(tx).commit(any());
+        }
+    }
+    @Test void expiredDomainCommandIsPersistedRejected(){
+        var expired=new SimulatedCommand("c","o","m","sim-user",now.minusSeconds(301));
+        new WorkerService(store,new JsonCommandDecoder()).submit(expired);
+        verify(jdbc).update(contains("UPDATE betting_worker.operation SET"),eq("REJECTED"),eq("COMMAND_TIMESTAMP_OUT_OF_RANGE"),eq(1L),anyString(),eq("o"),eq(0L));
+    }
+    @Test void evidenceForAnotherMatchProducesFailedOperation(){
+        when(source.fetch("m")).thenReturn(MarketEvidence.unavailable("another-match"));
+        new WorkerService(store,new JsonCommandDecoder()).submit(command);
+        verify(jdbc).update(contains("UPDATE betting_worker.operation SET"),eq("FAILED"),eq("EVIDENCE_SCOPE_FAILURE"),eq(1L),anyString(),eq("o"),eq(0L));
+    }
     private JdbcTemplate jdbc;private PlatformTransactionManager tx;private SuspensionEvidencePort source;private JdbcWorkerStore store;
     private final Instant now=Instant.parse("2026-11-15T00:00:00Z");
     private final SimulatedCommand command=new SimulatedCommand("c","o","m","sim-user",now);

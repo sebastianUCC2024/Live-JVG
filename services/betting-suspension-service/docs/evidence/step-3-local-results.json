@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-16",
+  "classification": "BLOQUEADO",
+  "head": "77c219f76ac3919abf9c039882d0eb11f23c2312",
+  "branch": "integration/Valeria-mvp-dev",
+  "postgres_tests_executed": 0,
+  "atomicity_certified": false,
+  "environment": {
+    "docker_ps": {
+      "exit_code": 0,
+      "stdout": "",
+      "scope": "Current Docker daemon; no running containers observed"
+    },
+    "dev3_environment_variable_names": [],
+    "exclusive_authorized_postgres_identified": false
+  },
+  "modules": {
+    "historical-archiver": {
+      "results": {
+        "tests": 77,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 76
+      },
+      "java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.archiver.integration.PreparedPostgresIntegrationTest.v1UpgradePreservesEvidenceAndV2SupportsMatchScopedIdentityAndRecovery"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-step3/historical-archiver-test.log",
+          "sha256": "86b4b5a2cd65ddaa4d403d716785b6f01aa4ec65eabdaa764f2710fa0ceef03c",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-step3/historical-archiver-package.log",
+          "sha256": "d38213042a3026d6acff967d7b29b77a15d95f1c72742c9ceef587ff8e43f7b4",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml package"
+        }
+      }
+    },
+    "betting-suspension-service": {
+      "results": {
+        "tests": 115,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 114
+      },
+      "java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.betting.integration.PreparedPostgresIntegrationTest.stateReviewClosureDedupAndOutboxSurviveNewAdapter"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-step3/betting-suspension-service-test.log",
+          "sha256": "85830400ccaa3096355b5bcef2cead0119f8be18a35d6f2d2d51b590187dff76",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-step3/betting-suspension-service-package.log",
+          "sha256": "245a99abf5dd9f2cffd7f2a89e777036636682ad0f333cce1ac5ef2ceebf739f",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml package"
+        }
+      }
+    },
+    "betting-worker": {
+      "results": {
+        "tests": 116,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 13,
+        "passed": 103
+      },
+      "java_versions": [
+        "17.0.20.1"
+      ],
+      "omitted_cases": [
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.deadlockVictimCanRetryInANewTransaction",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.unknownAndExpiredOpenCannotAccept",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.unavailableAuthorityCannotLeaveCommittedOperation",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.simultaneousIdenticalCommandsCommitOneOperationAndOneGrant",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.directAcceptedWithoutCurrentTransactionGrantFailsAtCommit",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.leaseExpiringAfterGrantRollsBackAtDeferredCommitCheck",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.rollbackAfterAuthorizationRemovesOperationAndGrantTogether",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.grantCannotCommitSeparatelyFromItsAcceptance",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.versionMismatchAndRestartCannotReuseOldPermission",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.twoConcurrentOperationsSerializeAndDuplicatesRemainUnique",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.suspensionBeforeAuthorizationBlocksAfterWaitingForItsCommit",
+        "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest.authorizationBeforeSuspensionKeepsSourceLockUntilOperationCommit",
+        "com.live_jgv.worker.integration.PreparedPostgresIntegrationTest.blockedOperationsAndSuspensionFenceSurviveNewAdapterAndDuplicate"
+      ],
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-step3/betting-worker-test.log",
+          "sha256": "8ffb4d909422effbdc4a17ea21e6db03ab0f2e0043ca06cfe09ae73eab037eab",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml test"
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-step3/betting-worker-package.log",
+          "sha256": "3ce96ba40a72dc843fec32b4fc430c43ab59474315f35b751a4218ddb688643a",
+          "build_success": true,
+          "command": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin:/opt/homebrew/bin:$PATH mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml package"
+        }
+      }
+    }
+  },
+  "migration_checksums": {
+    "services/historical-archiver/src/main/resources/db/migration/V2__match_scoped_identity.sql": "cde75814ca3175942bfee7ecc166ce2f759b8d45fcb1a9ef1763bc03b32dd1a8",
+    "services/historical-archiver/src/main/resources/db/migration/V1__archive_events.sql": "cf28fa5bbff62c25b7994deb4ce29bff05efa61fa2761a6bed3bf6fbb33e8fd4",
+    "services/betting-suspension-service/src/main/resources/db/migration/V2__atomic_authority.sql": "4102b72e8cce4811fa5c327e1a7cb7e2ce34697eb4dcf522479dcc23e31c2952",
+    "services/betting-suspension-service/src/main/resources/db/migration/V1__betting_control.sql": "a75f5dc385612007fefc196c3eaa5afea2a7de4cf662707113270d16670a4d89",
+    "services/betting-worker/src/main/resources/db/migration/V1__simulated_operations.sql": "330a979c2b88080614345200c503530038d7da6c339ce9d6ef6d311bb29849e6",
+    "services/betting-worker/src/main/resources/db/migration/V2__transactional_authorization.sql": "ca76343100989bfb2b1b64f4e8319dadfc3057ee9e984269eae26d594f40dfda"
+  }
+}

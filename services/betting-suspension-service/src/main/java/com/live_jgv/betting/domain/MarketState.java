@@ -7,7 +7,13 @@ import java.util.*;
 public record MarketState(String matchId, Status status, long version, String lastEventId,
                           Instant updatedAt, boolean inconsistent, Map<String,PendingReview> pendingReviews) {
     public enum Status { OPEN, SUSPENDED, UNKNOWN }
-    public record PendingReview(String reviewId, String referenceEventId, long openedVersion) { }
+    public record PendingReview(String reviewId, String referenceEventId, long openedVersion,
+                                SportEvent.EventType blockingType) {
+        public PendingReview {
+            if(blockingType!=SportEvent.EventType.GOAL && blockingType!=SportEvent.EventType.VAR_CHECK)
+                throw new IllegalArgumentException("Unknown blocking event type");
+        }
+    }
     public MarketState {
         if (matchId == null || matchId.isBlank() || version < 0) throw new IllegalArgumentException("Invalid market");
         Objects.requireNonNull(status); pendingReviews=Map.copyOf(pendingReviews);
@@ -21,8 +27,13 @@ public record MarketState(String matchId, Status status, long version, String la
         var pending=new LinkedHashMap<>(pendingReviews);var next=status;boolean uncertain=inconsistent;
         long revision=Math.addExact(version,1);
         switch (event.eventType()) {
+            case GOAL -> {
+                // Conservative internal hold, identified by the GOAL itself; not a synthetic VAR event.
+                pending.put(event.eventId(),new PendingReview(event.eventId(),event.eventId(),revision,event.eventType()));
+                next=Status.SUSPENDED;
+            }
             case VAR_CHECK -> {
-                pending.put(event.eventId(),new PendingReview(event.eventId(),event.referenceEventId(),revision));
+                pending.put(event.eventId(),new PendingReview(event.eventId(),event.referenceEventId(),revision,event.eventType()));
                 next=Status.SUSPENDED;
             }
             case GOAL_ANNULLED -> {
@@ -30,7 +41,7 @@ public record MarketState(String matchId, Status status, long version, String la
                 // A late or uncorrelated decision cannot reopen the market through another review.
                 if (pending.values().stream().noneMatch(review -> Objects.equals(review.referenceEventId(),event.referenceEventId()))) uncertain=true;
             }
-            case GOAL, MATCH_CONTINUES -> { /* No authority to open, close or correlate a review. */ }
+            case MATCH_CONTINUES -> { /* No authority to open, close or correlate a review. */ }
         }
         return new MarketState(matchId,next,revision,event.eventId(),now,uncertain,pending);
     }
@@ -39,13 +50,25 @@ public record MarketState(String matchId, Status status, long version, String la
         return new MarketState(matchId,Status.UNKNOWN,Math.addExact(version,1),lastEventId,now,true,pendingReviews);
     }
     public MarketState close(ReviewClosure command, SportEvent continuation, long continuationVersion, Instant now) {
+        return close(command,continuation,continuationVersion,now,ReviewClosure.ReferenceMode.V1_GOAL);
+    }
+    public MarketState close(ReviewClosure command, SportEvent continuation, long continuationVersion, Instant now,
+                             ReviewClosure.ReferenceMode mode) {
+        Objects.requireNonNull(mode);
         if (!matchId.equals(command.matchId()) || command.expectedVersion()!=version)
             throw new IllegalStateException("Market revision changed");
         var review=pendingReviews.get(command.reviewId());
+        if (now.isBefore(command.evidenceIssuedAt()) || !now.isBefore(command.evidenceExpiresAt()))
+            throw new IllegalArgumentException("Closure evidence is not current");
         if (review==null || inconsistent || continuation==null || !continuation.matchId().equals(matchId)
                 || continuation.eventType()!=SportEvent.EventType.MATCH_CONTINUES
                 || !continuation.eventId().equals(command.continuationEventId())
-                || continuationVersion<=review.openedVersion())
+                || continuation.timestamp().isAfter(now)
+                || !continuation.eventId().equals(lastEventId)
+                || continuationVersion<=review.openedVersion() || continuationVersion>version
+                || (mode==ReviewClosure.ReferenceMode.V1_GOAL
+                    ? continuation.referenceEventId()!=null && !continuation.referenceEventId().equals(review.referenceEventId())
+                    : review.blockingType()!=SportEvent.EventType.VAR_CHECK || !review.reviewId().equals(continuation.referenceEventId())))
             throw new IllegalArgumentException("Unambiguous subsequent continuation is required");
         var pending=new LinkedHashMap<>(pendingReviews);pending.remove(command.reviewId());
         return new MarketState(matchId,pending.isEmpty()?Status.OPEN:Status.SUSPENDED,
