@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.live_jgv.live_feed_producer.domain.model.MatchEvent;
 import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
 import com.live_jgv.live_feed_producer.application.service.OutgoingReferencePolicy;
+import com.live_jgv.live_feed_producer.application.service.EventPreparationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +44,7 @@ public final class KafkaMatchEventPublisher implements MatchEventPublisher {
             payload = mapper.writeValueAsString(event);
         } catch (Exception failure) {
             log.warn("Event preparation failed; failureType={}", failure.getClass().getSimpleName());
-            return CompletableFuture.failedFuture(new IllegalArgumentException("Could not prepare event JSON", failure));
+            return CompletableFuture.failedFuture(new EventPreparationException(failure));
         }
         try {
             return template.send(topic, event.matchId(), payload).handle((result, failure) -> {

@@ -113,6 +113,24 @@ class KafkaMatchEventPublisherTest {
     }
 
     @Test
+    void retriesKeepIdenticalKafkaKeyAndWirePayload() {
+        when(template.send(anyString(), anyString(), anyString())).thenReturn(
+                CompletableFuture.failedFuture(new org.apache.kafka.common.errors.TimeoutException()),
+                CompletableFuture.completedFuture(ack("match_events")));
+        var service = new com.live_jgv.live_feed_producer.application.service.MatchSimulationService(publisher, "match-1", "home", "away");
+        var failure = assertThrows(CompletionException.class, () -> service.publish("match-1", null,
+                EventType.GOAL, "home", 10, null, null).join());
+        var original = assertInstanceOf(com.live_jgv.live_feed_producer.application.service.EventPublicationException.class,
+                failure.getCause()).event();
+        var retried = service.publish(original.matchId(), original.eventId(), original.eventType(), original.teamId(),
+                original.minute(), original.timestamp(), original.referenceEventId()).join();
+        assertEquals(original, retried);
+        var payloads = ArgumentCaptor.forClass(String.class);
+        verify(template, times(2)).send(eq("match_events"), eq("match-1"), payloads.capture());
+        assertEquals(payloads.getAllValues().get(0), payloads.getAllValues().get(1));
+    }
+
+    @Test
     void rejectsBlankTopic() {
         assertThrows(IllegalArgumentException.class, () -> new KafkaMatchEventPublisher(template, mapper, " "));
     }
