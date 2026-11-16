@@ -1,7 +1,0 @@
-                      match_id                      | revision | accepted | outputs | pending 
-----------------------------------------------------+----------+----------+---------+---------
- phase7h-3d5d9b88-2592-439e-8b75-9b04639ce108-match |        7 |        7 |       7 |       0
- phase7h-6cc8302a-7d97-465e-a73a-757b7a5e7ae3-match |        7 |        7 |       7 |       0
- phase7h-e42015d8-7341-4d60-8c86-e4fcc8d9007b-match |        7 |        7 |       7 |       0
-(3 rows)
-

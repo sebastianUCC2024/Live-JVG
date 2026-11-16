@@ -1,1 +1,0 @@
-PASS frontend reads persistent real score 0-2; ten events; Atlético Local; no JS errors; responsive 390px

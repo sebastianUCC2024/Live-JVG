@@ -1,9 +1,0 @@
-PASS persistence after restarting dashboard and match-state: score 0-1, five events
-PASS repeated REST event after restart: six Kafka occurrences, five effects/outbox rows
-PASS real RabbitMQ duplicate delivery acknowledged, durable inbox remains five, score unchanged
-PASS HTTP validation: unknown match, foreign team, missing goal reference, minute 131
-core 5
-inbox 5
-outbox 5
-quarantine 0
-ALL EXTRA CHECKS PASS
