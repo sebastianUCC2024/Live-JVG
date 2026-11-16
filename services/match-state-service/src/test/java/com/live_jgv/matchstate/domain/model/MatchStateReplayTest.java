@@ -5,6 +5,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MatchStateReplayTest {
+    @Test void historicalV1KeepsGlobalClosureAndScoreDuringOverlappingReviews() {
+        var events = java.util.List.of(event("g", EventType.GOAL, null),
+                event("v1", EventType.VAR_CHECK, "g"), event("v2", EventType.VAR_CHECK, null),
+                event("c", EventType.MATCH_CONTINUES, "v1"));
+        var replay = MatchState.rebuilder("m", "h", "a");
+        var ordinary = MatchState.start("m", "h", "a");
+        for (var event : events) { replay.accept(event); ordinary = ordinary.apply(event); }
+        var rebuilt = replay.finish();
+        assertEquals(VarStatus.CLEAR, rebuilt.varStatus()); // Historical V1, not V2 partial closure.
+        assertEquals(new Score(1, 0), rebuilt.score());
+        assertEquals(ordinary.processedEvents(), rebuilt.processedEvents());
+        assertEquals(ordinary.varStatus(), rebuilt.varStatus());
+    }
     private MatchEvent event(String id, EventType type, String reference) {
         return new MatchEvent(id, "m", type, type == EventType.GOAL ? "h" : null, 1, Instant.EPOCH, reference);
     }

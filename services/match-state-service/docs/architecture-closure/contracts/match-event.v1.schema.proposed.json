@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "match-event V1 proposal (NOT APPROVED)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "match_id",
+    "event_type",
+    "minute",
+    "timestamp"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "match_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "event_type": {
+      "enum": [
+        "GOAL",
+        "VAR_CHECK",
+        "GOAL_ANNULLED",
+        "MATCH_CONTINUES"
+      ]
+    },
+    "team_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "minute": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 130
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reference_event_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "GOAL"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "team_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "required": [
+          "team_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "GOAL_ANNULLED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reference_event_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "required": [
+          "reference_event_id"
+        ]
+      }
+    }
+  ]
+}

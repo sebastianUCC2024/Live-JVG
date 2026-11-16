@@ -1,4 +1,6 @@
 FROM eclipse-temurin:17-jre
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ARG JAR_FILE
 COPY --chown=10001:10001 --chmod=0444 ${JAR_FILE} /app/application.jar
