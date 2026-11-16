@@ -15,6 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** Validates transaction binding using a real Spring manager over a mock connection, not PostgreSQL atomicity. */
 class JdbcAtomicAuthorizationTest {
+    @Test void openWithUnresolvedGoalOrVarHoldsCannotRecordGrant(){
+        var r=row();r.put("pending_reviews",2L);
+        when(jdbc.queryForMap(contains("lock_market_authority"),eq("m"))).thenReturn(r);
+        tx.execute(s->{var session=authority.lock(command);assertEquals("MARKET_UNRESOLVED",session.refusal());
+            assertFalse(session.recordGrant("canonical").allowed());return null;});
+        verify(jdbc,never()).queryForObject(contains("record_atomic_authorization"),eq(Boolean.class),any(Object[].class));
+    }
     private JdbcTemplate jdbc;private JdbcAtomicAuthorization authority;private TransactionTemplate tx;private Connection connection;
     private final String epoch="00000000-0000-0000-0000-000000000001";
     private final SimulatedCommand command=new SimulatedCommand("c","o","m","sim-user",Instant.EPOCH);

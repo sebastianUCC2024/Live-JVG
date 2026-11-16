@@ -18,6 +18,45 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Prepared real two-connection tests. Never enabled by default and never starts infrastructure. */
 @EnabledIfEnvironmentVariable(named="DEV3_RUN_ATOMIC_POSTGRES_TESTS",matches="true")
 class AtomicPostgresConcurrencyTest {
+    @Test void lostDatabaseConnectionAfterGrantCannotCommitAcceptance() {
+        String m=openMarket();lease(m);var c=command(m);var live=authority();
+        AtomicAuthorizationPort interrupted=cmd->{var session=live.lock(cmd);return new AtomicAuthorizationPort.Session(){
+            public boolean authoritative(){return session.authoritative();}
+            public MarketEvidence evidence(){return session.evidence();}
+            public String refusal(){return session.refusal();}
+            public AtomicAuthorizationPort.Grant recordGrant(String canonical){
+                var grant=session.recordGrant(canonical);assertTrue(grant.allowed());
+                // Kill only this test transaction's own connection, never another session or server.
+                client.execute("SELECT pg_terminate_backend(pg_backend_pid())");
+                return grant;
+            }
+        };};
+        assertThrows(RuntimeException.class,()->process(store(interrupted),c));
+        assertEquals(0,owner.queryForObject("SELECT count(*) FROM betting_worker.operation WHERE operation_id=?",Integer.class,c.operationId()));
+        assertEquals(0,owner.queryForObject("SELECT count(*) FROM betting_worker.operation_authorization WHERE operation_id=?",Integer.class,c.operationId()));
+        assertEquals(0,owner.queryForObject("SELECT count(*) FROM betting_worker.command_inbox WHERE command_id=?",Integer.class,c.commandId()));
+    }
+    @Test void workerCannotWriteAuthorityOrForgeGrantDirectly() {
+        for(String statement:List.of("UPDATE betting_control.market_state SET status='OPEN' WHERE FALSE",
+                "DELETE FROM betting_worker.operation_authorization WHERE FALSE")) {
+            var failure=assertThrows(org.springframework.dao.DataAccessException.class,()->client.update(statement));
+            boolean denied=false;
+            for(Throwable cause=failure;cause!=null;cause=cause.getCause())
+                if(cause instanceof java.sql.SQLException sql && "42501".equals(sql.getSQLState()))denied=true;
+            assertTrue(denied,"Expected PostgreSQL insufficient_privilege, not an unrelated SQL error");
+        }
+    }
+    @Test void simultaneousIdenticalCommandsCommitOneOperationAndOneGrant() throws Exception {
+        String m=openMarket();lease(m);var c=command(m);var start=new CountDownLatch(1);
+        var a=pool.submit(()->{await(start);return process(store(authority()),c);});
+        var b=pool.submit(()->{await(start);return process(store(authority()),c);});start.countDown();
+        var outcomes=List.of(a.get(5,TimeUnit.SECONDS),b.get(5,TimeUnit.SECONDS));
+        assertTrue(outcomes.contains(WorkerStore.Outcome.PROCESSED));assertTrue(outcomes.contains(WorkerStore.Outcome.DUPLICATE));
+        assertEquals(1,owner.queryForObject("SELECT count(*) FROM betting_worker.operation WHERE operation_id=?",Integer.class,c.operationId()));
+        assertEquals(1,owner.queryForObject("SELECT count(*) FROM betting_worker.operation_authorization WHERE operation_id=?",Integer.class,c.operationId()));
+        assertEquals(2L,owner.queryForObject("SELECT delivery_attempts FROM betting_worker.command_inbox WHERE command_id=?",Long.class,c.commandId()));
+        assertEquals("ACCEPTED",state(c.operationId()));
+    }
     private static JdbcTemplate owner,client;
     private static DriverManagerDataSource ownerDs,clientDs;
     private static String epoch,database,workerRole;
@@ -40,6 +79,17 @@ class AtomicPostgresConcurrencyTest {
         database=owner.queryForObject("SELECT current_database()",String.class);
         epoch=owner.queryForObject("SELECT epoch::text FROM betting_control.authorization_authority",String.class);
         clientDs=new DriverManagerDataSource(System.getenv("DEV3_IT_DB_URL"),workerRole,password);client=new JdbcTemplate(clientDs);
+        assertEquals(workerRole,client.queryForObject("SELECT current_user::text",String.class));
+        assertEquals(0,client.queryForObject("""
+                SELECT count(*)::integer FROM pg_catalog.pg_roles WHERE rolname=current_user
+                    AND (rolsuper OR rolcreaterole OR rolcreatedb OR rolreplication OR rolbypassrls)
+                """,Integer.class));
+        assertEquals(0,client.queryForObject("""
+                SELECT count(*)::integer FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+                WHERE n.nspname IN ('betting_control','betting_worker')
+                    AND pg_has_role(current_user,c.relowner,'MEMBER')
+                """,Integer.class));
         new JdbcAtomicAuthorization(client,database,epoch).verifyInstallation();
         owner.execute("CREATE TABLE betting_worker.it_deadlock_probe(id INTEGER PRIMARY KEY,value INTEGER NOT NULL)");
         owner.update("INSERT INTO betting_worker.it_deadlock_probe VALUES (1,0),(2,0)");

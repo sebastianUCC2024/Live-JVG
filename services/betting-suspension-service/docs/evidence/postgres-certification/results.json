@@ -1,0 +1,328 @@
+{
+  "classification": "CERTIFICADO within the isolated PostgreSQL test scope",
+  "date": "2026-11-16",
+  "resources": {
+    "container": "live-jvg-dev3-pg17-a693ce20",
+    "volume": "live-jvg-dev3-pg17-a693ce20-data",
+    "network": "live-jvg-dev3-pg17-a693ce20-net",
+    "port": 19634,
+    "admin": "dev3_it_admin_a693ce20",
+    "owner": "dev3_it_owner_a693ce20",
+    "worker": "dev3_it_worker_a693ce20",
+    "databases": {
+      "archiver": "dev3_it_archiver_a693ce20",
+      "control": "dev3_it_betting_control_a693ce20",
+      "worker": "dev3_it_betting_worker_a693ce20",
+      "atomic": "dev3_it_betting_worker_atomic_a693ce20_r3"
+    },
+    "host_network": "live-jvg-dev3-pg17-a693ce20-hostnet",
+    "previous_atomic_database": "dev3_it_betting_worker_atomic_a693ce20"
+  },
+  "postgres_version": "17.12",
+  "real_final": {
+    "archiver": {
+      "suites": [
+        {
+          "class": "com.live_jgv.archiver.integration.PreparedPostgresIntegrationTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "v1UpgradePreservesEvidenceAndV2SupportsMatchScopedIdentityAndRecovery",
+              "seconds": "0.64",
+              "status": "passed"
+            }
+          ],
+          "xml_sha256": "2ef23d6a2359033523b5c57e75e773c56f6232a78c6a1328b916b7217ca13476"
+        }
+      ],
+      "log": "services/betting-suspension-service/docs/evidence/postgres-certification/archiver-real-maven.txt",
+      "sha256": "89c619d658c7dcd0c8bbd39827a768569e7ef0d4cd39877ed8d205b5365b35a5",
+      "command": "mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml -Dtest=PreparedPostgresIntegrationTest test",
+      "approval_and_credentials": "Injected from private local manifest into subprocess environment, never into Git",
+      "original_log_sha256": "e1e372578634edaa247e524e1f02a35775bb49223d8023f2029856cf4716752c"
+    },
+    "control": {
+      "suites": [
+        {
+          "class": "com.live_jgv.betting.integration.PreparedPostgresIntegrationTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "stateReviewClosureDedupAndOutboxSurviveNewAdapter",
+              "seconds": "0.892",
+              "status": "passed"
+            }
+          ],
+          "xml_sha256": "a388d5df1e2543bdaa7f73071938e78a051f1c720b98969c72c2f919bbf5981c"
+        }
+      ],
+      "log": "services/betting-suspension-service/docs/evidence/postgres-certification/control-real-maven.txt",
+      "sha256": "c411ccbb313a976be9f29d2840b856d0934dd070b8b1a757db73efcc62fc56b0",
+      "command": "mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml -Dtest=PreparedPostgresIntegrationTest test",
+      "approval_and_credentials": "Injected from private local manifest into subprocess environment, never into Git",
+      "original_log_sha256": "74d9665e563bf39c63f36147f31473cf17820eb96d3788a6b6689aa674d23d94"
+    },
+    "worker": {
+      "suites": [
+        {
+          "class": "com.live_jgv.worker.integration.PreparedPostgresIntegrationTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "blockedOperationsAndSuspensionFenceSurviveNewAdapterAndDuplicate",
+              "seconds": "0.606",
+              "status": "passed"
+            }
+          ],
+          "xml_sha256": "f2edeab4c172e057c3454c9fa1f1284c0c7c4311f0d9459c7fde2a31a22fcdfa"
+        }
+      ],
+      "log": "services/betting-suspension-service/docs/evidence/postgres-certification/worker-real-maven.txt",
+      "sha256": "506711babb1f78a5e446e2f0b40be9e0f4a93bf3e498ce38d9ca6c57246304e7",
+      "command": "mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml -Dtest=PreparedPostgresIntegrationTest test",
+      "approval_and_credentials": "Injected from private local manifest into subprocess environment, never into Git",
+      "original_log_sha256": "dfead64cba6f3a24f535cc4fc74802333e247962cd41c646795044a0ba51c4f3"
+    },
+    "atomic": {
+      "suites": [
+        {
+          "class": "com.live_jgv.worker.integration.AtomicPostgresConcurrencyTest",
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "deadlockVictimCanRetryInANewTransaction",
+              "seconds": "1.065",
+              "status": "passed"
+            },
+            {
+              "name": "lostDatabaseConnectionAfterGrantCannotCommitAcceptance",
+              "seconds": "0.066",
+              "status": "passed"
+            },
+            {
+              "name": "unknownAndExpiredOpenCannotAccept",
+              "seconds": "0.061",
+              "status": "passed"
+            },
+            {
+              "name": "unavailableAuthorityCannotLeaveCommittedOperation",
+              "seconds": "0.037",
+              "status": "passed"
+            },
+            {
+              "name": "simultaneousIdenticalCommandsCommitOneOperationAndOneGrant",
+              "seconds": "0.05",
+              "status": "passed"
+            },
+            {
+              "name": "directAcceptedWithoutCurrentTransactionGrantFailsAtCommit",
+              "seconds": "0.03",
+              "status": "passed"
+            },
+            {
+              "name": "leaseExpiringAfterGrantRollsBackAtDeferredCommitCheck",
+              "seconds": "5.162",
+              "status": "passed"
+            },
+            {
+              "name": "workerCannotWriteAuthorityOrForgeGrantDirectly",
+              "seconds": "0.016",
+              "status": "passed"
+            },
+            {
+              "name": "rollbackAfterAuthorizationRemovesOperationAndGrantTogether",
+              "seconds": "0.044",
+              "status": "passed"
+            },
+            {
+              "name": "grantCannotCommitSeparatelyFromItsAcceptance",
+              "seconds": "0.058",
+              "status": "passed"
+            },
+            {
+              "name": "versionMismatchAndRestartCannotReuseOldPermission",
+              "seconds": "0.044",
+              "status": "passed"
+            },
+            {
+              "name": "twoConcurrentOperationsSerializeAndDuplicatesRemainUnique",
+              "seconds": "0.052",
+              "status": "passed"
+            },
+            {
+              "name": "suspensionBeforeAuthorizationBlocksAfterWaitingForItsCommit",
+              "seconds": "0.201",
+              "status": "passed"
+            },
+            {
+              "name": "authorizationBeforeSuspensionKeepsSourceLockUntilOperationCommit",
+              "seconds": "0.25",
+              "status": "passed"
+            }
+          ],
+          "xml_sha256": "4170df46131f34c41b0a5b0ef16b97a80468ce37d8430c8fba240be0b024c29f"
+        }
+      ],
+      "log": "services/betting-suspension-service/docs/evidence/postgres-certification/atomic-real-maven.txt",
+      "sha256": "6ada8e18f2e14370951c0e137d0f4da6ce82bd147f4708bcea1b88ff2bbba8c3",
+      "command": "mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml -Dtest=AtomicPostgresConcurrencyTest test",
+      "approval_and_credentials": "Injected from private local manifest into subprocess environment, never into Git",
+      "original_log_sha256": "9d76c646f6fc4a29b78da74f29f7b5f86d19921b9a9ad1dca4bb7fab119dab68"
+    }
+  },
+  "local_final": {
+    "historical-archiver": {
+      "counts": {
+        "tests": 77,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 76
+      },
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-cert-run/local-final/historical-archiver-test.log",
+          "sha256": "6cf6417b8bd0c4538b6e46a50cafb607e1cb93e2b7b2767cc819dee5ce3101fd",
+          "build_success": true
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-cert-run/local-final/historical-archiver-package.log",
+          "sha256": "21cc5c278504d39ef43e8069c118a8200e092ac5169f4349cdbb1540fc613c49",
+          "build_success": true
+        }
+      }
+    },
+    "betting-suspension-service": {
+      "counts": {
+        "tests": 127,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 126
+      },
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-cert-run/local-final/betting-suspension-service-test.log",
+          "sha256": "362e79d7c6edcb285f1275fbe1750361c1986e65340bda22a65eebd6f3ac113e",
+          "build_success": true
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-cert-run/local-final/betting-suspension-service-package.log",
+          "sha256": "ef3cd83c64ec560413e96a439cb47d1be4608af4894d63305f8f0e348f038bbe",
+          "build_success": true
+        }
+      }
+    },
+    "betting-worker": {
+      "counts": {
+        "tests": 118,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 15,
+        "passed": 103
+      },
+      "logs": {
+        "test": {
+          "path": "/private/tmp/live-jvg-dev3-cert-run/local-final/betting-worker-test.log",
+          "sha256": "e810377845be213dd2ce224067696b223a65c3d9265b0e638e217e7a6c563012",
+          "build_success": true
+        },
+        "package": {
+          "path": "/private/tmp/live-jvg-dev3-cert-run/local-final/betting-worker-package.log",
+          "sha256": "d00e5db690d4982e4c8abec995b6fbbb5d4829b14198f7ea239e13130e81ff5b",
+          "build_success": true
+        }
+      }
+    }
+  },
+  "initial_connection_failures": [
+    {
+      "job": "real-worker-r1",
+      "log": "/private/tmp/live-jvg-dev3-cert-run/real-worker-r1/maven.log",
+      "sha256": "641654a31b4f5b309cb8e882d3ddef36f4f1bc0b4e15e1e6d3ec40efd0cc819e",
+      "causes": [
+        "Caused by: org.postgresql.util.PSQLException: Connection to 127.0.0.1:19634 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.",
+        "Caused by: java.net.ConnectException: Connection refused"
+      ]
+    },
+    {
+      "job": "real-archiver-r1",
+      "log": "/private/tmp/live-jvg-dev3-cert-run/real-archiver-r1/maven.log",
+      "sha256": "69663b428525db8cf4b49cc159d16302ccc2f9ee4d5a939837e2cba40d92f1cf",
+      "causes": [
+        "Caused by: org.postgresql.util.PSQLException: Connection to 127.0.0.1:19634 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.",
+        "Caused by: java.net.ConnectException: Connection refused"
+      ]
+    },
+    {
+      "job": "real-control-r1",
+      "log": "/private/tmp/live-jvg-dev3-cert-run/real-control-r1/maven.log",
+      "sha256": "6b25242851de351235efb8aa1230cd28cf0440c97c68966b13470ce44e50972a",
+      "causes": [
+        "Caused by: org.postgresql.util.PSQLException: Connection to 127.0.0.1:19634 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.",
+        "Caused by: java.net.ConnectException: Connection refused"
+      ]
+    },
+    {
+      "job": "real-atomic-r1",
+      "log": "/private/tmp/live-jvg-dev3-cert-run/real-atomic-r1/maven.log",
+      "sha256": "0e4a94256f619a55c3619f80e1a2d621c4a99e83afb317b00d70bf8173269b16",
+      "causes": [
+        "Caused by: org.postgresql.util.PSQLException: Connection to 127.0.0.1:19634 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.",
+        "Caused by: java.net.ConnectException: Connection refused"
+      ]
+    }
+  ],
+  "restart": {
+    "container": "live-jvg-dev3-pg17-a693ce20",
+    "restart_executed": true,
+    "same_catalogs_data_digests_and_counts": true,
+    "tables_compared": 40
+  },
+  "migration_checksums": {
+    "services/historical-archiver/src/main/resources/db/migration/V2__match_scoped_identity.sql": "cde75814ca3175942bfee7ecc166ce2f759b8d45fcb1a9ef1763bc03b32dd1a8",
+    "services/historical-archiver/src/main/resources/db/migration/V1__archive_events.sql": "cf28fa5bbff62c25b7994deb4ce29bff05efa61fa2761a6bed3bf6fbb33e8fd4",
+    "services/betting-suspension-service/src/main/resources/db/migration/V2__atomic_authority.sql": "4102b72e8cce4811fa5c327e1a7cb7e2ce34697eb4dcf522479dcc23e31c2952",
+    "services/betting-suspension-service/src/main/resources/db/migration/V1__betting_control.sql": "a75f5dc385612007fefc196c3eaa5afea2a7de4cf662707113270d16670a4d89",
+    "services/betting-worker/src/main/resources/db/migration/V1__simulated_operations.sql": "330a979c2b88080614345200c503530038d7da6c339ce9d6ef6d311bb29849e6",
+    "services/betting-worker/src/main/resources/db/migration/V2__transactional_authorization.sql": "ca76343100989bfb2b1b64f4e8319dadfc3057ee9e984269eae26d594f40dfda"
+  },
+  "final_invariants": {
+    "invariants": {
+      "accepted_without_grant": 0,
+      "grant_without_accepted": 0
+    },
+    "container_inspection": "healthy {\"5432/tcp\":[{\"HostIp\":\"127.0.0.1\",\"HostPort\":\"19634\"}]} live-jvg-dev3-pg17-a693ce20-data:/var/lib/postgresql/data"
+  },
+  "head_at_evidence_capture": "c1df3f7869680d8ffd07ca78447cfa0fb1c8ae7f",
+  "final_head": "c1df3f7869680d8ffd07ca78447cfa0fb1c8ae7f",
+  "external_committed_advance": {
+    "from": "42884b7",
+    "to": "c1df3f7869680d8ffd07ca78447cfa0fb1c8ae7f",
+    "files": [
+      "services/live-feed-producer/docs/publication-recovery.md",
+      "services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/application/service/EventPreparationException.java",
+      "services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/application/service/EventPublicationException.java",
+      "services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/application/service/MatchSimulationService.java",
+      "services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/entrypoint/rest/MatchSimulationController.java",
+      "services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/infrastructure/kafka/KafkaMatchEventPublisher.java",
+      "services/live-feed-producer/src/test/java/com/live_jgv/live_feed_producer/application/service/MatchSimulationServiceTest.java",
+      "services/live-feed-producer/src/test/java/com/live_jgv/live_feed_producer/entrypoint/rest/SimulatorEnabledTest.java",
+      "services/live-feed-producer/src/test/java/com/live_jgv/live_feed_producer/infrastructure/kafka/KafkaMatchEventPublisherTest.java",
+      "services/match-state-service/docs/D1_4A_REGLAS_VAR_PROPUESTA.md"
+    ],
+    "dev3_changed": false
+  }
+}

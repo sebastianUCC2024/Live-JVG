@@ -20,7 +20,9 @@ class CapturedSequenceContractTest {
                 market=market.apply(input.event(),Instant.EPOCH.plusSeconds(i));assertFalse(market.betsAllowed());
             }
             assertNotNull(market);assertEquals(MarketState.Status.SUSPENDED,market.status());
-            assertEquals(1,market.pendingReviews().size());assertFalse(market.inconsistent());
+            // Two goals and one VAR remain separate internal holds; continuation clears none of them.
+            assertEquals(3,market.pendingReviews().size());assertFalse(market.inconsistent());
+            for(int i:new int[]{0,1,4})assertTrue(market.pendingReviews().containsKey(mapper.readTree(lines.get(i)).path("event_id").asText()));
         }
     }
 }

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.live_jgv.worker.domain.*;
 import com.live_jgv.worker.application.*;
 import com.live_jgv.worker.infrastructure.JdbcWorkerStore;
+import com.live_jgv.worker.infrastructure.JsonCommandDecoder;
 import java.util.concurrent.atomic.AtomicReference;
 
 @EnabledIfEnvironmentVariable(named="DEV3_RUN_POSTGRES_TESTS",matches="true")
@@ -34,5 +35,27 @@ class PreparedPostgresIntegrationTest {
         assertEquals(Operation.State.BLOCKED,recovered.find("o1").orElseThrow().state());
         assertEquals("STALE_MARKET_REVISION",recovered.find("o2").orElseThrow().reason());
         assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM betting_worker.operation",Integer.class));
+
+        // Internal domain entry point uses the same durable transaction, inbox and query after restart.
+        var service=new WorkerService(recovered,new JsonCommandDecoder());
+        var domain=new SimulatedCommand("domain-c","domain-o","it-match","sim-user",now);
+        assertEquals(WorkerStore.Outcome.PROCESSED,service.submit(domain));
+        var restarted=new WorkerService(new JdbcWorkerStore(jdbc,tx,source,policy,Clock.fixed(now,ZoneOffset.UTC)),new JsonCommandDecoder());
+        assertEquals(WorkerStore.Outcome.DUPLICATE,restarted.submit(domain));
+        assertEquals(WorkerStore.Outcome.IDENTITY_CONFLICT,restarted.submit(new SimulatedCommand("domain-c","domain-o","it-match","different-user",now)));
+        assertEquals(Operation.State.BLOCKED,restarted.find("domain-o").orElseThrow().state());
+        assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM betting_worker.operation_transition WHERE operation_id='domain-o'",Integer.class));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM betting_worker.message_audit WHERE command_id='domain-c'",Integer.class));
+
+        var retry=new SimulatedCommand("retry-c","retry-o","it-match","sim-user",now);
+        var failing=new WorkerService(new JdbcWorkerStore(jdbc,tx,source,policy,Clock.fixed(now,ZoneOffset.UTC),
+                command->{throw new IllegalStateException("Test authority unavailable");}),new JsonCommandDecoder());
+        assertThrows(IllegalStateException.class,()->failing.submit(retry));
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM betting_worker.command_inbox WHERE command_id='retry-c'",Integer.class));
+        assertTrue(restarted.find("retry-o").isEmpty());
+        assertEquals(WorkerStore.Outcome.PROCESSED,restarted.submit(retry));
+        assertEquals(WorkerStore.Outcome.DUPLICATE,restarted.submit(retry));
+        assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM betting_worker.operation_transition WHERE operation_id='retry-o'",Integer.class));
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM betting_worker.operation WHERE status='ACCEPTED'",Integer.class));
     }
 }

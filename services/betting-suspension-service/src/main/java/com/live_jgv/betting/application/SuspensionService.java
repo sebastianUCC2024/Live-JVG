@@ -12,4 +12,5 @@ public final class SuspensionService {
         return store.status(match);
     }
     public MarketState closeReview(ReviewClosure closure) { return store.closeReview(closure); }
+    public MarketState closeReviewV2(ReviewClosure closure) { return store.closeReviewV2(closure); }
 }

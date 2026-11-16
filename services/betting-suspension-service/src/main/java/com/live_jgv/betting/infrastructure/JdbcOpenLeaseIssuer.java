@@ -2,6 +2,7 @@ package com.live_jgv.betting.infrastructure;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
+import com.live_jgv.betting.application.LeaseSourceVerifier;
 import java.util.*;
 
 /** Internal only. Caller approval/caught-up checkpoint verification is required; no scheduler or HTTP adapter. */
@@ -13,8 +14,11 @@ public final class JdbcOpenLeaseIssuer {
             if(expectedVersion<1||ttlMillis<1||ttlMillis>5000)throw new IllegalArgumentException("Invalid lease bound");
         }
     }
-    private final JdbcTemplate jdbc;private final TransactionTemplate tx;
-    public JdbcOpenLeaseIssuer(JdbcTemplate jdbc,TransactionTemplate tx){this.jdbc=jdbc;this.tx=tx;}
+    private final JdbcTemplate jdbc;private final TransactionTemplate tx;private final LeaseSourceVerifier verifier;
+    public JdbcOpenLeaseIssuer(JdbcTemplate jdbc,TransactionTemplate tx){this(jdbc,tx,new UnavailableLeaseSourceVerifier());}
+    public JdbcOpenLeaseIssuer(JdbcTemplate jdbc,TransactionTemplate tx,LeaseSourceVerifier verifier){
+        this.jdbc=jdbc;this.tx=tx;this.verifier=Objects.requireNonNull(verifier);
+    }
     public UUID issue(Request request){
         return Objects.requireNonNull(tx.execute(status->{
             var row=jdbc.queryForMap("SELECT status,version,inconsistent FROM betting_control.market_state WHERE match_id=? FOR UPDATE",request.matchId());
@@ -22,6 +26,8 @@ public final class JdbcOpenLeaseIssuer {
             if(!"OPEN".equals(row.get("status"))||Boolean.TRUE.equals(row.get("inconsistent"))
                     ||((Number)row.get("version")).longValue()!=request.expectedVersion()||pending==null||pending!=0)
                 throw new IllegalStateException("Market cannot issue an opening lease");
+            if(!verifier.verify(request.matchId(),request.expectedVersion(),request.checkpoint()))
+                throw new IllegalStateException("Lease source cannot be verified");
             UUID id=UUID.randomUUID();
             int changed=jdbc.update("""
                 WITH sampled AS (SELECT clock_timestamp() AS now)
