@@ -1,0 +1,17 @@
+{
+  "alert_id": "d957ee54-352e-4133-a973-be717936a8bd",
+  "match_id": "m1",
+  "alert_type": "GOAL",
+  "source_event_id": "g1",
+  "source_updated_at": "2026-11-16T22:00:00Z",
+  "created_at": "2026-11-16T22:00:00Z",
+  "reference_event_id": null,
+  "home_score": 1,
+  "away_score": 0,
+  "var_status": "CLEAR",
+  "content": {
+    "locale": "es",
+    "title": "Gol",
+    "message": "Gol local"
+  }
+}

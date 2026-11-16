@@ -1,4 +1,4 @@
-name: live-jvg-mvp
+name: live-jvg-dev1-isolated
 # Explicit opt-in for this loopback-only local MVP, never a public deployment policy.
 x-simulator: &simulator
   SIMULATOR_WRITE_ENABLED: "true"
@@ -82,7 +82,7 @@ services:
     mem_limit: 384m
   dashboard:
     # MVP: STOMP simple broker is local to this one JVM. Do not scale horizontally.
-    container_name: live-jvg-mvp-dashboard
+    container_name: live-jvg-dev1-isolated-dashboard
     deploy:
       replicas: 1
     build:
@@ -121,6 +121,105 @@ services:
       kafka-init: {condition: service_completed_successfully}
       postgres: {condition: service_healthy}
       dashboard: {condition: service_healthy}
+    mem_limit: 512m
+  archiver:
+    profiles: [integration-prepared]
+    build:
+      context: .
+      args: {JAR_FILE: services/historical-archiver/target/historical-archiver-0.0.1-SNAPSHOT.jar}
+    environment:
+      <<: *rabbit
+      ARCHIVER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
+      ARCHIVER_DB_USERNAME: live_jvg
+      ARCHIVER_DB_PASSWORD: ${MVP_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      ARCHIVER_CONSUMER_ENABLED: "false"
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS http://localhost:8082/actuator/health/liveness >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+    mem_limit: 512m
+  suspension:
+    profiles: [integration-prepared]
+    build:
+      context: .
+      args: {JAR_FILE: services/betting-suspension-service/target/betting-suspension-service-0.0.1-SNAPSHOT.jar}
+    environment:
+      <<: *rabbit
+      BETTING_CONTROL_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
+      BETTING_CONTROL_DB_USERNAME: live_jvg
+      BETTING_CONTROL_DB_PASSWORD: ${MVP_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      BETTING_CONTROL_CONSUMER_ENABLED: "false"
+      BETTING_CONTROL_PUBLICATION_ENABLED: "false"
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS http://localhost:8083/actuator/health/liveness >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+    mem_limit: 512m
+  worker:
+    profiles: [integration-prepared]
+    build:
+      context: .
+      args: {JAR_FILE: services/betting-worker/target/betting-worker-0.0.1-SNAPSHOT.jar}
+    environment:
+      <<: *rabbit
+      BETTING_WORKER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
+      BETTING_WORKER_DB_USERNAME: live_jvg
+      BETTING_WORKER_DB_PASSWORD: ${MVP_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      BETTING_WORKER_CONSUMER_ENABLED: "false"
+      BETTING_WORKER_ACCEPTANCE_ENABLED: "false"
+      BETTING_WORKER_AUTHORIZATION_MODE: disabled
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS http://localhost:8084/actuator/health/liveness >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+    mem_limit: 512m
+  notification:
+    profiles: [integration-prepared]
+    build:
+      context: .
+      args: {JAR_FILE: services/notification-backend/target/notification-backend-0.0.1-SNAPSHOT.jar}
+    environment:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      NOTIFICATION_BIND_ADDRESS: 0.0.0.0
+      NOTIFICATION_STORAGE_ENABLED: "false"
+      NOTIFICATION_MESSAGING_ENABLED: "false"
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS http://localhost:8082/actuator/health/liveness >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
 volumes:
   postgres_data:
