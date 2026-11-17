@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:live-jvg:events:live-alert:1.0",
+  "title": "LiveAlert V1 AMQP event (not the REST DTO)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "alert_id",
+    "match_id",
+    "source_event_id",
+    "event_type",
+    "message",
+    "timestamp",
+    "reference_event_id",
+    "snapshot"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "1.0"
+    },
+    "alert_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "match_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": ".*\\S.*"
+    },
+    "source_event_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": ".*\\S.*"
+    },
+    "event_type": {
+      "enum": [
+        "GOAL",
+        "VAR_CHECK",
+        "GOAL_ANNULLED"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": ".*\\S.*",
+      "maxLength": 500
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reference_event_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": ".*\\S.*"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "snapshot": {
+      "$ref": "#/$defs/ScoreUpdateV1"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "GOAL_ANNULLED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reference_event_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": ".*\\S.*"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ScoreUpdateV1": {
+      "title": "score-update V1 proposal (NOT APPROVED)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "match_id",
+        "event_id",
+        "event_type",
+        "home_score",
+        "away_score",
+        "updated_at",
+        "var_status"
+      ],
+      "properties": {
+        "match_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "event_type": {
+          "enum": [
+            "GOAL",
+            "VAR_CHECK",
+            "GOAL_ANNULLED",
+            "MATCH_CONTINUES"
+          ]
+        },
+        "home_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "away_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "var_status": {
+          "enum": [
+            "CLEAR",
+            "IN_PROGRESS"
+          ]
+        },
+        "reference_event_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "event_type": {
+                "const": "GOAL_ANNULLED"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reference_event_id"
+            ],
+            "properties": {
+              "reference_event_id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "description": "Snapshot match_id, event_id, event_type, updated_at and reference_event_id must equal envelope identity, event_type, timestamp and reference. Runtime DTOs enforce cross-field coherence. Source ScoreUpdate V1 is unchanged."
+}
