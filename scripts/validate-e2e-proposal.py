@@ -28,7 +28,7 @@ def environment(manifest):
                   E2E_CONTROL_GROUP=groups['control'], E2E_KAFKA_SOURCE_ID=manifest['source_ids']['kafka'],
                   E2E_WORKER_SOURCE_ID=manifest['source_ids']['worker'],
                   E2E_DASHBOARD_QUEUE='dev3_it_'+manifest['run']+'_dashboard',
-                  E2E_NOTIFICATION_QUEUE='dev3_it_'+manifest['run']+'_notification')
+                  E2E_NOTIFICATION_QUEUE='notification.dev3_it_'+manifest['run'])
     for prefix, key in [('ARCHIVER', 'archive_app'), ('CONTROL', 'control_app'), ('WORKER', 'worker_app'),
                         ('MATCH_STATE', 'match_state_app'), ('DASHBOARD', 'dashboard_app'), ('NOTIFICATION', 'notification_app')]:
         values['E2E_'+prefix+'_ROLE'] = roles[key]

@@ -13,6 +13,32 @@ spec.loader.exec_module(harness)
 
 
 class HarnessTest(unittest.TestCase):
+    def test_notification_environment_matches_ownership_and_override_contract(self):
+        root = Path(__file__).resolve().parents[1]
+        manifest = json.loads((root / 'scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json').read_text())
+        spec = importlib.util.spec_from_file_location('proposal_environment', root / 'scripts/validate-e2e-proposal.py')
+        proposal = importlib.util.module_from_spec(spec)
+        with patch('subprocess.run', side_effect=AssertionError('Offline environment must not run commands')) as run:
+            spec.loader.exec_module(proposal)
+            values = proposal.environment(manifest)
+            run.assert_not_called()
+        queue = values['E2E_NOTIFICATION_QUEUE']
+        self.assertEqual('notification.dev3_it_5c84548cf006', queue)
+        # Same prefix and full-name allowlist as RabbitConfiguration.topology().
+        self.assertTrue(queue.startswith('notification.'))
+        self.assertRegex(queue, r'\A[A-Za-z0-9_.-]{1,200}\Z')
+        self.assertEqual('e2e-5c84548cf006', values['E2E_MATCH_ID'])
+        self.assertEqual(manifest['resources']['vhost'], values['E2E_VHOST'])
+        self.assertEqual('/', values['E2E_VHOST'])
+        self.assertEqual(manifest['resources']['exchange'], values['E2E_EXCHANGE'])
+        self.assertEqual(manifest['resources']['queue'], values['E2E_WORKER_QUEUE'])
+        self.assertEqual('dev3_it_5c84548cf006_dashboard', values['E2E_DASHBOARD_QUEUE'])
+        override = (root / 'scripts/e2e/compose.manifest-proposed.yml').read_text().split('  notification:\n', 1)[1]
+        for key, variable in [('NOTIFICATION_QUEUE', 'E2E_NOTIFICATION_QUEUE'),
+                              ('NOTIFICATION_MATCH_IDS', 'E2E_MATCH_ID'),
+                              ('SPRING_RABBITMQ_VIRTUAL_HOST', 'E2E_VHOST')]:
+            self.assertIn(key + ': ${' + variable + '}', override)
+
     def manifest(self, run='abcdef123456'):
         prefix = 'dev3_it_' + run
         return dict(run=run, project='live-jvg-e2e-'+run, resources=dict(database=prefix+'_authority',
