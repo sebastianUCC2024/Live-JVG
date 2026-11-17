@@ -20,14 +20,30 @@ public final class JdbcNotificationStore implements NotificationStore {
         // Never join a caller transaction that could commit after the listener ACK.
         this.tx.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
-    @Override public Result accept(ScoreUpdate update, Optional<LiveAlert> alert) {
+    @Override public Result acceptLiveAlert(LiveAlertV1 wire) {
+        String title=switch(wire.eventType()) { case GOAL -> "Gol"; case VAR_CHECK -> "Revisi\u00f3n VAR"; case GOAL_ANNULLED -> "Gol anulado"; default -> throw new InvalidUpdateException("Unsupported alert"); };
+        return accept(wire.snapshot(),Optional.of(new LiveAlert(wire.alertId(),wire.snapshot(),wire.timestamp(),
+                new LiveAlert.Content("es",title,wire.message()))),wire);
+    }
+    @Override public Result accept(ScoreUpdate update, Optional<LiveAlert> alert) { return accept(update,alert,null); }
+    private Result accept(ScoreUpdate update, Optional<LiveAlert> alert, LiveAlertV1 wire) {
         String payload = codec.encode(update);
         return tx.execute(status -> {
+            if(wire!=null) {
+                String encoded=new com.live_jgv.notification.infrastructure.json.LiveAlertCodec().encode(wire);
+                int claimed=jdbc.update("INSERT INTO notification.live_alert_inbox(alert_id,match_id,source_event_id,payload) VALUES (?,?,?,?::jsonb) ON CONFLICT DO NOTHING",wire.alertId(),wire.matchId(),wire.sourceEventId(),encoded);
+                if(claimed==0) {
+                    var previous=jdbc.queryForList("SELECT payload::text FROM notification.live_alert_inbox WHERE alert_id=? OR (match_id=? AND source_event_id=?)",wire.alertId(),wire.matchId(),wire.sourceEventId());
+                    if(previous.size()!=1 || !new com.live_jgv.notification.infrastructure.json.LiveAlertCodec().decode(previous.get(0).get("payload").toString().getBytes(StandardCharsets.UTF_8)).equals(wire)) throw new IdentityConflictException();
+                    return Result.DUPLICATE;
+                }
+            }
             int inserted = jdbc.update("""
                 INSERT INTO notification.inbox(source,match_id,event_id,payload,outcome)
                 VALUES (?,?,?,?::jsonb,?) ON CONFLICT (source,match_id,event_id) DO NOTHING
                 """, SOURCE, update.matchId(), update.eventId(), payload, alert.isPresent() ? "ALERT" : "SUPPRESSED");
             if (inserted == 0) {
+                if(wire!=null) throw new IdentityConflictException();
                 String prior = jdbc.queryForObject("SELECT payload::text FROM notification.inbox WHERE source=? AND match_id=? AND event_id=?",
                         String.class, SOURCE, update.matchId(), update.eventId());
                 if (!codec.decode(prior.getBytes(StandardCharsets.UTF_8)).equals(update)) throw new IdentityConflictException();

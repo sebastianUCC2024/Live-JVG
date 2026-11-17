@@ -29,13 +29,17 @@ public class DurableStorageConfiguration {
         this.startup = startup;
     }
 
+    public JdbcMatchStateStore jdbcMatchStateStore(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
+            MatchCatalogProperties catalog,String exchange,String routingKey) {
+        return jdbcMatchStateStore(jdbc,manager,mapper,catalog,exchange,routingKey,false);
+    }
     @Bean
     @DependsOnDatabaseInitialization
     public JdbcMatchStateStore jdbcMatchStateStore(JdbcTemplate jdbc, PlatformTransactionManager manager,
             ObjectMapper mapper, MatchCatalogProperties catalog,
             @Value("${match-state.rabbit.exchange:live_updates}") String exchange,
-            @Value("${match-state.rabbit.routing-key:score.{matchId}}") String routingKey) {
-        var store = new JdbcMatchStateStore(jdbc, new TransactionTemplate(manager), mapper, exchange, routingKey);
+            @Value("${match-state.rabbit.routing-key:score.{matchId}}") String routingKey, @Value("${match-state.alerts.enabled:false}") boolean alerts) {
+        var store = new JdbcMatchStateStore(jdbc, new TransactionTemplate(manager), mapper, exchange, routingKey, alerts);
         if (startup.catalog()) {
             catalog.getMatches().stream().filter(d -> hasText(d.matchId()) || hasText(d.homeTeamId()) || hasText(d.awayTeamId()))
                     .forEach(d -> store.register(MatchState.start(d.matchId(), d.homeTeamId(), d.awayTeamId())));
