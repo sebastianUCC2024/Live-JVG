@@ -86,13 +86,13 @@ def instant_key(value):
 
 
 class Harness:
-    def __init__(self, plan, files):
+    def __init__(self, plan, files, config=None):
         self.plan = plan
         self.base = ['docker', 'compose', '-p', plan['project']]
         for file in files:
             self.base += ['-f', str(Path(file).resolve())]
         self.base += ['--profile', 'integration-prepared']
-        self.config = json.loads(self.call(['config', '--format', 'json']))
+        self.config = config if config is not None else json.loads(self.call(['config', '--format', 'json']))
         self.observations = []
         self.container_ids = {}
 
@@ -104,7 +104,10 @@ class Harness:
             raise RuntimeError('Compose command failed: ' + args[0] + '; exit=' + str(result.returncode))
         return result.stdout.strip()
 
-    def preflight(self):
+    def validate_config(self, phase):
+        """Validate a resolved model only; never contact containers, databases or brokers."""
+        if phase not in {'passive', 'active'}:
+            raise ValueError('Unknown preflight phase')
         if os.environ.get('LIVE_JVG_E2E_APPROVED_PROJECT') != self.plan['project']:
             raise ValueError('Explicit isolated project acknowledgement missing')
         cfg = self.config
@@ -132,12 +135,17 @@ class Harness:
         worker = env['worker']
         if worker.get('BETTING_WORKER_ACCEPTANCE_ENABLED') != 'false' or worker.get('BETTING_WORKER_AUTHORIZATION_MODE') != 'disabled':
             raise ValueError('Acceptance and authority must remain disabled')
-        required = [('archiver', 'ARCHIVER_CONSUMER_ENABLED'), ('suspension', 'BETTING_CONTROL_CONSUMER_ENABLED'),
-                    ('worker', 'BETTING_WORKER_CONSUMER_ENABLED'), ('notification', 'NOTIFICATION_STORAGE_ENABLED'),
-                    ('notification', 'NOTIFICATION_MESSAGING_ENABLED')]
-        for name, flag in required:
-            if env[name].get(flag) != 'true':
-                raise ValueError('Owner must explicitly prepare ' + name + ': ' + flag)
+        policies = self.runtime_policy(phase)
+        for name, settings in policies.items():
+            for key, expected in settings.items():
+                if env[name].get(key) != expected:
+                    raise ValueError('Unsafe or missing ' + phase + ' control: ' + name + '/' + key)
+        for name in SERVICES:
+            if svc[name].get('depends_on'):
+                raise ValueError('Startup dependencies refused: ' + name)
+        initializer = svc.get('kafka-init')
+        if initializer is not None and initializer.get('profiles') != ['provisioning-explicit']:
+            raise ValueError('Kafka initialization must remain in its separate provisioning profile')
         for name in ['producer', 'match-state', 'dashboard']:
             if env[name].get('MATCH_ID') != self.plan['match_id']:
                 raise ValueError('Match registration mismatch: ' + name)
@@ -155,11 +163,9 @@ class Harness:
             service = svc[name]
             if service.get('command') or service.get('entrypoint'):
                 raise ValueError('Entrypoint/property overrides refused: ' + name)
+            allowed = set(policies[name]) | {'SPRING_RABBITMQ_VIRTUAL_HOST', 'SPRING_KAFKA_CONSUMER_GROUP_ID'}
             for key in env[name]:
-                if key.startswith(('SPRING_', 'JAVA_', 'JDK_')) and key not in {
-                        'SPRING_FLYWAY_ENABLED', 'SPRING_KAFKA_LISTENER_AUTO_STARTUP',
-                        'SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP', 'SPRING_RABBITMQ_VIRTUAL_HOST',
-                        'SPRING_KAFKA_CONSUMER_GROUP_ID'}:
+                if key.startswith(('SPRING_', 'JAVA_', 'JDK_')) and key not in allowed:
                     raise ValueError('Unreviewed runtime override refused: ' + name + '/' + key)
             group = env[name].get('SPRING_KAFKA_CONSUMER_GROUP_ID')
             if group and (name != 'match-state' or group != 'dev3_it_' + self.plan['run'] + '_match_state'):
@@ -180,9 +186,43 @@ class Harness:
         for key, setting in [('exchange', 'BETTING_WORKER_EXCHANGE'), ('queue', 'BETTING_WORKER_QUEUE')]:
             if resources[key] is not None and worker.get(setting) != resources[key]:
                 raise ValueError('Worker destination differs from manifest: ' + key)
+        self.worker = worker
+
+    @staticmethod
+    def runtime_policy(phase):
+        """Exact values per service and phase; an allowlist alone is insufficient."""
+        active = phase == 'active'
+        on = 'true' if active else 'false'
+        common = {
+            'SPRING_FLYWAY_ENABLED': 'false',
+            'SPRING_SQL_INIT_MODE': 'never',
+            'SPRING_RABBITMQ_DYNAMIC': 'false',
+            'SPRING_KAFKA_ADMIN_AUTO_CREATE': 'false',
+            'SPRING_KAFKA_LISTENER_AUTO_STARTUP': 'false',
+            'SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP': 'false',
+            'SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP': 'false',
+        }
+        policy = {name: dict(common) for name in SERVICES}
+        policy['producer']['SIMULATOR_WRITE_ENABLED'] = on
+        policy['dashboard'].update(SPRING_PROFILES_ACTIVE='passive',
+            DASHBOARD_CATALOG_BOOTSTRAP_ENABLED='false', SIMULATOR_WRITE_ENABLED='false',
+            DASHBOARD_RABBIT_LISTENER_ENABLED=on, SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
+        policy['match-state'].update(MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED='false',
+            MATCH_STATE_RECOVERY_ENABLED=on, MATCH_STATE_PUBLICATION_ENABLED=on,
+            KAFKA_LISTENER_AUTO_STARTUP=on, SPRING_KAFKA_LISTENER_AUTO_STARTUP=on)
+        policy['archiver']['ARCHIVER_CONSUMER_ENABLED'] = on
+        policy['suspension'].update(BETTING_CONTROL_CONSUMER_ENABLED=on,
+            BETTING_CONTROL_PUBLICATION_ENABLED='false')
+        policy['worker'].update(BETTING_WORKER_CONSUMER_ENABLED=on,
+            BETTING_WORKER_ACCEPTANCE_ENABLED='false', BETTING_WORKER_AUTHORIZATION_MODE='disabled')
+        policy['notification'].update(NOTIFICATION_STORAGE_ENABLED=on,
+            NOTIFICATION_MESSAGING_ENABLED=on, SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
+        return policy
+
+    def preflight(self):
+        self.validate_config('active')
         for name in SERVICES + ['postgres', 'kafka', 'rabbitmq']:
             self.check_container(name)
-        self.worker = worker
         self.sql("SELECT to_regclass('match_state.accepted_event'), to_regclass('dashboard.inbox')")
 
     def check_container(self, name):
@@ -297,11 +337,17 @@ class Harness:
                 raise AssertionError('Expected BLOCKED operation, observed ' + (value or 'no operation'))
             time.sleep(1)
 
-    def execute(self):
+    def prepare_execution(self):
         self.preflight()
         initial = self.observe()
         if any(initial[key] for key in ['match', 'dashboard', 'notification', 'archive', 'suspension', 'accepted']):
             raise ValueError('Fresh run required; existing evidence will not be overwritten')
+
+    def execute(self):
+        self.prepare_execution()
+        return self._execute_prepared()
+
+    def _execute_prepared(self):
         for count, step in enumerate(self.plan['steps'], 1):
             self.publish_through_producer(step['event'])
             self.await_state(count, step)
@@ -325,14 +371,24 @@ class Harness:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['plan', 'execute-v1'])
+    parser.add_argument('mode', choices=['plan', 'check-config', 'execute-v1'])
     parser.add_argument('--run', required=True)
+    parser.add_argument('--config-json', help='Resolved Compose JSON for offline validation; may contain secrets')
+    parser.add_argument('--phase', choices=['passive', 'active'], help='Required for check-config only')
     parser.add_argument('--timestamp', help='Fixed ISO instant for reproducible offline plans')
     parser.add_argument('--manifest', help='Reviewed resource manifest; never executes provisioning statements')
     parser.add_argument('--compose-file', action='append', default=[])
     args = parser.parse_args()
+    if args.mode == 'check-config' and (not args.config_json or not args.phase):
+        parser.error('check-config requires --config-json and --phase')
+    if args.mode != 'check-config' and (args.config_json or args.phase):
+        parser.error('--config-json and --phase are only valid for check-config')
     manifest = json.loads(Path(args.manifest).read_text()) if args.manifest else None
     plan = scenarios(args.run, args.timestamp, manifest)
+    if args.mode == 'check-config':
+        Harness(plan, [], config=json.loads(Path(args.config_json).read_text())).validate_config(args.phase)
+        print('CONFIG_VALIDATED_ONLY: ' + args.phase)
+        return
     output = ROOT / 'tmp' / plan['project']
     output.mkdir(parents=True, exist_ok=True)
     plan_file = output / 'plan.json'
@@ -353,14 +409,17 @@ def main():
     evidence = output / 'result.json'
     if evidence.exists():
         raise ValueError('Result exists; choose a new run rather than overwrite evidence')
-    # A run is one-shot, even when preflight fails. Preserve this claim as evidence;
-    # a second process must not publish the same plan concurrently.
-    with (output / 'execute.claim').open('x') as handle:
+    claim = output / 'execute.claim'
+    if claim.exists():
+        raise ValueError('Execution already claimed; preserve evidence and choose a new run')
+    # Read-only preparation can be retried without consuming the run identity.
+    # Once it succeeds, exclusive creation retains the one-shot/concurrency guard.
+    harness = Harness(plan, args.compose_file or [ROOT / 'docker-compose.yml'])
+    harness.prepare_execution()
+    with claim.open('x') as handle:
         handle.write('Isolated V1 execution claimed; never reuse this run.\n')
-    harness = None
     try:
-        harness = Harness(plan, args.compose_file or [ROOT / 'docker-compose.yml'])
-        result = harness.execute()
+        result = harness._execute_prepared()
     except Exception as failure:
         result = dict(status='FAILED', error_type=type(failure).__name__,
                       observations=harness.observations if harness else [])

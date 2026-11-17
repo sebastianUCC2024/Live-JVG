@@ -3,9 +3,10 @@ import importlib.util
 from pathlib import Path
 import unittest
 import json
+import re
 import tempfile
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 spec = importlib.util.spec_from_file_location('harness', Path(__file__).with_name('e2e-harness.py'))
 harness = importlib.util.module_from_spec(spec)
@@ -95,7 +96,7 @@ class HarnessTest(unittest.TestCase):
         self.assertEqual('dev3_it_5c84548cf006_control_app', proposed['roles']['control_app'])
         self.assertFalse(proposed['safe_flags']['acceptance'])
 
-    def test_plan_and_execution_claim_never_overwrite_previous_evidence(self):
+    def test_failed_preflight_can_retry_without_consuming_run_or_plan(self):
         with tempfile.TemporaryDirectory(prefix='offline-harness-') as temporary:
             test_root = Path(temporary).resolve()
             args = ['e2e-harness.py', 'plan', '--run', 'abcdef123456', '--timestamp', '2026-11-16T22:00:00.120Z']
@@ -105,26 +106,60 @@ class HarnessTest(unittest.TestCase):
                 original = plan_file.read_bytes()
                 with self.assertRaisesRegex(ValueError, 'Plan exists'):
                     harness.main()
-                self.assertEqual(original, plan_file.read_bytes())
-            args[1] = 'execute-v1'
-            with patch.object(harness, 'ROOT', test_root), patch('sys.argv', args), \
-                    patch.object(harness, 'Harness', side_effect=ValueError('preflight refused')) as constructor:
-                with self.assertRaisesRegex(ValueError, 'preflight refused'):
+                args[1] = 'execute-v1'
+                for stage in ['constructor', 'preparation']:
+                    runner = Mock()
+                    runner.prepare_execution.side_effect = ValueError('preflight refused')
+                    with patch.object(harness, 'Harness', side_effect=ValueError('preflight refused')
+                                      if stage == 'constructor' else None, return_value=runner) as constructor:
+                        for _ in range(2):
+                            with self.assertRaisesRegex(ValueError, 'preflight refused'):
+                                harness.main()
+                        self.assertEqual(2, constructor.call_count)
+                        runner._execute_prepared.assert_not_called()
+                    self.assertEqual(original, plan_file.read_bytes())
+                    self.assertFalse(plan_file.with_name('execute.claim').exists())
+                    self.assertFalse(plan_file.with_name('result.json').exists())
+
+    def test_execution_failure_retains_one_shot_claim_and_evidence(self):
+        with tempfile.TemporaryDirectory(prefix='offline-harness-') as temporary:
+            root = Path(temporary)
+            args = ['e2e-harness.py', 'execute-v1', '--run', 'abcdef123456']
+            runner = Mock()
+            runner._execute_prepared.side_effect = ValueError('after claim')
+            runner.observations = []
+            with patch.object(harness, 'ROOT', root), patch('sys.argv', args), \
+                    patch.object(harness, 'Harness', return_value=runner) as constructor:
+                with self.assertRaisesRegex(ValueError, 'after claim'):
                     harness.main()
-                result_file = plan_file.with_name('result.json')
-                result = result_file.read_bytes()
+                output = root / 'tmp/live-jvg-e2e-abcdef123456'
+                result = (output / 'result.json').read_bytes()
                 self.assertEqual('FAILED', json.loads(result)['status'])
                 with self.assertRaisesRegex(ValueError, 'Result exists'):
                     harness.main()
                 self.assertEqual(1, constructor.call_count)
-                self.assertEqual(original, plan_file.read_bytes())
-                self.assertEqual(result, result_file.read_bytes())
-                self.assertTrue(plan_file.with_name('execute.claim').exists())
+                self.assertEqual(result, (output / 'result.json').read_bytes())
+                self.assertTrue((output / 'execute.claim').exists())
+
+    def test_concurrent_claim_is_exclusive_and_never_deleted(self):
+        with tempfile.TemporaryDirectory(prefix='offline-harness-') as temporary:
+            root = Path(temporary)
+            claim = root / 'tmp/live-jvg-e2e-abcdef123456/execute.claim'
+            runner = Mock()
+            runner.prepare_execution.side_effect = lambda: claim.write_text('other executor')
+            args = ['e2e-harness.py', 'execute-v1', '--run', 'abcdef123456']
+            with patch.object(harness, 'ROOT', root), patch('sys.argv', args), \
+                    patch.object(harness, 'Harness', return_value=runner):
+                with self.assertRaises(FileExistsError):
+                    harness.main()
+                self.assertEqual('other executor', claim.read_text())
+                runner._execute_prepared.assert_not_called()
+                self.assertFalse(claim.with_name('result.json').exists())
 
     def test_committed_wire_fixture_matches_generated_reproducible_plan(self):
         fixture = json.loads(Path(__file__).with_name('e2e').joinpath('fixtures/v1-sequence.json').read_text())
         self.assertEqual(harness.scenarios('abcdef123456', '2026-11-16T22:00:00.120Z'), fixture)
-    def runner(self):
+    def runner(self, phase='active'):
         runner = object.__new__(harness.Harness)
         runner.plan = harness.scenarios('abcdef123456', '2026-11-16T22:00:00.120Z')
         runner.container_ids = {}
@@ -146,6 +181,23 @@ class HarnessTest(unittest.TestCase):
             env[name][prefix + 'HOST'] = 'rabbitmq'
             env[name][prefix + 'PORT'] = '5672'
         env['notification'].update(NOTIFICATION_STORAGE_ENABLED='true', NOTIFICATION_MESSAGING_ENABLED='true')
+        on = 'true' if phase == 'active' else 'false'
+        for name in harness.SERVICES:
+            env[name].update(SPRING_FLYWAY_ENABLED='false', SPRING_SQL_INIT_MODE='never',
+                SPRING_KAFKA_ADMIN_AUTO_CREATE='false', SPRING_RABBITMQ_DYNAMIC='false',
+                SPRING_KAFKA_LISTENER_AUTO_STARTUP='false', SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP='false',
+                SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP='false')
+        env['producer']['SIMULATOR_WRITE_ENABLED'] = on
+        env['dashboard'].update(SPRING_PROFILES_ACTIVE='passive', DASHBOARD_CATALOG_BOOTSTRAP_ENABLED='false',
+            SIMULATOR_WRITE_ENABLED='false', DASHBOARD_RABBIT_LISTENER_ENABLED=on,
+            SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
+        env['match-state'].update(MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED='false', MATCH_STATE_RECOVERY_ENABLED=on,
+            MATCH_STATE_PUBLICATION_ENABLED=on, KAFKA_LISTENER_AUTO_STARTUP=on, SPRING_KAFKA_LISTENER_AUTO_STARTUP=on)
+        for name, prefix in [('archiver', 'ARCHIVER'), ('suspension', 'BETTING_CONTROL'), ('worker', 'BETTING_WORKER')]:
+            env[name][prefix + '_CONSUMER_ENABLED'] = on
+        env['suspension']['BETTING_CONTROL_PUBLICATION_ENABLED'] = 'false'
+        env['notification'].update(NOTIFICATION_STORAGE_ENABLED=on, NOTIFICATION_MESSAGING_ENABLED=on,
+            SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
         env['worker'].update(BETTING_WORKER_ACCEPTANCE_ENABLED='false', BETTING_WORKER_AUTHORIZATION_MODE='disabled')
         return runner
 
@@ -295,6 +347,127 @@ class HarnessTest(unittest.TestCase):
         self.assertEqual(3, kafka.call_count)
         call.assert_called_once_with(['restart', 'match-state', 'dashboard', 'notification', 'archiver', 'suspension', 'worker'])
         self.assertEqual('V1_OBSERVED', result['status'])
+
+    def test_both_phase_models_validate_without_external_calls(self):
+        for phase in ['passive', 'active']:
+            runner = self.runner(phase)
+            with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}), \
+                    patch.object(harness.subprocess, 'run', side_effect=AssertionError('No commands')), \
+                    patch.object(runner, 'check_container') as check, patch.object(runner, 'sql') as sql:
+                runner.validate_config(phase)
+                check.assert_not_called()
+                sql.assert_not_called()
+                if phase == 'passive':
+                    with self.assertRaisesRegex(ValueError, 'active control'):
+                        runner.preflight()
+                    check.assert_not_called()
+
+    def test_every_phase_gate_rejects_missing_and_unsafe_values(self):
+        for phase in ['passive', 'active']:
+            for name, settings in harness.Harness.runtime_policy(phase).items():
+                for key, expected in settings.items():
+                    for unsafe in [None, '', False, 'TRUE', 'true' if expected != 'true' else 'false']:
+                        with self.subTest(phase=phase, service=name, key=key, unsafe=unsafe):
+                            runner = self.runner(phase)
+                            if unsafe is None: runner.config['services'][name]['environment'].pop(key)
+                            else: runner.config['services'][name]['environment'][key] = unsafe
+                            with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}), \
+                                    patch.object(runner, 'check_container') as check:
+                                with self.assertRaises(ValueError): runner.validate_config(phase)
+                                check.assert_not_called()
+
+    def test_passive_policy_matches_every_literal_control_in_committed_overlay(self):
+        source = Path(__file__).with_name('e2e').joinpath('compose.manifest-proposed.yml').read_text()
+        for name, settings in harness.Harness.runtime_policy('passive').items():
+            block = re.search(r'(?ms)^  ' + re.escape(name) + r':\n.*?(?=^  \S|\Z)', source).group()
+            for key, expected in settings.items():
+                self.assertRegex(block, r'(?m)^      ' + key + ': "?' + expected + '"?$')
+            for key in re.findall(r'^      (SPRING_[A-Z_]+):', block, re.M):
+                self.assertIn(key, set(settings) | {'SPRING_RABBITMQ_VIRTUAL_HOST', 'SPRING_KAFKA_CONSUMER_GROUP_ID'})
+
+    def test_unexpected_profiles_jvm_overrides_and_startup_dependencies_are_refused(self):
+        for name, key, value in [('dashboard', 'SPRING_PROFILES_ACTIVE', 'passive,memory'),
+                                 ('dashboard', 'SPRING_PROFILES_ACTIVE', 'prod'),
+                                 ('worker', 'SPRING_PROFILES_ACTIVE', 'passive'),
+                                 ('producer', 'JAVA_TOOL_OPTIONS', '-Dsimulator.write-enabled=true'),
+                                 ('worker', 'JDK_JAVA_OPTIONS', '-Dworker.acceptance.enabled=true')]:
+            runner = self.runner('passive')
+            runner.config['services'][name]['environment'][key] = value
+            with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}):
+                with self.assertRaises(ValueError): runner.validate_config('passive')
+        for name in harness.SERVICES:
+            runner = self.runner('passive')
+            runner.config['services'][name]['depends_on'] = {'kafka-init': {'condition': 'service_completed_successfully'}}
+            with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}):
+                with self.assertRaisesRegex(ValueError, 'dependencies'): runner.validate_config('passive')
+        runner = self.runner('passive')
+        runner.config['services']['kafka-init'] = {'profiles': ['integration-prepared']}
+        with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}):
+            with self.assertRaisesRegex(ValueError, 'provisioning profile'): runner.validate_config('passive')
+            with self.assertRaisesRegex(ValueError, 'Unknown'): runner.validate_config('typo')
+
+    def test_isolation_and_destination_regressions_fail_before_runtime_access(self):
+        for change in ['project', 'port', 'network', 'volume', 'bind', 'privileged', 'network_mode',
+                       'volumes_from', 'container_name', 'command', 'entrypoint', 'group', 'topic', 'match', 'destination']:
+            with self.subTest(change=change):
+                runner = self.runner()
+                service = runner.config['services']['worker']
+                if change == 'project': runner.config['name'] = 'shared'
+                elif change == 'port': service['ports'] = [{'host_ip': '0.0.0.0'}]
+                elif change in ['network', 'volume']:
+                    runner.config['networks' if change == 'network' else 'volumes'] = {'x': {'name': 'shared', 'external': True}}
+                elif change == 'bind': service['volumes'] = [{'type': 'bind', 'source': '/shared'}]
+                elif change == 'privileged': service['privileged'] = True
+                elif change in ['network_mode', 'container_name', 'command', 'entrypoint']: service[change] = 'unsafe'
+                elif change == 'volumes_from': service['volumes_from'] = ['shared']
+                elif change == 'group': service['environment']['SPRING_KAFKA_CONSUMER_GROUP_ID'] = 'shared'
+                elif change == 'topic': runner.config['services']['producer']['environment']['MATCH_EVENTS_TOPIC'] = 'foreign'
+                elif change == 'match': runner.config['services']['dashboard']['environment']['MATCH_ID'] = 'foreign'
+                else:
+                    runner.plan['resources']['exchange'] = 'approved'
+                    service['environment']['BETTING_WORKER_EXCHANGE'] = 'foreign'
+                with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}), \
+                        patch.object(runner, 'check_container') as check:
+                    with self.assertRaises(ValueError): runner.preflight()
+                    check.assert_not_called()
+
+    def test_existing_claim_refuses_before_preparation_and_preserves_artifacts(self):
+        with tempfile.TemporaryDirectory(prefix='offline-harness-') as temporary:
+            root = Path(temporary)
+            output = root / 'tmp/live-jvg-e2e-abcdef123456'
+            output.mkdir(parents=True)
+            claim = output / 'execute.claim'
+            claim.write_text('original claim')
+            args = ['e2e-harness.py', 'execute-v1', '--run', 'abcdef123456']
+            with patch.object(harness, 'ROOT', root), patch('sys.argv', args), patch.object(harness, 'Harness') as constructor:
+                with self.assertRaisesRegex(ValueError, 'already claimed'): harness.main()
+                constructor.assert_not_called()
+                self.assertEqual('original claim', claim.read_text())
+                self.assertFalse((output / 'result.json').exists())
+
+    def test_nonfresh_storage_is_refused_before_any_publication(self):
+        runner = self.runner()
+        initial = dict.fromkeys(['match', 'dashboard', 'notification', 'archive', 'suspension', 'accepted'], 0)
+        initial['match'] = 1
+        with patch.object(runner, 'preflight'), patch.object(runner, 'observe', return_value=initial), \
+                patch.object(runner, '_execute_prepared') as execute:
+            with self.assertRaisesRegex(ValueError, 'Fresh run required'): runner.execute()
+            execute.assert_not_called()
+
+    def test_check_config_cli_is_offline_and_creates_no_run_artifacts(self):
+        for phase in ['passive', 'active']:
+            runner = self.runner(phase)
+            with tempfile.TemporaryDirectory(prefix='offline-harness-') as temporary:
+                root = Path(temporary)
+                config = root / 'resolved.json'
+                config.write_text(json.dumps(runner.config))
+                args = ['e2e-harness.py', 'check-config', '--run', 'abcdef123456',
+                        '--config-json', str(config), '--phase', phase]
+                with patch.object(harness, 'ROOT', root), patch('sys.argv', args), \
+                        patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}), \
+                        patch.object(harness.subprocess, 'run', side_effect=AssertionError('No commands')):
+                    harness.main()
+                    self.assertFalse((root / 'tmp').exists())
 
 
 if __name__ == '__main__':
