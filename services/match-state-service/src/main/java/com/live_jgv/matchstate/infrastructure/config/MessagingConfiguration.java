@@ -48,6 +48,11 @@ public class MessagingConfiguration {
     private static final Logger log = LoggerFactory.getLogger(MessagingConfiguration.class);
 
     @Bean
+    public StartupPolicy startupPolicy(Environment environment) {
+        return StartupPolicy.from(environment);
+    }
+
+    @Bean
     public ObjectMapper messagingObjectMapper() {
         return JsonMapper.builder().addModule(new JavaTimeModule())
                 .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
@@ -117,10 +122,13 @@ public class MessagingConfiguration {
     }
 
     @Bean
-    public ScoreUpdatePublisher scoreUpdatePublisher(RabbitTemplate template, ObjectMapper mapper,
+    public ScoreUpdatePublisher scoreUpdatePublisher(RabbitTemplate template, ObjectMapper mapper, StartupPolicy startup,
             @Value("${match-state.rabbit.exchange:live_updates}") String exchange,
             @Value("${match-state.rabbit.routing-key:score.{matchId}}") String routingKey,
             @Value("${match-state.rabbit.confirm-timeout:5s}") Duration timeout) {
+        if (!startup.publication()) {
+            return update -> { throw new IllegalStateException("Score publication disabled"); };
+        }
         template.setMandatory(true);
         return new RabbitScoreUpdatePublisher(template, mapper, exchange, routingKey, timeout);
     }

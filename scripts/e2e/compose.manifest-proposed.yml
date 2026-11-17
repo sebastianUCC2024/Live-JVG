@@ -10,19 +10,41 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:19991
     ports: !override ["127.0.0.1:19991:19092"]
   kafka-init:
+    profiles: !override [provisioning-explicit]
     command: [--bootstrap-server, "kafka:9092", --create, --if-not-exists, --topic, "${E2E_TOPIC:?Manifest topic required}", --partitions, "1", --replication-factor, "1"]
   rabbitmq:
     environment:
       RABBITMQ_DEFAULT_VHOST: ${E2E_VHOST:?Manifest vhost required}
     ports: !override ["127.0.0.1:56991:5672", "127.0.0.1:15991:15672"]
   producer:
+    depends_on: !reset {}
     environment:
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
+      SIMULATOR_WRITE_ENABLED: "false"
       MATCH_ID: ${E2E_MATCH_ID:?Manifest match required}
       MATCH_EVENTS_TOPIC: ${E2E_TOPIC}
     ports: !override ["127.0.0.1:18191:8080"]
   dashboard:
+    depends_on: !reset {}
     container_name: !reset null
     environment:
+      SPRING_PROFILES_ACTIVE: passive
+      DASHBOARD_CATALOG_BOOTSTRAP_ENABLED: "false"
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
+      SIMULATOR_WRITE_ENABLED: "false"
+      DASHBOARD_RABBIT_LISTENER_ENABLED: "false"
       MATCH_ID: ${E2E_MATCH_ID}
       DASHBOARD_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
       DB_USERNAME: ${E2E_DASHBOARD_ROLE:?Dedicated owner-provisioned role}
@@ -31,7 +53,19 @@ services:
       SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
     ports: !override ["127.0.0.1:18190:8080"]
   match-state:
+    depends_on: !reset {}
     environment:
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
+      KAFKA_LISTENER_AUTO_STARTUP: "false"
+      MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED: "false"
+      MATCH_STATE_RECOVERY_ENABLED: "false"
+      MATCH_STATE_PUBLICATION_ENABLED: "false"
       MATCH_ID: ${E2E_MATCH_ID}
       MATCH_STATE_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
       MATCH_STATE_DB_USERNAME: ${E2E_MATCH_STATE_ROLE:?Dedicated owner-provisioned role}
@@ -41,7 +75,15 @@ services:
       SPRING_KAFKA_CONSUMER_GROUP_ID: ${E2E_MATCH_STATE_GROUP}
       SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
   archiver:
+    depends_on: !reset {}
     environment:
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
       ARCHIVER_DB_URL: jdbc:postgresql://postgres:5432/${E2E_ARCHIVE_DATABASE}
       ARCHIVER_DB_USERNAME: ${E2E_ARCHIVER_ROLE:?Dedicated owner-provisioned role}
       ARCHIVER_DB_PASSWORD: ${E2E_ARCHIVER_PASSWORD:?Private secret}
@@ -50,7 +92,15 @@ services:
       MATCH_EVENTS_TOPIC: ${E2E_TOPIC}
       ARCHIVER_CONSUMER_ENABLED: "false"
   suspension:
+    depends_on: !reset {}
     environment:
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
       BETTING_CONTROL_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
       BETTING_CONTROL_DB_USERNAME: ${E2E_CONTROL_ROLE:?Dedicated owner-provisioned role}
       BETTING_CONTROL_DB_PASSWORD: ${E2E_CONTROL_PASSWORD:?Private secret}
@@ -61,7 +111,15 @@ services:
       BETTING_CONTROL_CONSUMER_ENABLED: "false"
       BETTING_CONTROL_PUBLICATION_ENABLED: "false"
   worker:
+    depends_on: !reset {}
     environment:
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
       BETTING_WORKER_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
       BETTING_WORKER_DB_USERNAME: ${E2E_WORKER_ROLE:?Dedicated owner-provisioned role}
       BETTING_WORKER_DB_PASSWORD: ${E2E_WORKER_PASSWORD:?Private secret}
@@ -73,7 +131,15 @@ services:
       BETTING_WORKER_ACCEPTANCE_ENABLED: "false"
       BETTING_WORKER_AUTHORIZATION_MODE: disabled
   notification:
+    depends_on: !reset {}
     environment:
+      SPRING_SQL_INIT_MODE: never
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_RABBITMQ_DYNAMIC: "false"
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: "false"
       NOTIFICATION_STORAGE_ENABLED: "false"
       NOTIFICATION_MESSAGING_ENABLED: "false"
       NOTIFICATION_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
