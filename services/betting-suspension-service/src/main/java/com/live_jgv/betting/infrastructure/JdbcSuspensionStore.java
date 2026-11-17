@@ -9,12 +9,18 @@ import java.time.*;
 import java.util.*;
 
 public final class JdbcSuspensionStore implements SuspensionStore {
+    private final String academicQueue;
+    private final boolean academicEnabled;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
     private final Clock clock;
     private final ObjectMapper mapper=new ObjectMapper().findAndRegisterModules()
             .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    public JdbcSuspensionStore(JdbcTemplate jdbc,TransactionTemplate tx,Clock clock) { this.jdbc=jdbc;this.tx=tx;this.clock=clock; }
+    public JdbcSuspensionStore(JdbcTemplate jdbc,TransactionTemplate tx,Clock clock) { this(jdbc,tx,clock,false,"betting_commands"); }
+    public JdbcSuspensionStore(JdbcTemplate jdbc,TransactionTemplate tx,Clock clock,boolean academicEnabled,String academicQueue) {
+        if(academicQueue==null||!academicQueue.matches("[A-Za-z0-9_.-]{1,180}"))throw new IllegalArgumentException("Invalid academic queue");
+        this.jdbc=jdbc;this.tx=tx;this.clock=clock;this.academicEnabled=academicEnabled;this.academicQueue=academicQueue;
+    }
     @Override public Outcome handle(InputRecord r,DecodedInput input) {
         return Objects.requireNonNull(tx.execute(status->{
             int receipt=jdbc.update("""
@@ -43,7 +49,17 @@ public final class JdbcSuspensionStore implements SuspensionStore {
                     if(event.eventType()==SportEvent.EventType.VAR_CHECK || event.eventType()==SportEvent.EventType.GOAL) persistOne("""
                             INSERT INTO betting_control.pending_review(match_id,review_id,reference_event_id,opened_version) VALUES (?,?,?,?)
                             """,event.matchId(),event.eventId(),event.eventType()==SportEvent.EventType.GOAL?event.eventId():event.referenceEventId(),after.version());
-                    persist(before,after,event.eventId());outcome=Outcome.APPLIED;
+                    persist(before,after,event.eventId());
+                    if(academicEnabled) {
+                        var command=new com.live_jgv.betting.academic.AcademicCommandMapper().map(event);
+                        persistOne("""
+                            INSERT INTO betting_control.academic_outbox(command_id,match_id,source_event_id,source_version,
+                                command_type,payload,source_payload,source_reference_event_id,source_id,topic,partition_id,record_offset,source_headers,destination_queue)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            """,command.commandId(),command.matchId(),command.sourceEventId(),after.version(),command.commandType().name(),
+                                command.json(),r.value(),event.referenceEventId(),r.sourceId(),r.topic(),r.partition(),r.offset(),r.headers(),academicQueue);
+                    }
+                    outcome=Outcome.APPLIED;
                 }
             }
             int finalized=jdbc.update("""
