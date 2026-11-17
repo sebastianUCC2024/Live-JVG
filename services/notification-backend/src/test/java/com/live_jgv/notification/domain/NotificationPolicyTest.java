@@ -28,4 +28,12 @@ class NotificationPolicyTest {
     @Test void annulmentRequiresReference() {
         assertThrows(InvalidUpdateException.class,()->new ScoreUpdate("m","e",ScoreUpdate.EventType.GOAL_ANNULLED,0,0,ScoreUpdate.VarStatus.CLEAR,Instant.EPOCH,null));
     }
+    @Test void goalDuringV1ReviewDoesNotClaimTheScoreIsConfirmed() {
+        var update=new ScoreUpdate("m","goal-during-review",ScoreUpdate.EventType.GOAL,
+                2,1,ScoreUpdate.VarStatus.IN_PROGRESS,Instant.EPOCH,null);
+        var alert=new NotificationPolicy().create(update,Instant.EPOCH).orElseThrow();
+        assertEquals(update,alert.source());
+        assertEquals("Gol",alert.content().title());
+        assertEquals("Revisión VAR en curso. Marcador actualizado: 2–1.",alert.content().message());
+    }
 }
