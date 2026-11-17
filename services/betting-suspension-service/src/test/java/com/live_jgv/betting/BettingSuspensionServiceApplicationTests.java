@@ -25,6 +25,10 @@ class BettingSuspensionServiceApplicationTests {
         assertEquals("false",environment.getProperty("spring.flyway.enabled"));
         assertTrue(context.getBeansOfType(SuspensionPublisher.class).isEmpty());
         assertTrue(context.getBeansOfType(OutboxDispatcher.class).isEmpty());
+        assertTrue(context.getBeansOfType(com.live_jgv.betting.academic.AcademicOutboxDispatcher.class).isEmpty());
+        assertTrue(context.getBeansOfType(org.springframework.amqp.rabbit.core.RabbitAdmin.class).isEmpty());
+        assertEquals("false",environment.getProperty("academic.commands.enabled"));
+        assertEquals("false",environment.getProperty("academic.publication.enabled"));
         assertFalse(context.getBean(com.live_jgv.betting.application.LeaseSourceVerifier.class).verify("m",1,"unverified-checkpoint"));
         assertTrue(context.getBeansOfType(com.live_jgv.betting.infrastructure.JdbcOpenLeaseIssuer.class).isEmpty());
     }
