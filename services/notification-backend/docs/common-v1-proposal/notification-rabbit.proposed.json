@@ -1,0 +1,54 @@
+{
+  "status": "PROPOSED_NOT_APPROVED",
+  "executed": false,
+  "host": "127.0.0.1",
+  "port": 56991,
+  "management_port": 15991,
+  "vhost": "/",
+  "user": "notification_e2e_5c84548cf006",
+  "tags": [],
+  "password": null,
+  "permissions": {
+    "configure": "^(live_alerts|notification\\.dev3_it_5c84548cf006(\\.dlx|\\.dlq)?)$",
+    "read": "^(live_alerts|notification\\.dev3_it_5c84548cf006(\\.dlx)?)$",
+    "write": "^notification\\.dev3_it_5c84548cf006(\\.dlx|\\.dlq)?$"
+  },
+  "topic_permissions": {
+    "applicable": false,
+    "reason": "Fanout and direct exchanges do not use topic permissions"
+  },
+  "topology": {
+    "exchange": "live_alerts",
+    "type": "fanout",
+    "durable": true,
+    "queue": "notification.dev3_it_5c84548cf006",
+    "binding": "",
+    "dlx": "notification.dev3_it_5c84548cf006.dlx",
+    "dlx_type": "direct",
+    "dlq": "notification.dev3_it_5c84548cf006.dlq",
+    "recovery_key": "rejected"
+  },
+  "environment_proposal": {
+    "NOTIFICATION_LIVE_ALERTS_ENABLED": "false",
+    "NOTIFICATION_MESSAGING_ENABLED": "false",
+    "NOTIFICATION_RABBIT_USERNAME": "notification_e2e_5c84548cf006",
+    "SPRING_RABBITMQ_VIRTUAL_HOST": "/"
+  },
+  "requires_operator": [
+    "attest a new exclusive Rabbit server/project and its instance identity; PostgreSQL identity is insufficient",
+    "private password, scoped vhost permissions, no global grants or management tags",
+    "separate DLQ operator; do not grant DLQ consumption to Notification",
+    "explicit RabbitAdmin remains active when messaging is enabled, even with spring.rabbitmq.dynamic=false"
+  ],
+  "flags": {
+    "consumers": false,
+    "publication": false,
+    "acceptance": false,
+    "authority": "disabled",
+    "leases": false,
+    "notification_storage": false,
+    "live_alerts": false,
+    "alert_generation": false,
+    "alert_publication": false
+  }
+}

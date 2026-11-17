@@ -49,10 +49,16 @@ public class RabbitConfiguration {
         declarations.add(new Binding(dlq,Binding.DestinationType.QUEUE,dlx,"rejected",null));
         return new Declarables(declarations);
     }
+    public static Declarables alertTopology(String queue) {
+        if(queue==null || !queue.startsWith("notification.") || !queue.matches("[A-Za-z0-9_.-]{1,200}")) throw new IllegalArgumentException("Notification-owned queue required");
+        String dlx=queue+".dlx", dlq=queue+".dlq";
+        return new Declarables(new FanoutExchange("live_alerts",true,false),new org.springframework.amqp.core.Queue(queue,true),new Binding(queue,Binding.DestinationType.QUEUE,"live_alerts","",null),new DirectExchange(dlx,true,false),new org.springframework.amqp.core.Queue(dlq,true),new Binding(dlq,Binding.DestinationType.QUEUE,dlx,"rejected",null));
+    }
     @Bean Declarables notificationTopology(@Value("${notification.messaging.exchange}") String exchange,
             @Value("${notification.messaging.queue}") String queue,@Value("${notification.messaging.match-ids:}") String ids,
-            @Value("${notification.storage.enabled:false}") boolean storage) {
+            @Value("${notification.storage.enabled:false}") boolean storage, @Value("${notification.messaging.live-alerts-enabled:false}") boolean liveAlerts) {
         if (!storage) throw new IllegalArgumentException("Durable storage must be enabled before messaging");
+        if(liveAlerts) { if(ids.isBlank()) throw new IllegalArgumentException("Approved scope required"); return alertTopology(queue); }
         return topology(exchange,queue,ids);
     }
     @Bean RabbitAdmin notificationAdmin(ConnectionFactory connectionFactory, ConsumerReadiness consumer) {
@@ -82,11 +88,12 @@ public class RabbitConfiguration {
     }
     @Bean ScoreUpdateListener notificationListener(ProcessScoreUpdateService processor, ScoreUpdateCodec codec,
             ConfirmedDlqRecovery recovery, RabbitListenerEndpointRegistry registry, ConsumerReadiness consumer,
-            @Value("${notification.messaging.max-attempts:3}") int attempts,@Value("${notification.messaging.retry-interval-ms:1000}") long interval) {
-        return new ScoreUpdateListener(processor,codec,recovery,()->{
+            @Value("${notification.messaging.max-attempts:3}") int attempts,@Value("${notification.messaging.retry-interval-ms:1000}") long interval, @Value("${notification.messaging.live-alerts-enabled:false}") boolean liveAlerts, @Value("${notification.messaging.match-ids:}") String matchIds) {
+        var listener = new ScoreUpdateListener(processor,codec,recovery,()->{
             consumer.invalidate();
             var container=registry.getListenerContainer("notificationScores");
             if (container != null) container.stop(()->{});
         },Thread::sleep,attempts,interval);
+        return liveAlerts ? listener.withLiveAlerts(new LinkedHashSet<>(Arrays.stream(matchIds.split(",",-1)).map(String::trim).toList())) : listener;
     }
 }

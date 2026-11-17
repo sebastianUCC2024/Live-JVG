@@ -20,6 +20,12 @@ public final class ScoreUpdateListener {
     private final Sleeper sleeper;
     private final int attempts;
     private final long interval;
+    private com.live_jgv.notification.infrastructure.json.LiveAlertCodec alertCodec;
+    private java.util.Set<String> allowedMatches;
+    public ScoreUpdateListener withLiveAlerts(java.util.Set<String> matches) {
+        if(matches.isEmpty() || matches.stream().anyMatch(id->!id.matches("[A-Za-z0-9_.-]+"))) throw new IllegalArgumentException("Approved scope required");
+        this.alertCodec=new com.live_jgv.notification.infrastructure.json.LiveAlertCodec(); this.allowedMatches=java.util.Set.copyOf(matches); return this;
+    }
     private final ProcessingFailurePolicy failurePolicy=new ProcessingFailurePolicy();
     public ScoreUpdateListener(ProcessScoreUpdateService processor, ScoreUpdateCodec codec,
             ConfirmedDlqRecovery recovery, Runnable stop, Sleeper sleeper, int attempts, long interval) {
@@ -31,14 +37,16 @@ public final class ScoreUpdateListener {
     public void receive(Message message, Channel channel) throws IOException {
         long tag = message.getMessageProperties().getDeliveryTag();
         try {
-            var update = codec.decode(message.getBody());
+            var alert=alertCodec==null?null:alertCodec.decode(message.getBody());
+            var update = alert==null?codec.decode(message.getBody()):alert.snapshot();
             var properties = message.getMessageProperties();
-            if ((properties.getMessageId() != null && !properties.getMessageId().equals(update.eventId()))
-                    || (properties.getReceivedRoutingKey() != null && !properties.getReceivedRoutingKey().equals("score." + update.matchId())))
+            if(alert!=null && (!allowedMatches.contains(alert.matchId()) || !"live_alerts".equals(properties.getReceivedExchange()) || !alert.alertId().toString().equals(properties.getMessageId()))) throw new InvalidUpdateException("LiveAlert AMQP identity or scope mismatch");
+            if (alert==null && ((properties.getMessageId() != null && !properties.getMessageId().equals(update.eventId()))
+                    || (properties.getReceivedRoutingKey() != null && !properties.getReceivedRoutingKey().equals("score." + update.matchId()))))
                 throw new InvalidUpdateException("AMQP identity or routing key mismatch");
             for (int attempt=1; ; attempt++) {
                 try {
-                    var result=processor.process(update);
+                    var result=alert==null?processor.process(update):processor.process(alert);
                     LOG.info("Notification input processed; result={}, matchId={}, eventId={}",result,update.matchId(),update.eventId());
                     break;
                 }

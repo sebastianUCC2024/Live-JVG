@@ -15,10 +15,16 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
     private final ObjectMapper mapper;
     private final String exchange;
     private final String routingPattern;
+    private final boolean liveAlerts;
     private final ThreadLocal<JdbcTemplate> publicationSession = new ThreadLocal<>();
 
     public JdbcMatchStateStore(JdbcTemplate jdbc, TransactionTemplate transactions, ObjectMapper mapper,
                                String exchange, String routingPattern) {
+        this(jdbc,transactions,mapper,exchange,routingPattern,false);
+    }
+    public JdbcMatchStateStore(JdbcTemplate jdbc, TransactionTemplate transactions, ObjectMapper mapper,
+            String exchange,String routingPattern,boolean liveAlerts) {
+        this.liveAlerts=liveAlerts;
         this.jdbc = jdbc;
         this.transactions = transactions;
         this.mapper = mapper;
@@ -99,6 +105,9 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
                     updated.matchId(), event.eventId(), next, eventJson);
             jdbc.update("INSERT INTO match_state.score_outbox(match_id,event_id,application_seq,payload,exchange_name,routing_key) VALUES (?,?,?,?,?,?)",
                     updated.matchId(), event.eventId(), next, outputJson, exchange, routingPattern.replace("{matchId}", updated.matchId()));
+            if(liveAlerts) LiveAlertV1.create(update).ifPresent(alert -> jdbc.update(
+                    "INSERT INTO match_state.alert_outbox(alert_id,match_id,event_id,application_seq,payload,exchange_name) VALUES (?,?,?,?,?,?)",
+                    alert.alertId(),update.matchId(),update.eventId(),next,encode(alert),"live_alerts"));
             return true;
         }));
     }
