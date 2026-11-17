@@ -70,10 +70,8 @@ class HarnessTest(unittest.TestCase):
         self.assertFalse(proposed['safe_flags']['acceptance'])
 
     def test_plan_and_execution_claim_never_overwrite_previous_evidence(self):
-        workspace_tmp = harness.ROOT / 'tmp'
-        with tempfile.TemporaryDirectory(prefix='offline-harness-', dir=workspace_tmp) as temporary:
+        with tempfile.TemporaryDirectory(prefix='offline-harness-') as temporary:
             test_root = Path(temporary).resolve()
-            self.assertTrue(test_root.is_relative_to(workspace_tmp.resolve()))
             args = ['e2e-harness.py', 'plan', '--run', 'abcdef123456', '--timestamp', '2026-11-16T22:00:00.120Z']
             with patch.object(harness, 'ROOT', test_root), patch('sys.argv', args):
                 harness.main()
