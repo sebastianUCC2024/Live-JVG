@@ -11,13 +11,21 @@ import static org.junit.jupiter.api.Assertions.*;
 class ValidationPipelineTest {
     private final Path root=Path.of("..","..");
     @Test @SuppressWarnings("unchecked")
-    void ciBuildsAllThreeRealServicesAndBothClientsWithoutDeployOrExternalInfrastructure() throws Exception {
+    void ciBuildsAllSevenRealServicesAndBothClientsWithoutDeployOrExternalInfrastructure() throws Exception {
         var workflow=(Map<String,Object>)new Yaml().load(Files.readString(root.resolve(".github/workflows/validation.yml")));
         assertEquals(Map.of("contents","read"),workflow.get("permissions"));
         var jobs=(Map<String,Map<String,Object>>)workflow.get("jobs");
         var java=jobs.get("java");
         var matrix=(Map<String,Object>)((Map<String,Object>)java.get("strategy")).get("matrix");
-        assertEquals(Set.of("live-feed-producer","match-state-service","dashboard-backend"),new HashSet<>((List<String>)matrix.get("service")));
+        assertEquals(Set.of(
+            "live-feed-producer",
+            "match-state-service",
+            "dashboard-backend",
+            "historical-archiver",
+            "betting-suspension-service",
+            "betting-worker",
+            "notification-backend"
+        ),new HashSet<>((List<String>)matrix.get("service")));
         var javaSteps=(List<Map<String,Object>>)java.get("steps");
         assertTrue(javaSteps.stream().anyMatch(step->String.valueOf(step.get("run")).equals("mvn -B -ntp -f services/${{ matrix.service }}/pom.xml verify")));
         for(String name:List.of("react","node"))assertNotNull(jobs.get(name));
@@ -25,8 +33,16 @@ class ValidationPipelineTest {
             assertFalse(job.containsKey("services"));
             for(var step:(List<Map<String,Object>>)job.get("steps")) {
                 String command=String.valueOf(step.get("run"));
-                assertFalse(command.contains("skipTests"));assertFalse(command.contains("docker"));
-                assertFalse(command.contains("deploy"));assertFalse(command.contains("integration-postgres"));
+                assertFalse(command.contains("skipTests"));
+                if (command.contains("docker")) {
+                    assertEquals(
+                        "docker compose -p live-jvg-dev1-isolated --profile integration-prepared config --quiet",
+                        command.trim(),
+                        "Only static Docker Compose configuration validation is allowed"
+                    );
+                }
+                assertFalse(command.contains("deploy"));
+                assertFalse(command.contains("integration-postgres"));
             }
         }
     }
