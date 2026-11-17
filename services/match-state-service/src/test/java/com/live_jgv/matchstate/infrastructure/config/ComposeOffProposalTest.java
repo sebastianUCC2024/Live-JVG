@@ -63,7 +63,10 @@ class ComposeOffProposalTest {
                 assertEquals("true", map(map(base.get(name)).get("environment")).get("SIMULATOR_WRITE_ENABLED"));
                 assertEquals("false", env.get("SIMULATOR_WRITE_ENABLED"));
             }
-            if (name.equals("dashboard")) assertEquals("false", env.get("DASHBOARD_RABBIT_LISTENER_ENABLED"));
+            if (name.equals("dashboard")) {
+                assertDashboardPassive(env);
+                assertEquals("false", env.get("DASHBOARD_RABBIT_LISTENER_ENABLED"));
+            }
             if (name.equals("match-state")) {
                 for (var key : List.of("KAFKA_LISTENER_AUTO_STARTUP", "MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED",
                         "MATCH_STATE_RECOVERY_ENABLED", "MATCH_STATE_PUBLICATION_ENABLED")) assertEquals("false", env.get(key));
@@ -73,5 +76,27 @@ class ComposeOffProposalTest {
         assertEquals("!override", profiles.tag());
         assertEquals(List.of("provisioning-explicit"), profiles.value());
         assertTrue(map(map(base.get("match-state")).get("depends_on")).containsKey("kafka-init"));
+    }
+
+    private static void assertDashboardPassive(Map<String, Object> env) {
+        assertEquals("passive", env.get("SPRING_PROFILES_ACTIVE"));
+        assertEquals("false", env.get("DASHBOARD_CATALOG_BOOTSTRAP_ENABLED"));
+    }
+
+    @Test
+    void dashboardRejectsMissingOrUnsafePassiveControls() throws Exception {
+        var services = map(read("scripts/e2e/compose.manifest-proposed.yml").get("services"));
+        var safe = map(map(services.get("dashboard")).get("environment"));
+        assertDashboardPassive(safe);
+        for (var key : List.of("SPRING_PROFILES_ACTIVE", "DASHBOARD_CATALOG_BOOTSTRAP_ENABLED")) {
+            var missing = new HashMap<>(safe);
+            missing.remove(key);
+            assertThrows(AssertionError.class, () -> assertDashboardPassive(missing), key);
+            for (var unsafe : List.of("", "true", "default", "passive,prod")) {
+                var changed = new HashMap<>(safe);
+                changed.put(key, unsafe);
+                assertThrows(AssertionError.class, () -> assertDashboardPassive(changed), key + ":" + unsafe);
+            }
+        }
     }
 }

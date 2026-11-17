@@ -34,6 +34,8 @@ services:
     depends_on: !reset {}
     container_name: !reset null
     environment:
+      SPRING_PROFILES_ACTIVE: passive
+      DASHBOARD_CATALOG_BOOTSTRAP_ENABLED: "false"
       SPRING_SQL_INIT_MODE: never
       SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
       SPRING_FLYWAY_ENABLED: "false"

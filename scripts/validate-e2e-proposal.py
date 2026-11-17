@@ -62,6 +62,8 @@ def validate(manifest):
         assert env['SPRING_SQL_INIT_MODE'] == 'never'
     for name in ['producer', 'dashboard']:
         assert services[name]['environment']['SIMULATOR_WRITE_ENABLED'] == 'false'
+    assert services['dashboard']['environment']['SPRING_PROFILES_ACTIVE'] == 'passive'
+    assert services['dashboard']['environment']['DASHBOARD_CATALOG_BOOTSTRAP_ENABLED'] == 'false'
     assert services['dashboard']['environment']['DASHBOARD_RABBIT_LISTENER_ENABLED'] == 'false'
     for key in ['KAFKA_LISTENER_AUTO_STARTUP', 'MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED',
                 'MATCH_STATE_RECOVERY_ENABLED', 'MATCH_STATE_PUBLICATION_ENABLED']:

@@ -90,3 +90,39 @@ No se ejecutaron Docker, SQL, migraciones, Kafka, RabbitMQ, consumidores reales 
 No se hizo push ni PR. En este clon no existe la referencia `dev1/architecture-closure`
 ni aparecen sus cinco eliminaciones staged; no se modificó ni reparó ningún worktree anterior.
 El índice inicial del clon estaba limpio.
+
+
+## Correccion minima tras revision independiente de DEV 3
+
+Base de esta correccion: `a38e3b9f63fb4aaac41919d03e5b5a524e4aa00b`.
+El overlay Dashboard ahora exige `SPRING_PROFILES_ACTIVE: passive` y
+`DASHBOARD_CATALOG_BOOTSTRAP_ENABLED: "false"`. La prueba offline verifica ambos
+valores y rechaza su ausencia, valores vacios, ON y perfiles adicionales inseguros.
+El inspector del modelo resuelto comprueba tambien ambas variables; no se ejecuto.
+Todos los controles OFF anteriores y los tags de dependencias permanecen intactos.
+La prueba YAML sigue verificando `depends_on: !reset {}` para los siete servicios
+Java y `kafka-init` limitado al perfil `provisioning-explicit`: no queda una ruta
+heredada de dependencias que lo seleccione al iniciar esos servicios.
+
+Version minima conjunta del overlay: **Docker Compose v2.24.4** o posterior.
+El overlay requiere soporte de `!reset` y `!override`; la documentacion oficial
+fija v2.24.4 como minimo para `!override`, que determina este requisito conjunto:
+https://docs.docker.com/reference/compose-file/merge/#replace-value
+La semantica de `!reset` se documenta en:
+https://docs.docker.com/reference/compose-file/merge/#reset-value
+No se comprobo la version instalada ni se ejecuto Docker para validar estos tags.
+
+Persisten las condiciones de DEV 3 sobre Dashboard: el perfil passive requiere
+su implementacion revisada en `8b5fde751d061cc4256bd555bbfc942b62f28b5e`.
+Este commit solo configura ese perfil; no incorpora ni modifica codigo Dashboard.
+La compatibilidad conjunta sigue pendiente de la nueva revision independiente;
+no se certifica arranque global OFF ni E2E real. La infraestructura completa,
+la seleccion explicita de `kafka-init` y perfiles posteriores pueden activar
+aprovisionamiento; el overlay no autoriza esas operaciones.
+
+Validacion de esta correccion: **120 tests offline, 0 fallos, 0 errores**;
+`ComposeOffProposalTest` contiene 2 tests. Se mantuvieron las exclusiones de
+integraciones externas. `git diff --check` pasa. No se ejecutaron Docker,
+SQL, migraciones, brokers, consumidores reales ni aceptacion.
+El indice de este clon estaba limpio al iniciar esta correccion; no se tocaron
+otros clones ni worktrees.
