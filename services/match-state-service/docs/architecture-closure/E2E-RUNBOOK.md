@@ -6,7 +6,10 @@ suspensión/autoridad siguen gates en CONTRACT-DECISIONS.md y TEAM-CONFIG.md.
 
 1. Elegir run nuevo de doce hex minúsculas. Ejemplo offline:
    `python scripts/e2e-harness.py plan --run abcdef123456`.
-   Produce tmp/live-jvg-e2e-abcdef123456/plan.json sin Docker ni red.
+   Produce tmp/live-jvg-e2e-abcdef123456/plan.json sin Docker ni red. Para fijar tiempos,
+   añadir --timestamp 2026-11-16T22:00:00.120Z. No sobrescribe planes existentes.
+   execute-v1 reutiliza el plan solo si coincide con el escenario canónico;
+   execute.claim impide ejecuciones concurrentes/repetidas del mismo run.
 2. Obtener decisiones/roles/migraciones/topología del equipo. Copiar
    scripts/e2e/compose.owner-prepared.example.yml a tmp/e2e-owner.yml; completar
    variables y habilitar únicamente los consumers y storage revisados. Conservar
@@ -14,8 +17,8 @@ suspensión/autoridad siguen gates en CONTRACT-DECISIONS.md y TEAM-CONFIG.md.
    !reset elimina nombre fijo de Dashboard en ese proyecto. Usar puertos libres
    loopback mediante override si los actuales están ocupados; nunca detener laboratorio.
 3. Construir siete JAR: `mvn -B -ntp -f services/<modulo>/pom.xml verify`.
-   Dashboard hoy falla dos tests de configuración: Gabriel debe corregirlos antes
-   de declarar verde este gate. Nunca usar skipTests para avanzar.
+   PR #24 corrigió los tests de configuración de Dashboard: repetidos en 3fb2a10,
+   150 pruebas sin fallos/errores/skips. Nunca usar skipTests para avanzar.
 4. Definir MVP_DB_PASSWORD, MVP_RABBIT_PASSWORD, E2E_MATCH_ID=e2e-<run> y las
    variables E2E_* requeridas en la plantilla. Validar antes de iniciar:
    `docker compose -p live-jvg-e2e-<run> -f docker-compose.yml -f tmp/e2e-owner.yml --profile integration-prepared config --quiet`.
@@ -55,7 +58,10 @@ No forzar estas suites sobre el Compose de este documento: sus guards exigen nom
 puertos y bases distintos. Nueva prueba PostgreSQL está preparada, no ejecutada.
 CI solo corre local y estático; no presenta gates PostgreSQL/brokers/E2E como verdes.
 
-## Resultado de preparación local (16 noviembre 2026)
+## Evidencia histórica previa a PR #24/#26 (16 noviembre 2026)
+
+Los fallos Dashboard y HEAD 2e53fde de esta sección son históricos. Ver
+V1-READINESS.md para resultados actuales sobre 3fb2a10 y cambios nuevos.
 
 | Servicio | Resultado real disponible | Tests / skips |
 |---|---|---|
@@ -91,3 +97,62 @@ Git: dev1/architecture-closure, HEAD 2e53fdece51e6e4ec08782dec8f31b30630c805e.
 Cinco eliminaciones staged previas conservadas exactamente; ningún add/commit/push.
 Recomendación: apto para compartir diff o PR borrador coordinado, NO para PR listo
 para merge mientras Dashboard falle y falten aprobaciones semánticas/operativas.
+
+## Comprobaciones nuevas del ejecutor
+
+Preflight valida URLs internas de TODOS los servicios, Kafka/Rabbit internos, puertos
+loopback y ausencia de overrides command/entrypoint/JVM/perfiles Spring. Inspecciona
+labels reales project/service, entorno real frente a configuración resuelta, montajes
+y redes efectivas. Antes de reiniciar vuelve a inspeccionar y rechaza contenedores
+reemplazados. Solo usa SELECT, publicaciones sintéticas y restart del proyecto aprobado;
+no down, eliminación de volúmenes, DDL, grants, migraciones o activación de flags.
+
+Fixture canónica: scripts/e2e/fixtures/v1-sequence.json. Ocho eventos, luego duplicado
+GOAL, barrera, reinicio y segunda barrera: diez eventos únicos. Incluye VAR_CHECK
+atrasado cinco minutos y continuación V1 sin referencia; se aplica por llegada.
+Las esperas dinámicas conservan semántica global V1. E2EV1FixtureReplayTest recorre
+el JSON con MatchEventMessage, MatchState y Rebuilder reales, comprobando cada score,
+estado, idempotencia, conflicto y reconstrucción. Esto es evidencia LOCAL, sin brokers.
+
+## Propuesta parametrizada para DEV 3: todavía NO autorizada
+
+El procedimiento anterior con live_jvg/match_events se conserva como modo legacy.
+Para el proyecto propuesto live-jvg-e2e-5c84548cf006, usar el manifiesto
+scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json y el override
+scripts/e2e/compose.manifest-proposed.yml. common-v1 sigue la propuesta publicada de
+PR #27: live_jvg NUEVA para todos, schemas separados (incluido Archiver), match_events
+y vhost / dentro del proyecto NUEVO. --layout standalone del generador mantiene la
+alternativa dev3_it_* y DB Archiver independiente. No renombrar bases ni SQL por sustitución.
+
+Comandos permitidos ahora, exclusivamente offline/config:
+
+```powershell
+python scripts/test-e2e-harness.py
+python scripts/validate-e2e-proposal.py --manifest scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json
+python scripts/e2e-harness.py plan --run 5c84548cf006 --timestamp 2026-11-16T22:00:00.120Z --manifest scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json
+```
+
+Existe un plan privado anterior en tmp/live-jvg-e2e-5c84548cf006/plan.json (standalone).
+NO coincide con el nuevo manifiesto common-v1: execute-v1 debe rechazarlo. No repetir,
+sobrescribir ni eliminar evidencia: el equipo debe aprobar run nuevo antes del ensayo
+común. El validador usa credenciales ficticias en memoria y ejecuta
+solo compose config --quiet/config --format json, nunca up ni una conexión a brokers/DB.
+No usar su entorno ficticio como credenciales de ejecución.
+
+No hay copia local del manifiesto externo original mencionado por el usuario. La propuesta
+incluida deriva los nombres canónicos del generador DEV 3 incorporado y registra su SHA-256;
+el equipo debe cotejarla con su original. Roles adicionales, DB Archiver, vhost y puertos
+son propuestas nuevas, NO una aprobación ni un aprovisionamiento realizado.
+
+Futura ejecución (NO autorizada ahora): el operador inyectará E2E_* reales según
+environment() de scripts/validate-e2e-proposal.py, reemplazando exclusivamente los
+placeholders de secretos mediante su gestor privado. Debe revisar y copiar el override
+a tmp/owner-approved.yml, activar consumers/storage por separado tras las migraciones
+aprobadas, mantener aceptación/autoridad/V2 OFF y validar de nuevo. Después del permiso
+explícito de arranque, migración, publicaciones sintéticas y restart, execute-v1 debe recibir
+--manifest scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json junto con los dos
+--compose-file correspondientes. No ejecutar ese modo mientras falte permiso.
+
+La parametrización no selecciona semántica V2; SQL solo consulta, con base principal
+de manifiesto y consulta independiente a Archiver. El tópico usado por las barreras
+también viene del manifiesto; vhost/routing/destinos discrepantes se rechazan.

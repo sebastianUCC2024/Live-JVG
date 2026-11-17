@@ -9,11 +9,10 @@ Los healthchecks opcionales son liveness, no prueba de storage listo.
 
 Gabriel:
 
-- Revisar los cambios compartidos CI/Compose. Dashboard LocalMvpConfigurationTest exige
-  container_name=live-jvg-mvp-dashboard; el archivo actual usa live-jvg-dev1-isolated-dashboard.
-  ValidationPipelineTest exige matriz de tres Java y prohíbe cualquier comando docker.
-  Actualizar esas expectativas para siete servicios y permitir únicamente config estático.
-  DEV 1 no modifica esos tests ni los excluye.
+- RESUELTO por PR #24: tests CI/Compose de Dashboard actualizados. Verificación
+  repetida sobre 3fb2a10: 150 pruebas, cero fallos/errores/skips. No volver a
+  corregir ni excluir estos tests. Falta aprobar el override E2E concreto.
+- PR #23 fue revertido por #25: no asumir una integración VAR V2 externa activa.
 - Registrar MATCH_ID=e2e-<run> y home/away en Dashboard y Match State. Migrar schema
   dashboard V1/V2 en base aislada mediante su procedimiento; validar snapshots y STOMP.
 - Provisionar rol/schema notification V1 (Flyway automático desactivado), conceder permisos
@@ -31,10 +30,14 @@ Valeria:
   Bases distintas no sirven para ese protocolo. URL común en Compose es compatible,
   pero el usuario live_jvg común/superusuario NO certifica permisos ni autorización.
 - Orden: control V1/V2 antes de worker V1/V2; archiver V1 independiente. Migraciones
-  automáticas siguen desactivadas. Readiness consulta tablas aun con consumers apagados:
+  automáticas siguen desactivadas. Archiver también requiere V1/V2 (identidad compuesta).
+  Readiness consulta tablas aun con consumers apagados:
   los opcionales no arrancarán funcionalmente sin schemas.
 - Aprobar grants EXECUTE de funciones SECURITY DEFINER y revocar escritura directa sobre
   fuentes y operation_authorization según verifyInstallation. No crear leases reales.
+- PR #27/2d19cd7 añadió SELECT completos: control_app lee authorization_authority y
+  authorization_lease; worker_app lee operation_authorization. Permiten startup/readiness,
+  pero también lectura de filas completas; no son permisos solo de metadatos ni escritura.
 - Configurar ARCHIVER/CONTROL/WORKER DB roles/passwords, source IDs y grupos exclusivos,
   misma Kafka source/epoch y tópico. Provisionar exchange/queue/binding de comandos y
   routing key. Habilitar solo consumers revisados; mantener publicación de control apagada

@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 JAVA = {'producer', 'match-state', 'dashboard', 'notification', 'archiver', 'suspension', 'worker'}
 
 
-def validate(config):
+def validate(config, resources=None):
     services = config['services']
     assert JAVA <= services.keys()
     assert {'postgres', 'kafka', 'rabbitmq', 'kafka-init'} <= services.keys()
@@ -34,7 +34,8 @@ def validate(config):
         env = services[name]['environment']
         assert env[prefix + '_CONSUMER_ENABLED'] == 'false'
         assert env['SPRING_FLYWAY_ENABLED'] == 'false'
-        assert env[prefix + '_DB_URL'] == 'jdbc:postgresql://postgres:5432/live_jvg'
+        database = (resources['archiver_database'] if name == 'archiver' else resources['database']) if resources else 'live_jvg'
+        assert env[prefix + '_DB_URL'] == 'jdbc:postgresql://postgres:5432/' + database
     worker = services['worker']['environment']
     assert worker['BETTING_WORKER_ACCEPTANCE_ENABLED'] == 'false'
     assert worker['BETTING_WORKER_AUTHORIZATION_MODE'] == 'disabled'
