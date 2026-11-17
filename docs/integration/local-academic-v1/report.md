@@ -1,6 +1,8 @@
 # Integración local académica V1 — resultado verificable
 
-Estado: integración local realizada; NO finalizado ni certificado E2E. No se publicó esta rama.
+Estado: integración local y cierre de dependencias realizados; NO finalizado ni certificado E2E. No se publicó esta rama.
+Actualización: Notification y los validadores antes bloqueados ya pasaron con sus dependencias reales;
+ver `dependency-close/report.md` y `skipped-tests.md`. Los fallos históricos se conservan como evidencia.
 
 ## Historial y protección
 
@@ -64,21 +66,29 @@ ORDER02 global permanece ABIERTO. No basta activar una cabecera o confiar en upd
 | historical-archiver | 80 | 2 | 0 |
 | betting-suspension-service | 157 | 3 | 0 |
 | betting-worker | 142 | 17 | 0 |
-| Total ejecutable | 752 | 22 | 0 |
-| notification-backend | NO EJECUTADO | No determinado | Maven bloqueado antes de pruebas |
+| notification-backend | 117 | 0 | 0 |
+| Total siete módulos | 869 | 22 | 0 |
 
-Maven verify incluye test/package. Notification conserva su POM real Boot 4.1.2: parent ausente en caché offline.
-Una copia diagnóstica externa con Boot4.1.1 cacheado tampoco pudo resolver todos sus JAR offline; no sustituye
-la prueba objetivo y NO cambió el POM integrado. No se bajó de versión ni se declaró verde su suite.
+Maven verify incluye test/package. Notification conserva su POM real Boot 4.1.2, cuya existencia se comprobó
+con HTTP200 en Maven Central oficial. Se resolvieron sus dependencias y pasaron verify online y después offline.
+La suite final tiene 117 pruebas; una es el nuevo inventario estático V1/V2. No se bajó de versión ni cambió POM/lock.
+Los fallos previos de caché y el diagnóstico 4.1.1 se conservan como historial, no como resultados actuales.
 El fixture JDBC de publicación inicialmente omitía la columna de secuencia nueva; se corrigió y la suite pasó.
-Los logs iniciales fallidos se conservan, además de los finales.
 
-- React: 143 pruebas / 15 archivos; TypeScript + Vite build exitosos, usando dependencias existentes sin instalar.
-- Python: 40 harness + 11 académico + 5 runtime shell + 26 generador común + 4 generador aislado = 86 exitosas.
-- Scripts académicos/Python compilan. Validación YAML estática en las pruebas Java; no equivale a Docker Compose config.
-- `validate-dev1-contracts.py` no pudo ejecutarse por ausencia de fastjsonschema; no se instaló ni descargó.
-- El puente MVC Notification → guardas TS requiere su suite/fixture vigente; no se simula ese resultado.
-- git diff --check y whitespace de archivos nuevos se revisan antes del commit. Evidencias en `evidence/`.
+- React: 143 pruebas / 15 archivos y build correcto de la fase anterior, código frontend sin cambios.
+- Node Dashboard: 34 pruebas locales exitosas en este cierre.
+- Python: 40 harness + 11 académico + 5 runtime shell + 26 generador común + 4 generador aislado +
+  4 regresiones UUID + 4 regresiones Draft2020-12 = 94 exitosas, repetidas con el venv aislado.
+- Contratos Draft07: cuatro propuestas, 20 fixtures positivos/negativos, workflow YAML con siete módulos verificado.
+- Contratos Draft2020-12: dos esquemas, tres fixtures del record productor real y dos académicos. Se comprueban
+  formatos y coherencia envelope/snapshot; no se presentan los ejemplos independientes como secuencia E2E.
+- Puente MVC Notification → guardas TypeScript: PASS con el fixture producido por su suite Boot4.1.2 real.
+- Validador corregido: UUID se comprueba explícitamente; no se desactivaron formatos ni cambiaron esquemas para pasar.
+- Las 22 omitidas siguen omitidas: 19 PostgreSQL, 2 Kafka, 1 RabbitMQ; ninguna certificable offline.
+  El inventario separa 14 casos atómicos y un caso legacy Control que emite lease, todos excluidos del ensayo estándar; las otras siete requieren laboratorio aislado.
+  Además hay 13 métodos externos Notification *IT excluidos del ciclo local, NO ejecutados y fuera de esas 22.
+- YAML sigue validado estáticamente, sin Docker Compose. No hay certificación de DDL, ACL ni brokers reales.
+- Evidencias nuevas en `dependency-close/evidence/`; los logs históricos de `evidence/` no se han borrado.
 
 ## Matriz de requisitos académicos
 
@@ -86,7 +96,7 @@ PASS OFFLINE indica implementación y pruebas locales; no significa PASS con inf
 
 | Requisito | Responsable / evidencia | Estado | Validación pendiente |
 |---|---|---|---|
-| Java17, records, dominio y puertos separados | módulos Java, tests de dominio/arquitectura | PASS OFFLINE en seis módulos | Notification POM objetivo |
+| Java17, records, dominio y puertos separados | módulos Java, tests de dominio/arquitectura | PASS OFFLINE en siete módulos | arranque e imágenes reales |
 | Kafka match_events, clave match_id | Producer y Match State, suites de codec/publicación | PASS OFFLINE | topic, clave y offsets reales |
 | GOAL / VAR_CHECK / GOAL_ANNULLED / MATCH_CONTINUES | dominio productor/estado, fixtures | PASS OFFLINE V1 | secuencia real |
 | Gol y anulación corrigen 1-0 → 0-0 | pruebas Match State y plan académico | PASS OFFLINE | marcador real observado |
@@ -95,21 +105,21 @@ PASS OFFLINE indica implementación y pruebas locales; no significa PASS con inf
 | Orden y duplicados | cabecera/application_seq + Dashboard V3 opt-in | PARCIAL | migración, replay, ACL; ORDER02 legado abierto |
 | WebSocket/STOMP/REST Dashboard | suite Dashboard y frontend | PASS OFFLINE | conexión, reconexión y navegador reales |
 | React muestra marcador/VAR/alertas | 143 tests y build | PASS OFFLINE | captura con servicios y datos reales |
-| Fanout live_alerts | outbox independiente, contrato y Notification DEV2 | PARCIAL | Maven Notification objetivo y Fanout real |
+| Fanout live_alerts | outbox independiente, Notification117 tests, schemas y puente TS | PASS OFFLINE | Fanout y persistencia reales |
 | Work Queue suspensión/reanudación | AcademicCommand V1, Worker, outbox | PASS OFFLINE | entrega real, dos instancias, ACK después de COMMIT |
 | Apuestas seguras | policy BLOCKED, acceptance=false, authority=disabled | PASS OFFLINE | SELECT global cero ACCEPTED/grants/leases en ensayo |
 | PostgreSQL histórico/auditoría | Archiver y adapters JDBC, pruebas locales | PARCIAL | V2/V3/V4, ownership, restricciones y recuperación reales |
 | Docker multietapa no root | Dockerfile y tests Compose/runtime | PASS ESTÁTICO | build de las siete imágenes |
 | JVM/límites/dos Workers | tests shell/YAML y preflight por réplica | PASS OFFLINE | enforcement y consumo real de CPU/RAM |
-| JUnit5/Mockito/TDD | suites y evidencias RED/GREEN conservadas | PASS OFFLINE parcial | suite Notification objetivo |
+| JUnit5/Mockito/TDD | suites de siete módulos y evidencias conservadas | PASS OFFLINE | pruebas externas autorizadas |
 | Reentrega, DLQ, reinicio, outbox | pruebas de fallos y plan de observación | PASS OFFLINE | fallos inducidos autorizados, persistencia física |
 | Contratos compartidos vacíos | betting-command/match-event/score-update.schema.json | PENDIENTE DE APROBACIÓN | no se publican como aprobados por inferencia |
 | E2E integral académico | harness adicional y guía | PREPARADO, NO EJECUTADO | autorización de infraestructura y activación |
 
 ## Próximos bloqueos y autorizaciones exactas
 
-1. Autorizar resolución de dependencias Maven del POM Notification real y del validador Python, sin cambiar versiones
-   por disponibilidad de caché. Repetir verify/contratos; no hay evidencia de un fallo de código en esa suite.
+1. RESUELTO: dependencias y validadores locales autorizados, descargados y verificados. No hace falta otra
+   autorización para repetir esas validaciones offline; la autorización no incluye infraestructura.
 2. Revisar el nuevo metadato application_seq, Dashboard V3 y los contratos públicos aún vacíos; decidir la equivalencia
    del término académico annuls_event_id con reference_event_id, sin introducir un alias incompatible automáticamente.
 3. Aprobar exclusivamente recursos NUEVOS: proyecto/puertos libres, red, volúmenes, PostgreSQL17, Kafka y RabbitMQ;
@@ -122,4 +132,4 @@ PASS OFFLINE indica implementación y pruebas locales; no significa PASS con inf
 8. Publicar esta integración, abrir PR o fusionarla a dev requieren autorización posterior. Nada de ello se hizo.
 
 La guía `demonstration.md` contiene el procedimiento preparado. La tarea llega a estos límites operativos;
-la ausencia de infraestructura ejecutada y de validación Notification impide declarar el proyecto finalizado.
+la ausencia de infraestructura y de validación E2E real impide declarar el proyecto finalizado.

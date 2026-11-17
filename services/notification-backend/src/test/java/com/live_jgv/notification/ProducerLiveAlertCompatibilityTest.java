@@ -22,15 +22,18 @@ class ProducerLiveAlertCompatibilityTest {
             var score=loader.loadClass("com.live_jgv.matchstate.domain.model.ScoreUpdate");
             var alert=loader.loadClass("com.live_jgv.matchstate.domain.model.LiveAlertV1");
             var mapper=new ObjectMapper().registerModule(new JavaTimeModule()).setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            var wireImages=mapper.createArrayNode();
             for(String event:new String[]{"GOAL","VAR_CHECK","GOAL_ANNULLED"}) {
                 var snapshot=score.getConstructors()[0].newInstance("match",1,0,"source",Enum.valueOf((Class)type,event),Instant.parse("2026-11-17T10:00:00.123456789Z"),Enum.valueOf((Class)status,"IN_PROGRESS"),event.equals("GOAL_ANNULLED")?"goal":null);
                 var wire=((Optional<?>)alert.getMethod("create",score).invoke(null,snapshot)).orElseThrow();
+                JsonNode image=mapper.valueToTree(wire);wireImages.add(image);
                 var decoded=new LiveAlertCodec().decode(mapper.writeValueAsBytes(wire));
                 assertEquals(event,decoded.eventType().name());assertEquals("source",decoded.sourceEventId());
                 assertEquals(1,decoded.snapshot().homeScore());assertEquals(decoded.timestamp(),decoded.snapshot().updatedAt());
                 if(event.equals("GOAL_ANNULLED")) assertEquals("goal",decoded.referenceEventId());
                 assertEquals(8,mapper.valueToTree(snapshot).size());
             }
+            Files.writeString(Path.of("target","live-alert-wire-fixtures.json"),mapper.writeValueAsString(wireImages));
         }
     }
 }

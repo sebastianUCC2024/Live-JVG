@@ -23,12 +23,13 @@ public class NotificationPostgresIT {
         var authorization=IntegrationGate.authorize(actions);
         evidence=new IntegrationEvidence(authorization.settings()); observer.use(evidence); db=new PostgresFixture(authorization,true);
     }
-    @Test @Order(1) void flywayV1CreatesOnlyExpectedBusinessTablesAndIsRepeatable() throws Exception {
+    @Test @Order(1) void flywayV1AndV2CreateExpectedBusinessTablesAndAreRepeatable() throws Exception {
         var tables=db.jdbc.queryForList("SELECT tablename FROM pg_tables WHERE schemaname='notification' ORDER BY tablename",String.class);
-        assertEquals(List.of("alerts","cursor_state","flyway_schema_history","inbox"),tables);
+        assertEquals(NotificationMigrationInventory.TABLES,tables);
         new PostgresFixture(db.authorization,true); // migrate+validate again; never clean.
-        assertEquals(1,db.jdbc.queryForObject("SELECT count(*) FROM notification.flyway_schema_history WHERE success AND version='1'",Integer.class));
-        evidence.record("migration",Map.of("result","V1_VALIDATED"));
+        for(String version:NotificationMigrationInventory.VERSIONS)
+            assertEquals(1,db.jdbc.queryForObject("SELECT count(*) FROM notification.flyway_schema_history WHERE success AND version=?",Integer.class,version));
+        evidence.record("migration",Map.of("result","V1_V2_VALIDATED"));
     }
     @Test void uniquenessAndDuplicateIdentityAreDurable() throws Exception {
         String match=match("unique"); var update=db.update(match,"event-unique",ScoreUpdate.EventType.GOAL);
