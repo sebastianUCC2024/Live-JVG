@@ -6,6 +6,9 @@ import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
 import com.live_jgv.dashboard.infrastructure.amqp.ScoreUpdateMessageDecoder;
 import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -24,13 +27,33 @@ public class ScoreProjection {
     private final JdbcTemplate jdbc; private final TransactionTemplate tx; private final ObjectMapper mapper;
     public ScoreProjection(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
             MatchSnapshotPublisher publisher,
+            String match,String home,String away,String homeName,String awayName){
+        this(jdbc,manager,mapper,publisher,match,home,away,homeName,awayName,true);
+    }
+    @Autowired
+    public ScoreProjection(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
+            MatchSnapshotPublisher publisher,
             @Value("${live.match-id}") String match,@Value("${live.home-team-id}") String home,@Value("${live.away-team-id}") String away,
-            @Value("${live.home-name}") String homeName,@Value("${live.away-name}") String awayName){
+            @Value("${live.home-name}") String homeName,@Value("${live.away-name}") String awayName,
+            @Value("${dashboard.catalog.bootstrap-enabled:true}") boolean bootstrapEnabled){
         this.publisher=publisher;this.jdbc=jdbc;this.tx=new TransactionTemplate(manager);this.mapper=mapper;
-        jdbc.update("INSERT INTO dashboard.matches(match_id,home_team_id,away_team_id,home_name,away_name) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",match,home,away,homeName,awayName);
-        var row=jdbc.queryForMap("SELECT * FROM dashboard.matches WHERE match_id=?",match);
+        if(bootstrapEnabled)
+            jdbc.update("INSERT INTO dashboard.matches(match_id,home_team_id,away_team_id,home_name,away_name) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",match,home,away,homeName,awayName);
+        final Map<String,Object> row;
+        try {
+            row=jdbc.queryForMap("SELECT * FROM dashboard.matches WHERE match_id=?",match);
+        } catch(EmptyResultDataAccessException missing) {
+            if(bootstrapEnabled) throw missing;
+            throw new IllegalStateException("Dashboard catalog match is missing; passive startup requires a pre-provisioned catalog",missing);
+        } catch(DataAccessException unavailable) {
+            if(bootstrapEnabled) throw unavailable;
+            throw new IllegalStateException("Cannot validate Dashboard catalog in passive mode; check schema availability and SELECT permissions",unavailable);
+        }
         if(!home.equals(row.get("home_team_id"))||!away.equals(row.get("away_team_id"))) throw new IllegalStateException("El catálogo persistido no coincide con los equipos configurados");
-        jdbc.update("UPDATE dashboard.matches SET home_name=?,away_name=? WHERE match_id=?",homeName,awayName,match);
+        if(bootstrapEnabled)
+            jdbc.update("UPDATE dashboard.matches SET home_name=?,away_name=? WHERE match_id=?",homeName,awayName,match);
+        else if(!homeName.equals(row.get("home_name"))||!awayName.equals(row.get("away_name")))
+            throw new IllegalStateException("Dashboard catalog names differ from configuration; passive startup does not modify the catalog");
     }
     @RabbitListener(id="durableScores",queues="${live.queue}",containerFactory="durableScoresFactory")
     public synchronized void receive(Message message){
