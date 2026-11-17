@@ -9,3 +9,9 @@ docs
 **/.env*
 **/target/*
 !services/*/target/*-SNAPSHOT.jar
+
+.worktrees
+tmp
+temp
+logs
+.9f
