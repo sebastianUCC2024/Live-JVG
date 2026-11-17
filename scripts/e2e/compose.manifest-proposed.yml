@@ -1,0 +1,88 @@
+# PROPOSAL ONLY. All adapters OFF; no permission to start, migrate or publish.
+# Resolve with scripts/validate-e2e-proposal.py; values come from the review manifest.
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: ${E2E_DATABASE:?Manifest database required}
+    ports: !override ["127.0.0.1:55991:5432"]
+  kafka:
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:19991
+    ports: !override ["127.0.0.1:19991:19092"]
+  kafka-init:
+    command: [--bootstrap-server, "kafka:9092", --create, --if-not-exists, --topic, "${E2E_TOPIC:?Manifest topic required}", --partitions, "1", --replication-factor, "1"]
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_VHOST: ${E2E_VHOST:?Manifest vhost required}
+    ports: !override ["127.0.0.1:56991:5672", "127.0.0.1:15991:15672"]
+  producer:
+    environment:
+      MATCH_ID: ${E2E_MATCH_ID:?Manifest match required}
+      MATCH_EVENTS_TOPIC: ${E2E_TOPIC}
+    ports: !override ["127.0.0.1:18191:8080"]
+  dashboard:
+    container_name: !reset null
+    environment:
+      MATCH_ID: ${E2E_MATCH_ID}
+      DASHBOARD_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
+      DB_USERNAME: ${E2E_DASHBOARD_ROLE:?Dedicated owner-provisioned role}
+      DB_PASSWORD: ${E2E_DASHBOARD_PASSWORD:?Private secret}
+      DASHBOARD_QUEUE: ${E2E_DASHBOARD_QUEUE}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
+    ports: !override ["127.0.0.1:18190:8080"]
+  match-state:
+    environment:
+      MATCH_ID: ${E2E_MATCH_ID}
+      MATCH_STATE_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
+      MATCH_STATE_DB_USERNAME: ${E2E_MATCH_STATE_ROLE:?Dedicated owner-provisioned role}
+      MATCH_STATE_DB_PASSWORD: ${E2E_MATCH_STATE_PASSWORD:?Private secret}
+      MATCH_EVENTS_TOPIC: ${E2E_TOPIC}
+      KAFKA_SOURCE_ID: ${E2E_KAFKA_SOURCE_ID}
+      SPRING_KAFKA_CONSUMER_GROUP_ID: ${E2E_MATCH_STATE_GROUP}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
+  archiver:
+    environment:
+      ARCHIVER_DB_URL: jdbc:postgresql://postgres:5432/${E2E_ARCHIVE_DATABASE}
+      ARCHIVER_DB_USERNAME: ${E2E_ARCHIVER_ROLE:?Dedicated owner-provisioned role}
+      ARCHIVER_DB_PASSWORD: ${E2E_ARCHIVER_PASSWORD:?Private secret}
+      ARCHIVER_SOURCE_ID: ${E2E_KAFKA_SOURCE_ID}
+      ARCHIVER_GROUP_ID: ${E2E_ARCHIVE_GROUP}
+      MATCH_EVENTS_TOPIC: ${E2E_TOPIC}
+      ARCHIVER_CONSUMER_ENABLED: "false"
+  suspension:
+    environment:
+      BETTING_CONTROL_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
+      BETTING_CONTROL_DB_USERNAME: ${E2E_CONTROL_ROLE:?Dedicated owner-provisioned role}
+      BETTING_CONTROL_DB_PASSWORD: ${E2E_CONTROL_PASSWORD:?Private secret}
+      BETTING_CONTROL_SOURCE_ID: ${E2E_KAFKA_SOURCE_ID}
+      BETTING_CONTROL_GROUP_ID: ${E2E_CONTROL_GROUP}
+      MATCH_EVENTS_TOPIC: ${E2E_TOPIC}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
+      BETTING_CONTROL_CONSUMER_ENABLED: "false"
+      BETTING_CONTROL_PUBLICATION_ENABLED: "false"
+  worker:
+    environment:
+      BETTING_WORKER_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
+      BETTING_WORKER_DB_USERNAME: ${E2E_WORKER_ROLE:?Dedicated owner-provisioned role}
+      BETTING_WORKER_DB_PASSWORD: ${E2E_WORKER_PASSWORD:?Private secret}
+      BETTING_WORKER_SOURCE_ID: ${E2E_WORKER_SOURCE_ID}
+      BETTING_WORKER_EXCHANGE: ${E2E_EXCHANGE}
+      BETTING_WORKER_QUEUE: ${E2E_WORKER_QUEUE}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
+      BETTING_WORKER_CONSUMER_ENABLED: "false"
+      BETTING_WORKER_ACCEPTANCE_ENABLED: "false"
+      BETTING_WORKER_AUTHORIZATION_MODE: disabled
+  notification:
+    environment:
+      NOTIFICATION_STORAGE_ENABLED: "false"
+      NOTIFICATION_MESSAGING_ENABLED: "false"
+      NOTIFICATION_DB_URL: jdbc:postgresql://postgres:5432/${E2E_DATABASE}
+      NOTIFICATION_DB_USERNAME: ${E2E_NOTIFICATION_ROLE:?Dedicated owner-provisioned role}
+      NOTIFICATION_DB_PASSWORD: ${E2E_NOTIFICATION_PASSWORD:?Private secret}
+      NOTIFICATION_MATCH_IDS: ${E2E_MATCH_ID}
+      NOTIFICATION_QUEUE: ${E2E_NOTIFICATION_QUEUE}
+      NOTIFICATION_RABBIT_HOST: rabbitmq
+      NOTIFICATION_RABBIT_PORT: "5672"
+      NOTIFICATION_RABBIT_USERNAME: mvp
+      NOTIFICATION_RABBIT_PASSWORD: ${MVP_RABBIT_PASSWORD}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${E2E_VHOST}
