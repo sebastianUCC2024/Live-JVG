@@ -11,7 +11,7 @@ class SafeIntegrationProfileTest {
         assertEquals("false",profile.getProperty("spring.flyway.enabled"));
         for(String key:profile.stringPropertyNames()) if(key.endsWith(".consumer.enabled")||key.endsWith(".publication.enabled")||key.endsWith(".acceptance.enabled"))
             assertEquals("false",profile.getProperty(key),key);
-        assertEquals("readinessState,db",profile.getProperty("management.endpoint.health.group.readiness.include"));
+        assertEquals("readinessState,db,messagingReadiness",profile.getProperty("management.endpoint.health.group.readiness.include"));
         assertEquals("${DEV3_ARCHIVER_DB_URL}",profile.getProperty("spring.datasource.url"));
     }
 }

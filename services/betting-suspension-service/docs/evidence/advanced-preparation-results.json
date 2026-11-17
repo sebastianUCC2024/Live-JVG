@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-16",
+  "branch": "feature/Valeria-dev3-e2e-preparation",
+  "head": "2e53fdece51e6e4ec08782dec8f31b30630c805e",
+  "local_verify": {
+    "historical-archiver": {
+      "counts": {
+        "tests": 82,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 2,
+        "passed": 80
+      },
+      "command": "JAVA_HOME=<Temurin 17> mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/historical-archiver/pom.xml verify",
+      "log": "/private/tmp/live-jvg-dev3-advanced/historical-archiver.log",
+      "sha256": "b0ed1496721e8a01adf11032ee85ef5c380edd9c3188c2aabf9dcc40a976e3cf",
+      "build_success": true
+    },
+    "betting-suspension-service": {
+      "counts": {
+        "tests": 140,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 2,
+        "passed": 138
+      },
+      "command": "JAVA_HOME=<Temurin 17> mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-suspension-service/pom.xml verify",
+      "log": "/private/tmp/live-jvg-dev3-advanced/betting-suspension-service.log",
+      "sha256": "ff6f232ef28f455b34f76ff97ee53dd0b21410248eae2cab495941d2c185efc3",
+      "build_success": true
+    },
+    "betting-worker": {
+      "counts": {
+        "tests": 124,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 16,
+        "passed": 108
+      },
+      "command": "JAVA_HOME=<Temurin 17> mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml verify",
+      "log": "/private/tmp/live-jvg-dev3-advanced/betting-worker.log",
+      "sha256": "58e0143c5f3de6f8203f54400d38cd5bc67e572517e10f318503087de7716a0f",
+      "build_success": true
+    }
+  },
+  "total_passed": 326,
+  "total_skipped": 20,
+  "postgres": "Previous certification only: 17 passed. Not rerun; SQL, roles and authorization unchanged. Lab untouched.",
+  "migration_checksums_match_previous_certification": true,
+  "previous_real_log_checksums_match": true,
+  "external_snapshot_files_unchanged": true,
+  "brokers": "No broker test executed; three passive probes gated and skipped. No E2E claim.",
+  "initial_failures": [
+    {
+      "module": "historical-archiver",
+      "stage": "initial",
+      "cause": "Isolated context excludes datasource and has no db health contributor; resolved using test-only readiness group override",
+      "log": "/private/tmp/live-jvg-dev3-advanced/historical-archiver.initial.log",
+      "sha256": "59479d0b857b5e591e0dc07d916f143c07d9a0eb77660d8293df74cd7f406f3b"
+    },
+    {
+      "module": "betting-suspension-service",
+      "stage": "initial",
+      "cause": "Isolated context excludes datasource and has no db health contributor; resolved using test-only readiness group override",
+      "log": "/private/tmp/live-jvg-dev3-advanced/betting-suspension-service.initial.log",
+      "sha256": "d518c85d52eab3e893f815bd244a79af75bee6679cef677476603e85948fb90f"
+    },
+    {
+      "module": "betting-worker",
+      "stage": "initial",
+      "cause": "Isolated context excludes datasource and has no db health contributor; resolved using test-only readiness group override",
+      "log": "/private/tmp/live-jvg-dev3-advanced/betting-worker.initial.log",
+      "sha256": "e0042eae222dbf9c966d241980c68466134bb16f7f99e435f94a55a36442fa27"
+    },
+    {
+      "module": "betting-worker",
+      "stage": "second",
+      "cause": "Subclass mock maker cannot stub final AMQP isRunning; resolved setting local test container running state without starting it",
+      "log": "/private/tmp/live-jvg-dev3-advanced/betting-worker.second.log",
+      "sha256": "7259d2a60b654eb44d99c565b94be8c98a90ddf12d8e7d6ca4bfb1f906851b7a"
+    }
+  ],
+  "git_diff_check_passed": true,
+  "modified_and_new_files": 31,
+  "staged_files": [],
+  "candidate_files_whitespace_check_passed": true
+}
