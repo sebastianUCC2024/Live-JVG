@@ -12,7 +12,7 @@ class LocalMvpConfigurationTest {
         var compose=(Map<String,Object>)new Yaml().load(Files.readString(Path.of("..","..","docker-compose.yml")));
         var services=(Map<String,Map<String,Object>>)compose.get("services");
         var dashboard = services.get("dashboard");
-        assertEquals("live-jvg-mvp-dashboard", dashboard.get("container_name"));
+        assertEquals("live-jvg-dev1-isolated-dashboard", dashboard.get("container_name"));
         assertEquals(1, ((Map<String,Object>)dashboard.get("deploy")).get("replicas"));
         for(String name:List.of("producer","dashboard")) {
             var env=(Map<String,Object>)services.get(name).get("environment");
