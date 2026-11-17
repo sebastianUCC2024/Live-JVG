@@ -13,6 +13,11 @@ x-match: &match
   AWAY_TEAM_ID: away
 services:
   postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
     image: postgres:17
     environment:
       POSTGRES_DB: live_jvg
@@ -26,8 +31,14 @@ services:
       timeout: 3s
       retries: 30
   kafka:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1536M
     image: apache/kafka:3.9.1
     environment:
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx768m"
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:19092
@@ -51,12 +62,22 @@ services:
       timeout: 10s
       retries: 30
   kafka-init:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     image: apache/kafka:3.9.1
     depends_on:
       kafka: {condition: service_healthy}
     entrypoint: [/opt/kafka/bin/kafka-topics.sh]
     command: [--bootstrap-server, "kafka:9092", --create, --if-not-exists, --topic, match_events, --partitions, "1", --replication-factor, "1"]
   rabbitmq:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
     image: rabbitmq:4-management
     environment:
       RABBITMQ_DEFAULT_USER: mvp
@@ -69,9 +90,14 @@ services:
       timeout: 5s
       retries: 30
   producer:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
     build:
       context: .
-      args: {JAR_FILE: services/live-feed-producer/target/live-feed-producer-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: live-feed-producer, JAR_FILE: services/live-feed-producer/target/live-feed-producer-0.0.1-SNAPSHOT.jar}
     environment:
       <<: [*match, *simulator]
       PORT: "8080"
@@ -81,13 +107,17 @@ services:
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 384m
   dashboard:
-    # MVP: STOMP simple broker is local to this one JVM. Do not scale horizontally.
-    container_name: live-jvg-dev1-isolated-dashboard
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    # MVP: STOMP simple broker is local to this one JVM. Do not scale horizontally.
+    container_name: live-jvg-dev1-isolated-dashboard
     build:
       context: .
-      args: {JAR_FILE: services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: dashboard-backend, JAR_FILE: services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar}
     environment:
       <<: [*match, *rabbit, *simulator]
       PORT: "8080"
@@ -107,9 +137,14 @@ services:
       retries: 40
     mem_limit: 512m
   match-state:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     build:
       context: .
-      args: {JAR_FILE: services/match-state-service/target/match-state-service-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: match-state-service, JAR_FILE: services/match-state-service/target/match-state-service-0.0.1-SNAPSHOT.jar}
     environment:
       <<: [*match, *rabbit]
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -123,10 +158,15 @@ services:
       dashboard: {condition: service_healthy}
     mem_limit: 512m
   archiver:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {JAR_FILE: services/historical-archiver/target/historical-archiver-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: historical-archiver, JAR_FILE: services/historical-archiver/target/historical-archiver-0.0.1-SNAPSHOT.jar}
     environment:
       <<: *rabbit
       ARCHIVER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
@@ -148,10 +188,15 @@ services:
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
   suspension:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {JAR_FILE: services/betting-suspension-service/target/betting-suspension-service-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: betting-suspension-service, JAR_FILE: services/betting-suspension-service/target/betting-suspension-service-0.0.1-SNAPSHOT.jar}
     environment:
       <<: *rabbit
       BETTING_CONTROL_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
@@ -174,10 +219,16 @@ services:
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
   worker:
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {JAR_FILE: services/betting-worker/target/betting-worker-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: betting-worker, JAR_FILE: services/betting-worker/target/betting-worker-0.0.1-SNAPSHOT.jar}
     environment:
       <<: *rabbit
       BETTING_WORKER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
@@ -201,10 +252,15 @@ services:
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
   notification:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {JAR_FILE: services/notification-backend/target/notification-backend-0.0.1-SNAPSHOT.jar}
+      args: {SERVICE_MODULE: notification-backend, JAR_FILE: services/notification-backend/target/notification-backend-0.0.1-SNAPSHOT.jar}
     environment:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
       SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"

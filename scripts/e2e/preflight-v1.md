@@ -117,3 +117,29 @@ using mocks. No additional test dependency is introduced.
 - Configuration-only success does not prove an empty database, readiness, effective
   broker permissions, UI/STOMP behavior or E2E certification.
 - No acceptance, authority or leases were enabled; no push, PR or merge was performed.
+
+
+## Separate academic Worker replica patch (uncommitted review)
+
+This worktree materializes the 21eed1d baseline and applies a separate dependent
+patch; it does not rewrite that commit or its transfer bundle. The approved
+academic count is exactly 2 Workers in both passive and active models, and 1 for
+Dashboard and every other service. The model must declare Worker replicas=2;
+a missing setting, a different number, a string or a boolean fails closed.
+
+Inspection includes all containers, not only running ones. Every distinct ID
+must have the correct project/service and unique ordinal 1 or 2, be running and
+not paused/restarting, match declared environment/mount/network restrictions,
+and use the same image ID as its peers. A declared image reference must match.
+The full ID set and image ID are retained after all replicas pass and checked
+again before and after restart. Additional, missing or replaced replicas fail.
+
+The fixed image JAVA_OPTS is accepted from actual runtime metadata; changed or
+appended options and nonempty JVM injection variables fail. Declared JAVA_ and
+JDK_ overrides remain forbidden by configuration validation. Passive flags,
+acceptance=false and authorization=disabled remain mandatory in every replica.
+
+Image consistency and stability are checked; for locally built images without
+an approved digest/reference, this does not independently attest the provenance
+of the first observed image. Configuration-only checks cannot prove runtime state.
+No Work Queue or real E2E execution was performed.

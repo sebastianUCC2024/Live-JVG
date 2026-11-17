@@ -111,6 +111,8 @@ services:
       BETTING_CONTROL_CONSUMER_ENABLED: "false"
       BETTING_CONTROL_PUBLICATION_ENABLED: "false"
   worker:
+    deploy:
+      replicas: 2
     depends_on: !reset {}
     environment:
       SPRING_SQL_INIT_MODE: never

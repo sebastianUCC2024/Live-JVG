@@ -17,6 +17,8 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVICES = ['producer', 'match-state', 'dashboard', 'notification', 'archiver', 'suspension', 'worker']
+# Reviewed academic topology, identical in passive and active model validation.
+WORKER_REPLICAS = 2
 
 
 def resources_for(run, manifest=None):
@@ -135,6 +137,11 @@ class Harness:
         worker = env['worker']
         if worker.get('BETTING_WORKER_ACCEPTANCE_ENABLED') != 'false' or worker.get('BETTING_WORKER_AUTHORIZATION_MODE') != 'disabled':
             raise ValueError('Acceptance and authority must remain disabled')
+        for name in SERVICES + ['postgres', 'kafka', 'rabbitmq']:
+            expected = WORKER_REPLICAS if name == 'worker' else 1
+            declared = svc[name].get('deploy', {}).get('replicas', 1)
+            if type(declared) is not int or declared != expected:
+                raise ValueError('Unapproved replica count: ' + name)
         policies = self.runtime_policy(phase)
         for name, settings in policies.items():
             for key, expected in settings.items():
@@ -226,32 +233,65 @@ class Harness:
         self.sql("SELECT to_regclass('match_state.accepted_event'), to_regclass('dashboard.inbox')")
 
     def check_container(self, name):
-        ids = self.call(['ps', '-q', name]).splitlines()
-        if len(ids) != 1:
-            raise ValueError('Exactly one running container required: ' + name)
-        inspected = subprocess.run(['docker', 'inspect', ids[0]], capture_output=True, text=True, check=True, timeout=15)
-        container = json.loads(inspected.stdout)[0]
-        labels = container['Config'].get('Labels', {})
-        if (labels.get('com.docker.compose.project') != self.plan['project']
-                or labels.get('com.docker.compose.service') != name
-                or not container['State'].get('Running')):
-            raise ValueError('Container ownership/running state mismatch: ' + name)
-        declared = self.config['services'][name]
-        actual_env = dict(item.split('=', 1) for item in container['Config'].get('Env', []) if '=' in item)
-        for key, value in declared.get('environment', {}).items():
-            if actual_env.get(key) != str(value):
-                raise ValueError('Running environment differs from reviewed config: ' + name + '/' + key)
-        volumes = {item['name'] for item in self.config.get('volumes', {}).values()}
-        for mount in container.get('Mounts', []):
-            if mount.get('Type') != 'volume' or mount.get('Name') not in volumes:
-                raise ValueError('Actual container uses an unreviewed mount: ' + name)
-        networks = {item['name'] for item in self.config.get('networks', {}).values()}
-        if not set(container['NetworkSettings']['Networks']) <= networks:
-            raise ValueError('Actual container uses an external network: ' + name)
+        expected = WORKER_REPLICAS if name == 'worker' else 1
+        # Include stopped/exited instances so a failed replica cannot be hidden.
+        ids = self.call(['ps', '--all', '-q', name]).splitlines()
+        if len(ids) != expected or len(set(ids)) != expected or any(not value.strip() for value in ids):
+            raise ValueError('Exact approved container count required: ' + name)
+        identity = frozenset(ids)
         previous = self.container_ids.get(name)
-        if previous and previous != ids[0]:
+        if previous is not None and previous != identity:
             raise ValueError('Container replaced during harness run: ' + name)
-        self.container_ids[name] = ids[0]
+        inspected = subprocess.run(['docker', 'inspect', *ids], capture_output=True, text=True, check=True, timeout=15)
+        containers = json.loads(inspected.stdout)
+        if len(containers) != expected or {c.get('Id') for c in containers} != set(ids):
+            raise ValueError('Inspected container identity mismatch: ' + name)
+        numbers = set()
+        images = set()
+        declared = self.config['services'][name]
+        for container in containers:
+            labels = container['Config'].get('Labels', {})
+            if (labels.get('com.docker.compose.project') != self.plan['project']
+                    or labels.get('com.docker.compose.service') != name
+                    or not container['State'].get('Running')
+                    or container['State'].get('Paused') or container['State'].get('Restarting')):
+                raise ValueError('Container ownership/running state mismatch: ' + name)
+            number = labels.get('com.docker.compose.container-number')
+            if number not in {str(i) for i in range(1, expected + 1)} or number in numbers:
+                raise ValueError('Replica ordinal mismatch: ' + name)
+            numbers.add(number)
+            image = container.get('Image')
+            if not isinstance(image, str) or not image:
+                raise ValueError('Container image identity missing: ' + name)
+            images.add(image)
+            if declared.get('image') and container['Config'].get('Image') != declared['image']:
+                raise ValueError('Declared image mismatch: ' + name)
+            actual_env = dict(item.split('=', 1) for item in container['Config'].get('Env', []) if '=' in item)
+            for key, value in declared.get('environment', {}).items():
+                if actual_env.get(key) != str(value):
+                    raise ValueError('Running environment differs from reviewed config: ' + name + '/' + key)
+            # Match the fixed image entrypoint policy; do not allow JVM injection
+            # through image defaults or undeclared container environment values.
+            safe_opts = '-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError'
+            if actual_env.get('JAVA_OPTS', safe_opts) != safe_opts or any(
+                    actual_env.get(key) for key in ['JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS']):
+                raise ValueError('Unapproved running JVM options: ' + name)
+            volumes = {item['name'] for item in self.config.get('volumes', {}).values()}
+            for mount in container.get('Mounts', []):
+                if mount.get('Type') != 'volume' or mount.get('Name') not in volumes:
+                    raise ValueError('Actual container uses an unreviewed mount: ' + name)
+            networks = {item['name'] for item in self.config.get('networks', {}).values()}
+            if not set(container['NetworkSettings']['Networks']) <= networks:
+                raise ValueError('Actual container uses an external network: ' + name)
+        if len(images) != 1:
+            raise ValueError('Replica image mismatch: ' + name)
+        image = next(iter(images))
+        image_ids = getattr(self, 'container_images', {})
+        if name in image_ids and image_ids[name] != image:
+            raise ValueError('Container image changed during harness run: ' + name)
+        # Record only after every instance passed; never commit partial validation.
+        self.container_images = dict(image_ids, **{name: image})
+        self.container_ids[name] = identity
 
     def sql(self, statement, database=None):
         # Only generated SELECTs are used; identifiers/IDs below are restricted or constants.
@@ -360,6 +400,8 @@ class Harness:
         for name in SERVICES + ['postgres', 'kafka', 'rabbitmq']:
             self.check_container(name)
         self.call(['restart', 'match-state', 'dashboard', 'notification', 'archiver', 'suspension', 'worker'])
+        for name in SERVICES + ['postgres', 'kafka', 'rabbitmq']:
+            self.check_container(name)
         self.await_state(count + 1, self.plan['steps'][-1])
         # Check consumers after restart using another fresh barrier.
         self.publish_event(dict(barrier, event_id=self.plan['run']+'-restart-barrier'))

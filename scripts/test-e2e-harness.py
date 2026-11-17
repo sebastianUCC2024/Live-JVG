@@ -199,6 +199,8 @@ class HarnessTest(unittest.TestCase):
         env['notification'].update(NOTIFICATION_STORAGE_ENABLED=on, NOTIFICATION_MESSAGING_ENABLED=on,
             SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
         env['worker'].update(BETTING_WORKER_ACCEPTANCE_ENABLED='false', BETTING_WORKER_AUTHORIZATION_MODE='disabled')
+        runner.config['services']['worker']['deploy'] = {'replicas': 2}
+        runner.config['services']['dashboard']['deploy'] = {'replicas': 1}
         return runner
 
     def test_run_ids_cannot_inject_sql_paths_or_commands(self):
@@ -287,9 +289,10 @@ class HarnessTest(unittest.TestCase):
                 runner.preflight()
             self.assertEqual(10, check.call_count)
 
-    def inspected(self, runner, name):
+    def inspected(self, runner, name, container_id='id', number='1'):
         env = runner.config['services'][name]['environment']
-        return {'Config': {'Labels': {'com.docker.compose.project': runner.plan['project'],
+        return {'Id': container_id, 'Image': 'sha256:reviewed-test-image', 'Config': {'Labels': {'com.docker.compose.project': runner.plan['project'],
+                                     'com.docker.compose.container-number': number,
                                      'com.docker.compose.service': name},
                            'Env': [key + '=' + value for key, value in env.items()]},
                 'State': {'Running': True}, 'Mounts': [], 'NetworkSettings': {'Networks': {}}}
@@ -297,7 +300,7 @@ class HarnessTest(unittest.TestCase):
     def test_actual_container_ownership_and_runtime_mismatch_are_refused(self):
         for change in ['project', 'environment', 'mount', 'network']:
             runner = self.runner()
-            info = self.inspected(runner, 'worker')
+            info = self.inspected(runner, 'dashboard')
             if change == 'project': info['Config']['Labels']['com.docker.compose.project'] = 'dev3-lab'
             if change == 'environment': info['Config']['Env'] = ['BETTING_WORKER_ACCEPTANCE_ENABLED=true']
             if change == 'mount': info['Mounts'] = [{'Type': 'volume', 'Name': 'dev3-lab-data'}]
@@ -305,19 +308,19 @@ class HarnessTest(unittest.TestCase):
             with patch.object(runner, 'call', return_value='id'), \
                     patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps([info]))):
                 with self.assertRaises(ValueError):
-                    runner.check_container('worker')
+                    runner.check_container('dashboard')
 
     def test_valid_running_container_is_recorded_and_replacement_is_refused(self):
         runner = self.runner()
-        info = self.inspected(runner, 'worker')
+        info = self.inspected(runner, 'dashboard')
         with patch.object(runner, 'call', return_value='id'), \
                 patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps([info]))):
-            runner.check_container('worker')
-        self.assertEqual('id', runner.container_ids['worker'])
+            runner.check_container('dashboard')
+        self.assertEqual(frozenset({'id'}), runner.container_ids['dashboard'])
         with patch.object(runner, 'call', return_value='new-id'), \
                 patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps([info]))):
             with self.assertRaisesRegex(ValueError, 'replaced'):
-                runner.check_container('worker')
+                runner.check_container('dashboard')
 
     def test_producer_response_accepts_java_instant_spelling_but_not_changed_payload(self):
         runner = self.runner()
@@ -468,6 +471,120 @@ class HarnessTest(unittest.TestCase):
                         patch.object(harness.subprocess, 'run', side_effect=AssertionError('No commands')):
                     harness.main()
                     self.assertFalse((root / 'tmp').exists())
+
+    def test_approved_replica_counts_in_both_phases(self):
+        for phase in ['passive', 'active']:
+            for name, invalid in [('worker', 0), ('worker', 1), ('worker', 3), ('worker', '2'),
+                                  ('worker', True), ('dashboard', 2), ('producer', 2), ('kafka', 2)]:
+                runner = self.runner(phase)
+                runner.config['services'][name]['deploy'] = {'replicas': invalid}
+                with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}):
+                    with self.assertRaisesRegex(ValueError, 'replica count'): runner.validate_config(phase)
+            runner = self.runner(phase)
+            runner.config['services']['worker'].pop('deploy')
+            with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}):
+                with self.assertRaisesRegex(ValueError, 'replica count'): runner.validate_config(phase)
+
+    def test_two_workers_are_each_inspected_and_order_is_irrelevant(self):
+        runner = self.runner('passive')
+        info = [self.inspected(runner, 'worker', 'worker1', '1'), self.inspected(runner, 'worker', 'worker2', '2')]
+        with patch.object(runner, 'call', side_effect=['worker1\nworker2', 'worker2\nworker1']) as call, \
+                patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(info))) as inspect:
+            runner.check_container('worker')
+            runner.check_container('worker')
+            self.assertEqual(frozenset({'worker1', 'worker2'}), runner.container_ids['worker'])
+            call.assert_called_with(['ps', '--all', '-q', 'worker'])
+            self.assertEqual({'worker1', 'worker2'}, set(inspect.call_args.args[0][2:]))
+        self.assertEqual('false', runner.config['services']['worker']['environment']['BETTING_WORKER_CONSUMER_ENABLED'])
+
+    def test_worker_count_and_id_duplicates_fail_before_inspect(self):
+        for ids in ['', 'worker1', 'worker1\nworker2\nworker3', 'worker1\nworker1']:
+            runner = self.runner()
+            with patch.object(runner, 'call', return_value=ids), patch.object(harness.subprocess, 'run') as inspect:
+                with self.assertRaisesRegex(ValueError, 'count'): runner.check_container('worker')
+                inspect.assert_not_called()
+                self.assertNotIn('worker', runner.container_ids)
+
+    def test_each_worker_failure_is_rejected_without_recording_partial_success(self):
+        for index in [0, 1]:
+            for change in ['project', 'service', 'ordinal', 'stopped', 'paused', 'restarting', 'environment',
+                           'mount', 'network', 'identity', 'image', 'jvm', 'tool-options']:
+                with self.subTest(replica=index, change=change):
+                    runner = self.runner('passive')
+                    info = [self.inspected(runner, 'worker', 'worker1', '1'), self.inspected(runner, 'worker', 'worker2', '2')]
+                    bad = info[index]
+                    if change == 'project': bad['Config']['Labels']['com.docker.compose.project'] = 'shared'
+                    elif change == 'service': bad['Config']['Labels']['com.docker.compose.service'] = 'other'
+                    elif change == 'ordinal': bad['Config']['Labels']['com.docker.compose.container-number'] = '3'
+                    elif change == 'stopped': bad['State']['Running'] = False
+                    elif change == 'paused': bad['State']['Paused'] = True
+                    elif change == 'restarting': bad['State']['Restarting'] = True
+                    elif change == 'environment': bad['Config']['Env'] = ['BETTING_WORKER_CONSUMER_ENABLED=true']
+                    elif change == 'mount': bad['Mounts'] = [{'Type': 'bind', 'Source': '/shared'}]
+                    elif change == 'network': bad['NetworkSettings']['Networks'] = {'shared': {}}
+                    elif change == 'identity': bad['Id'] = 'foreign'
+                    elif change == 'image': bad['Image'] = 'sha256:other'
+                    elif change == 'jvm': bad['Config']['Env'].append('JAVA_OPTS=-Dworker.acceptance.enabled=true')
+                    else: bad['Config']['Env'].append('JAVA_TOOL_OPTIONS=-javaagent:unsafe.jar')
+                    with patch.object(runner, 'call', return_value='worker1\nworker2'), \
+                            patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(info))):
+                        with self.assertRaises(ValueError): runner.check_container('worker')
+                        self.assertNotIn('worker', runner.container_ids)
+                        self.assertFalse(getattr(runner, 'container_images', {}))
+
+    def test_worker_replacement_and_image_change_do_not_overwrite_baseline(self):
+        runner = self.runner()
+        info = [self.inspected(runner, 'worker', 'worker1', '1'), self.inspected(runner, 'worker', 'worker2', '2')]
+        with patch.object(runner, 'call', return_value='worker1\nworker2'), \
+                patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(info))):
+            runner.check_container('worker')
+        original = runner.container_ids.copy()
+        with patch.object(runner, 'call', return_value='worker1\nreplacement'), patch.object(harness.subprocess, 'run') as inspect:
+            with self.assertRaisesRegex(ValueError, 'replaced'): runner.check_container('worker')
+            inspect.assert_not_called()
+        for item in info: item['Image'] = 'sha256:replaced'
+        with patch.object(runner, 'call', return_value='worker1\nworker2'), \
+                patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(info))):
+            with self.assertRaisesRegex(ValueError, 'image changed'): runner.check_container('worker')
+        self.assertEqual(original, runner.container_ids)
+
+    def test_dashboard_extra_instance_and_worker_inspect_mismatch_fail(self):
+        runner = self.runner()
+        with patch.object(runner, 'call', return_value='dashboard1\ndashboard2'), patch.object(harness.subprocess, 'run') as inspect:
+            with self.assertRaisesRegex(ValueError, 'count'): runner.check_container('dashboard')
+            inspect.assert_not_called()
+        info = self.inspected(runner, 'worker', 'worker1', '1')
+        for inspected in [[info], [info, info]]:
+            with patch.object(runner, 'call', return_value='worker1\nworker2'), \
+                    patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(inspected))):
+                with self.assertRaises(ValueError): runner.check_container('worker')
+
+    def test_approved_image_jvm_default_passes_without_allowing_declared_overrides(self):
+        runner = self.runner('passive')
+        info = [self.inspected(runner, 'worker', 'worker1', '1'), self.inspected(runner, 'worker', 'worker2', '2')]
+        for item in info:
+            item['Config']['Env'].append('JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError')
+        with patch.object(runner, 'call', return_value='worker1\nworker2'), \
+                patch.object(harness.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(info))):
+            runner.check_container('worker')
+        runner.config['services']['worker']['environment']['JAVA_OPTS'] = '-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError'
+        with patch.dict(harness.os.environ, {'LIVE_JVG_E2E_APPROVED_PROJECT': runner.plan['project']}):
+            with self.assertRaisesRegex(ValueError, 'runtime override'): runner.validate_config('passive')
+
+    def test_invalid_replicas_after_restart_block_the_next_barrier(self):
+        runner = self.runner()
+        initial = dict.fromkeys(['match', 'dashboard', 'notification', 'archive', 'suspension', 'accepted'], 0)
+        restarted = [False]
+        def check(name):
+            if restarted[0] and name == 'worker': raise ValueError('replica failed after restart')
+        def restart(args):
+            restarted[0] = True
+        with patch.object(runner, 'preflight'), patch.object(runner, 'observe', return_value=initial), \
+                patch.object(runner, 'publish_through_producer'), patch.object(runner, 'publish_event') as kafka, \
+                patch.object(runner, 'await_state'), patch.object(runner, 'blocked_command'), \
+                patch.object(runner, 'check_container', side_effect=check), patch.object(runner, 'call', side_effect=restart):
+            with self.assertRaisesRegex(ValueError, 'after restart'): runner.execute()
+            self.assertEqual(2, kafka.call_count)  # duplicate and first barrier only
 
 
 if __name__ == '__main__':
