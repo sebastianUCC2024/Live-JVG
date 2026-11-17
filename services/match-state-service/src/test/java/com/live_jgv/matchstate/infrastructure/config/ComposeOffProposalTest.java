@@ -137,4 +137,21 @@ class ComposeOffProposalTest {
         assertTrue(dockerfile.contains("COPY --from=build"));
     }
 
+    @Test
+    void academicOnProposalRequiresSeparatePolicyAndNeverEnablesAuthority() throws Exception {
+        var services=map(read("scripts/e2e/compose.academic-proposed.yml").get("services"));
+        var worker=map(map(services.get("worker")).get("environment"));
+        assertEquals("false",worker.get("BETTING_WORKER_ACCEPTANCE_ENABLED"));
+        assertEquals("disabled",worker.get("BETTING_WORKER_AUTHORIZATION_MODE"));
+        assertEquals("false",worker.get("BETTING_WORKER_CONSUMER_ENABLED"));
+        assertEquals("true",worker.get("ACADEMIC_CONSUMER_ENABLED"));
+        assertEquals("false",worker.get("ACADEMIC_TOPOLOGY_ENABLED"));
+        assertTrue(worker.get("SPRING_RABBITMQ_VIRTUAL_HOST").toString().contains("E2E_ACADEMIC_VHOST"));
+        assertEquals("http://127.0.0.1:15173",map(map(services.get("dashboard")).get("environment")).get("DASHBOARD_ALLOWED_ORIGINS"));
+        assertEquals("http://127.0.0.1:15173",map(map(services.get("notification")).get("environment")).get("NOTIFICATION_ALLOWED_ORIGINS"));
+        assertEquals(List.of("127.0.0.1:18192:8082"),((Tagged)map(services.get("notification")).get("ports")).value());
+        var off=map(read("scripts/e2e/compose.manifest-proposed.yml").get("services"));
+        assertEquals("false",map(map(off.get("worker")).get("environment")).get("ACADEMIC_CONSUMER_ENABLED"));
+    }
+
 }

@@ -22,20 +22,27 @@ import java.util.*;
 @Repository
 @DependsOnDatabaseInitialization
 public class ScoreProjection {
+    private final boolean sequenceRequired;
     private final MatchSnapshotPublisher publisher;
     private final ScoreUpdateMessageDecoder decoder = new ScoreUpdateMessageDecoder();
     private final JdbcTemplate jdbc; private final TransactionTemplate tx; private final ObjectMapper mapper;
     public ScoreProjection(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
             MatchSnapshotPublisher publisher,
             String match,String home,String away,String homeName,String awayName){
-        this(jdbc,manager,mapper,publisher,match,home,away,homeName,awayName,true);
+        this(jdbc,manager,mapper,publisher,match,home,away,homeName,awayName,true,false);
+    }
+    public ScoreProjection(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
+            MatchSnapshotPublisher publisher,String match,String home,String away,String homeName,String awayName,boolean bootstrapEnabled){
+        this(jdbc,manager,mapper,publisher,match,home,away,homeName,awayName,bootstrapEnabled,false);
     }
     @Autowired
     public ScoreProjection(JdbcTemplate jdbc,PlatformTransactionManager manager,ObjectMapper mapper,
             MatchSnapshotPublisher publisher,
             @Value("${live.match-id}") String match,@Value("${live.home-team-id}") String home,@Value("${live.away-team-id}") String away,
             @Value("${live.home-name}") String homeName,@Value("${live.away-name}") String awayName,
-            @Value("${dashboard.catalog.bootstrap-enabled:true}") boolean bootstrapEnabled){
+            @Value("${dashboard.catalog.bootstrap-enabled:true}") boolean bootstrapEnabled,
+            @Value("${dashboard.score.sequence-required:false}") boolean sequenceRequired){
+        this.sequenceRequired=sequenceRequired;
         this.publisher=publisher;this.jdbc=jdbc;this.tx=new TransactionTemplate(manager);this.mapper=mapper;
         if(bootstrapEnabled)
             jdbc.update("INSERT INTO dashboard.matches(match_id,home_team_id,away_team_id,home_name,away_name) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",match,home,away,homeName,awayName);
@@ -58,6 +65,7 @@ public class ScoreProjection {
     @RabbitListener(id="durableScores",queues="${live.queue}",containerFactory="durableScoresFactory")
     public synchronized void receive(Message message){
         decoder.decode(message.getBody());
+        Long sequence=sequenceRequired?requiredSequence(message):null;
         final JsonNode json;
         try{json=mapper.readTree(message.getBody());}catch(Exception e){throw new IllegalArgumentException("ScoreUpdate no válido",e);}
         for(String field:List.of("match_id","event_id","event_type","home_score","away_score","var_status","updated_at"))
@@ -66,17 +74,34 @@ public class ScoreProjection {
         String match=json.get("match_id").asText(),event=json.get("event_id").asText(),payload=json.toString();
         tx.executeWithoutResult(status->{
             jdbc.queryForMap("SELECT match_id FROM dashboard.matches WHERE match_id=? FOR UPDATE",match);
-            var prior=jdbc.queryForList("SELECT payload FROM dashboard.inbox WHERE match_id=? AND event_id=?",match,event);
+            var prior=jdbc.queryForList("SELECT payload"+(sequenceRequired?",source_application_seq":"")+" FROM dashboard.inbox WHERE match_id=? AND event_id=?",match,event);
             if(!prior.isEmpty()){
+                if(sequenceRequired && (!(prior.get(0).get("source_application_seq") instanceof Number n) || n.longValue()!=sequence))
+                    throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("Conflicting source sequence or legacy inbox; reviewed replay required");
                 try{if(!mapper.readTree((String)prior.get(0).get("payload")).equals(json))throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("ID de salida con contenido distinto");}
                 catch(com.fasterxml.jackson.core.JsonProcessingException e){throw new IllegalStateException(e);}return;
             }
-            jdbc.update("INSERT INTO dashboard.inbox(match_id,event_id,payload) VALUES (?,?,?)",match,event,payload);
+            if(sequenceRequired) {
+                Boolean legacy=jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM dashboard.inbox WHERE match_id=? AND source_application_seq IS NULL)",Boolean.class,match);
+                if(!Boolean.FALSE.equals(legacy))
+                    throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("Legacy inbox cannot be mixed with source sequence; reviewed replay required");
+                Long previous=jdbc.queryForObject("SELECT COALESCE(MAX(source_application_seq),0) FROM dashboard.inbox WHERE match_id=?",Long.class,match);
+                if(previous==null || sequence!=Math.addExact(previous,1))
+                    throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("Old or non-contiguous source sequence; custody/replay required");
+                jdbc.update("INSERT INTO dashboard.inbox(match_id,event_id,payload,source_application_seq) VALUES (?,?,?,?)",match,event,payload,sequence);
+            } else jdbc.update("INSERT INTO dashboard.inbox(match_id,event_id,payload) VALUES (?,?,?)",match,event,payload);
             jdbc.update("UPDATE dashboard.matches SET home_score=?,away_score=?,var_status=?,last_event_id=?,updated_at=? WHERE match_id=?",json.get("home_score").asInt(),json.get("away_score").asInt(),json.get("var_status").asText(),event,json.get("updated_at").asText(),match);
         });
         // Publish only committed state. A redelivery publishes the latest snapshot,
         // never the older duplicate payload. Clients deduplicate its durable revision.
         snapshot(match).ifPresent(publisher::publish);
+    }
+    private Long requiredSequence(Message message) {
+        Object raw=message.getMessageProperties().getHeaders().get("application_seq");
+        // AMQP integral header, never timestamp, float, string, or inferred arrival order.
+        if(!(raw instanceof Long || raw instanceof Integer) || ((Number)raw).longValue()<1)
+            throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("Authoritative application_seq header required");
+        return ((Number)raw).longValue();
     }
     public synchronized Optional<MatchSnapshot> snapshot(String match) {
         return jdbc.query("""

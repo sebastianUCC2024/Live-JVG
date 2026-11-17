@@ -42,6 +42,16 @@ class RabbitScoreUpdatePublisherTest {
     }
 
     @Test
+    void storedAuthoritativeSequenceTravelsInHeaderWithoutChangingV1Json() throws Exception {
+        confirms(true,false);String json=mapper.writeValueAsString(update);
+        publisher.publishStored(new StoredScoreUpdate(update,json,"live_updates","score.match-001",3L));
+        var message=org.mockito.ArgumentCaptor.forClass(Message.class);
+        verify(template).send(anyString(),anyString(),message.capture(),any(CorrelationData.class));
+        assertEquals(3L,message.getValue().getMessageProperties().getHeaders().get("application_seq"));
+        assertArrayEquals(json.getBytes(StandardCharsets.UTF_8),message.getValue().getBody());
+    }
+
+    @Test
     void sendsJsonToExchangeAndMatchRoutingKeyWithPersistentDeliveryAndStableMessageId() throws Exception {
         confirms(true, false);
         publisher.publish(update);

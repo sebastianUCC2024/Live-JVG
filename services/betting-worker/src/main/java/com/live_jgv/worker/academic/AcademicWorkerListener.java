@@ -8,6 +8,7 @@ import java.util.*;
 
 /** AUTO ACK only after the handler's transaction (and rejection custody) has completed. */
 public final class AcademicWorkerListener {
+    private final String instanceId=UUID.randomUUID().toString();
     private final AcademicCommandHandler handler;private final AcademicCommandStore store;
     private final AcademicRabbitSender dlq;private final String queue,source;
     public AcademicWorkerListener(AcademicCommandHandler handler,AcademicCommandStore store,AcademicRabbitSender dlq,String queue,String source){
@@ -17,7 +18,7 @@ public final class AcademicWorkerListener {
     @RabbitListener(id="academicBettingWorker",queues="${academic.rabbit.queue:betting_commands}",containerFactory="academicRabbitFactory",autoStartup="false")
     public void receive(Message message) {
         var props=message.getMessageProperties();final String headers;
-        try{headers=new ObjectMapper().writeValueAsString(props.getHeaders());}
+        try{var auditHeaders=new HashMap<String,Object>(props.getHeaders());auditHeaders.put("academic_consumer_instance_id",instanceId);headers=new ObjectMapper().writeValueAsString(auditHeaders);}
         catch(Exception failure){throw new IllegalStateException("Cannot preserve academic transport headers");}
         var input=new TransportMessage(source,props.getMessageId(),Objects.toString(props.getReceivedExchange(),""),
                 Objects.toString(props.getReceivedRoutingKey(),""),message.getBody(),headers);

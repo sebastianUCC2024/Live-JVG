@@ -195,7 +195,10 @@ class HarnessTest(unittest.TestCase):
             MATCH_STATE_PUBLICATION_ENABLED=on, KAFKA_LISTENER_AUTO_STARTUP=on, SPRING_KAFKA_LISTENER_AUTO_STARTUP=on)
         for name, prefix in [('archiver', 'ARCHIVER'), ('suspension', 'BETTING_CONTROL'), ('worker', 'BETTING_WORKER')]:
             env[name][prefix + '_CONSUMER_ENABLED'] = on
-        env['suspension']['BETTING_CONTROL_PUBLICATION_ENABLED'] = 'false'
+        env['suspension'].update(BETTING_CONTROL_PUBLICATION_ENABLED='false', ACADEMIC_COMMANDS_ENABLED='false', ACADEMIC_PUBLICATION_ENABLED='false')
+        env['worker'].update(ACADEMIC_CONSUMER_ENABLED='false', ACADEMIC_TOPOLOGY_ENABLED='false')
+        env['match-state'].update(MATCH_STATE_ALERTS_ENABLED='false', MATCH_STATE_ALERTS_PUBLICATION_ENABLED='false')
+        env['notification']['NOTIFICATION_LIVE_ALERTS_ENABLED'] = 'false'
         env['notification'].update(NOTIFICATION_STORAGE_ENABLED=on, NOTIFICATION_MESSAGING_ENABLED=on,
             SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
         env['worker'].update(BETTING_WORKER_ACCEPTANCE_ENABLED='false', BETTING_WORKER_AUTHORIZATION_MODE='disabled')
@@ -586,6 +589,37 @@ class HarnessTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'after restart'): runner.execute()
             self.assertEqual(2, kafka.call_count)  # duplicate and first barrier only
 
+
+
+    def test_academic_flags_fail_closed_in_both_phases(self):
+        controls={'suspension':['ACADEMIC_COMMANDS_ENABLED','ACADEMIC_PUBLICATION_ENABLED'],
+                  'worker':['ACADEMIC_CONSUMER_ENABLED','ACADEMIC_TOPOLOGY_ENABLED']}
+        for phase in ['passive','active']:
+            for service,keys in controls.items():
+                for key in keys:
+                    for bad in [None,'true','TRUE','',False,'disabled']:
+                        with self.subTest(phase=phase,key=key,bad=bad):
+                            runner=self.runner(phase)
+                            if bad is None: runner.config['services'][service]['environment'].pop(key)
+                            else: runner.config['services'][service]['environment'][key]=bad
+                            with patch.dict(harness.os.environ,{'LIVE_JVG_E2E_APPROVED_PROJECT':runner.plan['project']}):
+                                with self.assertRaises(ValueError): runner.validate_config(phase)
+
+    def test_passive_model_rejects_property_aliases(self):
+        for key in ['academic.consumer.enabled','academic_consumer_enabled','worker.acceptance.enabled','spring.application.json']:
+            runner=self.runner('passive');runner.config['services']['worker']['environment'][key]='true'
+            with patch.dict(harness.os.environ,{'LIVE_JVG_E2E_APPROVED_PROJECT':runner.plan['project']}),self.assertRaises(ValueError):runner.validate_config('passive')
+
+    def test_every_replica_rejects_academic_and_undeclared_property_overrides(self):
+        for ordinal in [0,1]:
+            for key,value in [('ACADEMIC_CONSUMER_ENABLED','true'),('ACADEMIC_TOPOLOGY_ENABLED','true'),
+                              ('ACADEMIC_OTHER_ENABLED','true'),('SPRING_APPLICATION_JSON','{}'),('academic.consumer.enabled','true'),('worker.acceptance.enabled','true'),('academic_consumer_enabled','true')]:
+                runner=self.runner('passive')
+                info=[self.inspected(runner,'worker','w1','1'),self.inspected(runner,'worker','w2','2')]
+                info[ordinal]['Config']['Env']=[v for v in info[ordinal]['Config']['Env'] if not v.startswith(key+'=')]+[key+'='+value]
+                with patch.object(runner,'call',return_value='w1\nw2'),patch.object(harness.subprocess,'run',return_value=SimpleNamespace(stdout=json.dumps(info))):
+                    with self.assertRaises(ValueError):runner.check_container('worker')
+                self.assertNotIn('worker',runner.container_ids)
 
 if __name__ == '__main__':
     unittest.main()

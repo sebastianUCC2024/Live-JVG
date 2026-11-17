@@ -1,0 +1,26 @@
+{
+  "status": "PROPOSED_NOT_APPROVED_NOT_EXECUTED",
+  "academic_vhost": "dev3_it_{run}_academic",
+  "sports_vhost": "exclusive_new_rehearsal_broker_only",
+  "academic_resources": ["betting_commands", "betting_commands.dlx", "betting_commands.dlq"],
+  "default_exchange": "",
+  "command_routing_key": "betting_commands",
+  "dlx_type": "direct",
+  "dlq_routing_key": "rejected",
+  "roles": {
+    "academic_publisher": {"configure": "none", "read": "none", "write": "default exchange in academic vhost only; verify broker permission representation"},
+    "academic_worker": {"configure": "none", "read": ["betting_commands"], "write": ["betting_commands.dlx"]},
+    "provisioner": {"scope": "only the academic vhost and its three named resources; never runtime credentials"},
+    "score_publisher": {"vhost": "sports", "write": ["live_updates", "live_alerts"]},
+    "score_reader": {"vhost": "sports", "read": "dedicated Dashboard queue", "write": "its DLX only"},
+    "alert_reader": {"vhost": "sports", "read": "dedicated Notification Fanout-only queue", "write": "its DLX only", "configure": "review explicit Notification RabbitAdmin declarations"}
+  },
+  "not_a_rabbit_definitions_import": true,
+  "limits": [
+    "Default-exchange write is NOT demonstrated to restrict publishing solely by routing key",
+    "No sensitive or preexisting queues allowed in academic vhost",
+    "No guest/mvp/admin runtime identity in the academic ON model",
+    "Broker permission checks, vhost denial and confirms/returns must be verified after separate approval",
+    "Kafka remains a controlled isolated PLAINTEXT rehearsal, not production authentication certification"
+  ]
+}

@@ -8,13 +8,17 @@ import org.springframework.stereotype.Component;
 /** Transport readiness is not permission to accept an operation. No broker calls or auto-recovery. */
 @Component("messagingReadiness")
 public final class MessagingReadiness implements HealthIndicator {
-    private final RabbitListenerEndpointRegistry registry;private final boolean enabled;
-    public MessagingReadiness(RabbitListenerEndpointRegistry registry,@Value("${worker.consumer.enabled:false}") boolean enabled){
-        this.registry=registry;this.enabled=enabled;
+    private final RabbitListenerEndpointRegistry registry;private final boolean enabled;private final boolean academic;
+    public MessagingReadiness(RabbitListenerEndpointRegistry registry,boolean enabled){this(registry,enabled,false);}
+    @org.springframework.beans.factory.annotation.Autowired
+    public MessagingReadiness(RabbitListenerEndpointRegistry registry,@Value("${worker.consumer.enabled:false}") boolean enabled,
+            @Value("${academic.consumer.enabled:false}") boolean academic){
+        this.registry=registry;this.enabled=enabled;this.academic=academic;
     }
     @Override public Health health(){
-        if(!enabled)return unavailable("DISABLED");
-        var listener=registry.getListenerContainer("simulatedBettingWorker");
+        if(!enabled&&!academic)return unavailable("DISABLED");
+        if(enabled&&academic)return unavailable("AMBIGUOUS_CONSUMER_MODE");
+        var listener=registry.getListenerContainer(academic?"academicBettingWorker":"simulatedBettingWorker");
         if(listener==null)return unavailable("LISTENER_MISSING");
         if(!listener.isRunning())return unavailable("STOPPED");
         if(!(listener instanceof SimpleMessageListenerContainer simple))return unavailable("UNVERIFIED_CONTAINER");

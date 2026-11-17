@@ -172,7 +172,7 @@ class Harness:
                 raise ValueError('Entrypoint/property overrides refused: ' + name)
             allowed = set(policies[name]) | {'SPRING_RABBITMQ_VIRTUAL_HOST', 'SPRING_KAFKA_CONSUMER_GROUP_ID'}
             for key in env[name]:
-                if key.startswith(('SPRING_', 'JAVA_', 'JDK_')) and key not in allowed:
+                if ('.' in key or '-' in key or key.upper().startswith(('SPRING', 'JAVA_', 'JDK_', 'ACADEMIC', 'MATCH_STATE_ALERTS_', 'NOTIFICATION_LIVE_ALERTS_'))) and key not in allowed:
                     raise ValueError('Unreviewed runtime override refused: ' + name + '/' + key)
             group = env[name].get('SPRING_KAFKA_CONSUMER_GROUP_ID')
             if group and (name != 'match-state' or group != 'dev3_it_' + self.plan['run'] + '_match_state'):
@@ -186,7 +186,7 @@ class Harness:
             prefix = 'NOTIFICATION_RABBIT_' if name == 'notification' else 'RABBITMQ_'
             if env[name].get(prefix + 'HOST') != 'rabbitmq' or str(env[name].get(prefix + 'PORT')) != '5672':
                 raise ValueError('External RabbitMQ refused: ' + name)
-            if env[name].get('SPRING_RABBITMQ_VIRTUAL_HOST', '/') != resources['vhost']:
+            if env[name].get('SPRING_RABBITMQ_VIRTUAL_HOST', '/') != self.expected_vhost(name):
                 raise ValueError('Rabbit vhost differs from approved publishing destination: ' + name)
         if os.environ.get('LIVE_JVG_E2E_RABBIT_VHOST', resources['vhost']) != resources['vhost']:
             raise ValueError('Rabbit publishing vhost differs from manifest')
@@ -194,6 +194,9 @@ class Harness:
             if resources[key] is not None and worker.get(setting) != resources[key]:
                 raise ValueError('Worker destination differs from manifest: ' + key)
         self.worker = worker
+
+    def expected_vhost(self, name):
+        return self.plan['resources']['vhost']
 
     @staticmethod
     def runtime_policy(phase):
@@ -214,15 +217,18 @@ class Harness:
         policy['dashboard'].update(SPRING_PROFILES_ACTIVE='passive',
             DASHBOARD_CATALOG_BOOTSTRAP_ENABLED='false', SIMULATOR_WRITE_ENABLED='false',
             DASHBOARD_RABBIT_LISTENER_ENABLED=on, SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
-        policy['match-state'].update(MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED='false',
+        policy['match-state'].update(MATCH_STATE_ALERTS_ENABLED='false', MATCH_STATE_ALERTS_PUBLICATION_ENABLED='false',
+            MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED='false',
             MATCH_STATE_RECOVERY_ENABLED=on, MATCH_STATE_PUBLICATION_ENABLED=on,
             KAFKA_LISTENER_AUTO_STARTUP=on, SPRING_KAFKA_LISTENER_AUTO_STARTUP=on)
         policy['archiver']['ARCHIVER_CONSUMER_ENABLED'] = on
-        policy['suspension'].update(BETTING_CONTROL_CONSUMER_ENABLED=on,
+        policy['suspension'].update(ACADEMIC_COMMANDS_ENABLED='false', ACADEMIC_PUBLICATION_ENABLED='false',
+            BETTING_CONTROL_CONSUMER_ENABLED=on,
             BETTING_CONTROL_PUBLICATION_ENABLED='false')
-        policy['worker'].update(BETTING_WORKER_CONSUMER_ENABLED=on,
+        policy['worker'].update(ACADEMIC_CONSUMER_ENABLED='false', ACADEMIC_TOPOLOGY_ENABLED='false',
+            BETTING_WORKER_CONSUMER_ENABLED=on,
             BETTING_WORKER_ACCEPTANCE_ENABLED='false', BETTING_WORKER_AUTHORIZATION_MODE='disabled')
-        policy['notification'].update(NOTIFICATION_STORAGE_ENABLED=on,
+        policy['notification'].update(NOTIFICATION_LIVE_ALERTS_ENABLED='false', NOTIFICATION_STORAGE_ENABLED=on,
             NOTIFICATION_MESSAGING_ENABLED=on, SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP=on)
         return policy
 
@@ -267,6 +273,9 @@ class Harness:
             if declared.get('image') and container['Config'].get('Image') != declared['image']:
                 raise ValueError('Declared image mismatch: ' + name)
             actual_env = dict(item.split('=', 1) for item in container['Config'].get('Env', []) if '=' in item)
+            for key in actual_env:
+                if ('.' in key or '-' in key or key.upper().startswith(('ACADEMIC', 'SPRING'))) and key not in declared.get('environment', {}):
+                    raise ValueError('Undeclared running property override: ' + name + '/' + key)
             for key, value in declared.get('environment', {}).items():
                 if actual_env.get(key) != str(value):
                     raise ValueError('Running environment differs from reviewed config: ' + name + '/' + key)
@@ -314,6 +323,7 @@ class Harness:
         actual = json.loads(response)
         if actual.keys() != event.keys() or any(actual[key] != event[key] for key in event if key != 'timestamp') or instant_key(actual['timestamp']) != instant_key(event['timestamp']):
             raise AssertionError('Producer did not preserve submitted event identity/payload')
+        return actual
 
     def observe(self):
         m = self.plan['match_id']
@@ -388,10 +398,11 @@ class Harness:
         return self._execute_prepared()
 
     def _execute_prepared(self):
+        transmitted=[]
         for count, step in enumerate(self.plan['steps'], 1):
-            self.publish_through_producer(step['event'])
+            transmitted.append(self.publish_through_producer(step['event']))
             self.await_state(count, step)
-        self.publish_event(self.plan['steps'][0]['event'])
+        self.publish_event(transmitted[0])
         # A barrier proves every consumer traversed the duplicate, unlike an immediate count check.
         barrier = dict(self.plan['steps'][-1]['event'], event_id=self.plan['run']+'-barrier')
         self.publish_event(barrier)

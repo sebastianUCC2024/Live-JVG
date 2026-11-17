@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/private/tmp/live-jvg-local-academic-v1/scripts/validate-dev1-contracts.py", line 4, in <module>
+    import fastjsonschema
+ModuleNotFoundError: No module named 'fastjsonschema'

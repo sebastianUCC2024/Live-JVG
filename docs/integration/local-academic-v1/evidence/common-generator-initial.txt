@@ -1,0 +1,36 @@
+.....................FEF.
+======================================================================
+ERROR: test_review_files_have_no_trailing_whitespace (__main__.CommonV1ProposalTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/live-jvg-local-academic-v1/services/notification-backend/docs/common-v1-proposal/test_prepare_common_v1.py", line 219, in test_review_files_have_no_trailing_whitespace
+    content = (proposal.HERE / name).read_text(encoding="utf-8")
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1256, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/live-jvg-local-academic-v1/services/notification-backend/docs/common-v1-proposal/70-academic-dml.proposed.sql'
+
+======================================================================
+FAIL: test_rendered_artifacts_match_review_files (__main__.CommonV1ProposalTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/live-jvg-local-academic-v1/services/notification-backend/docs/common-v1-proposal/test_prepare_common_v1.py", line 214, in test_rendered_artifacts_match_review_files
+    self.assertEqual((proposal.HERE / name).read_text(encoding="utf-8"), content, name)
+AssertionError: '{\n [635 chars] "AtlÃ©tico Local",\n    "away_name": "Deporti[6670 chars]n}\n' != '{\n [635 chars] "Atlético Local",\n    "away_name": "Deportiv[7363 chars]n}\n'
+Diff is 8429 characters long. Set self.maxDiff to None to see it. : plan.proposed.json
+
+======================================================================
+FAIL: test_six_schemas_fourteen_migrations_and_control_before_worker (__main__.CommonV1ProposalTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/live-jvg-local-academic-v1/services/notification-backend/docs/common-v1-proposal/test_prepare_common_v1.py", line 83, in test_six_schemas_fourteen_migrations_and_control_before_worker
+    self.assertEqual(sum(len(step["files"]) for step in steps), 14)
+AssertionError: 17 != 14
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.038s
+
+FAILED (failures=2, errors=1)

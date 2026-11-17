@@ -146,6 +146,8 @@ services:
       context: .
       args: {SERVICE_MODULE: match-state-service, JAR_FILE: services/match-state-service/target/match-state-service-0.0.1-SNAPSHOT.jar}
     environment:
+      MATCH_STATE_ALERTS_ENABLED: "false"
+      MATCH_STATE_ALERTS_PUBLICATION_ENABLED: "false"
       <<: [*match, *rabbit]
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MATCH_STATE_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
@@ -198,6 +200,8 @@ services:
       context: .
       args: {SERVICE_MODULE: betting-suspension-service, JAR_FILE: services/betting-suspension-service/target/betting-suspension-service-0.0.1-SNAPSHOT.jar}
     environment:
+      ACADEMIC_COMMANDS_ENABLED: "false"
+      ACADEMIC_PUBLICATION_ENABLED: "false"
       <<: *rabbit
       BETTING_CONTROL_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
       BETTING_CONTROL_DB_USERNAME: live_jvg
@@ -230,6 +234,8 @@ services:
       context: .
       args: {SERVICE_MODULE: betting-worker, JAR_FILE: services/betting-worker/target/betting-worker-0.0.1-SNAPSHOT.jar}
     environment:
+      ACADEMIC_CONSUMER_ENABLED: "false"
+      ACADEMIC_TOPOLOGY_ENABLED: "false"
       <<: *rabbit
       BETTING_WORKER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
       BETTING_WORKER_DB_USERNAME: live_jvg
@@ -262,6 +268,7 @@ services:
       context: .
       args: {SERVICE_MODULE: notification-backend, JAR_FILE: services/notification-backend/target/notification-backend-0.0.1-SNAPSHOT.jar}
     environment:
+      NOTIFICATION_LIVE_ALERTS_ENABLED: "false"
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
       SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
       NOTIFICATION_BIND_ADDRESS: 0.0.0.0

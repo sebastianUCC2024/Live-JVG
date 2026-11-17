@@ -11,5 +11,14 @@ class AcademicListenerTest {
  @Test void unconfirmedDlqDoesNotAck(){when(store.quarantine(any(),anyString())).thenReturn(AcademicCommandStore.Outcome.QUARANTINED);assertThrows(IllegalStateException.class,()->listener.receive(message(false)));}
  @Test void identityConflictIsAuditedThenForwardedToDlq(){when(store.record(any(),any())).thenReturn(AcademicCommandStore.Outcome.IDENTITY_CONFLICT);assertThrows(IllegalStateException.class,()->listener.receive(message(true)));verify(rabbit).send(eq("betting_commands.dlx"),eq("rejected"),any(Message.class),any(CorrelationData.class));}
  @Test void unexpectedExchangeCannotInvokeDomainRecord(){var message=message(true);message.getMessageProperties().setReceivedExchange("wrong");when(store.quarantine(any(),anyString())).thenReturn(AcademicCommandStore.Outcome.QUARANTINED);assertThrows(IllegalStateException.class,()->listener.receive(message));verify(store).quarantine(any(),eq("UNEXPECTED_ACADEMIC_DESTINATION"));verify(store,never()).record(any(),any());}
+ @Test void eachConsumerInstanceAddsItsOwnAuditIdentity(){
+  when(store.record(any(),any())).thenReturn(AcademicCommandStore.Outcome.RECORDED);
+  listener.receive(message(true));
+  new AcademicWorkerListener(new AcademicCommandHandler(store,new AcademicCommandCodec()),store,new AcademicRabbitSender(rabbit,"betting_commands.dlx","rejected",1),"betting_commands","academic-test/1").receive(message(true));
+  var evidence=org.mockito.ArgumentCaptor.forClass(com.live_jgv.worker.domain.TransportMessage.class);
+  verify(store,times(2)).record(any(),evidence.capture());
+  assertNotEquals(evidence.getAllValues().get(0).headers(),evidence.getAllValues().get(1).headers());
+  assertTrue(evidence.getAllValues().get(0).headers().contains("academic_consumer_instance_id"));
+ }
  @Test void durableTopologyIncludesSeparateDeadLetterBinding(){var topology=AcademicTopologyConfiguration.topology("betting_commands");assertEquals(4,topology.getDeclarables().size());for(var d:topology.getDeclarables())if(d instanceof Queue q){assertTrue(q.isDurable());assertFalse(q.isAutoDelete());if(q.getName().equals("betting_commands")){assertEquals("betting_commands.dlx",q.getArguments().get("x-dead-letter-exchange"));assertEquals("rejected",q.getArguments().get("x-dead-letter-routing-key"));}}}
 }

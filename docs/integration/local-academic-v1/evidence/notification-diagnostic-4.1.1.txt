@@ -1,0 +1,47 @@
+[INFO] Scanning for projects...
+[INFO] Loaded 24514 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[INFO]
+[INFO] -----------------< com.live-jgv:notification-backend >------------------
+[INFO] Building notification-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for org.apache.maven.plugins:maven-surefire-plugin:jar:3.5.6 is missing, no dependency information available
+[WARNING] The POM for org.apache.maven.plugins:maven-jar-plugin:jar:3.5.1 is missing, no dependency information available
+[WARNING] The POM for org.springframework.boot:spring-boot-starter-flyway:jar:4.1.1 is missing, no dependency information available
+[WARNING] The POM for org.flywaydb:flyway-database-postgresql:jar:12.4.0 is missing, no dependency information available
+[WARNING] The POM for com.fasterxml.jackson.core:jackson-databind:jar:2.21.5 is missing, no dependency information available
+[WARNING] The POM for com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.21.5 is missing, no dependency information available
+[WARNING] The POM for org.springframework.boot:spring-boot-starter-actuator-test:jar:4.1.1 is missing, no dependency information available
+[WARNING] The POM for org.springframework.boot:spring-boot-starter-amqp:jar:4.1.1 is missing, no dependency information available
+[WARNING] The POM for org.springframework.boot:spring-boot-starter-amqp-test:jar:4.1.1 is missing, no dependency information available
+[WARNING] The POM for org.springframework.boot:spring-boot-starter-actuator:jar:4.1.1 is missing, no dependency information available
+[INFO] ------------------------------------------------------------------------
+[ERROR] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.254 s
+[INFO] Finished at: 2026-11-17T03:25:08-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal on project notification-backend: Could not resolve dependencies for project com.live-jgv:notification-backend:jar:0.0.1-SNAPSHOT
+[ERROR] dependency: org.springframework.boot:spring-boot-starter-flyway:jar:4.1.1 (compile)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact org.springframework.boot:spring-boot-starter-flyway:jar:4.1.1 has not been downloaded from it before.
+[ERROR] dependency: org.flywaydb:flyway-database-postgresql:jar:12.4.0 (compile)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact org.flywaydb:flyway-database-postgresql:jar:12.4.0 has not been downloaded from it before.
+[ERROR] dependency: com.fasterxml.jackson.core:jackson-databind:jar:2.21.5 (compile)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact com.fasterxml.jackson.core:jackson-databind:jar:2.21.5 has not been downloaded from it before.
+[ERROR] dependency: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.21.5 (compile)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.21.5 has not been downloaded from it before.
+[ERROR] dependency: org.springframework.boot:spring-boot-starter-actuator:jar:4.1.1 (compile)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact org.springframework.boot:spring-boot-starter-actuator:jar:4.1.1 has not been downloaded from it before.
+[ERROR] dependency: org.springframework.boot:spring-boot-starter-amqp:jar:4.1.1 (compile)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact org.springframework.boot:spring-boot-starter-amqp:jar:4.1.1 has not been downloaded from it before.
+[ERROR] dependency: org.springframework.boot:spring-boot-starter-actuator-test:jar:4.1.1 (test)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact org.springframework.boot:spring-boot-starter-actuator-test:jar:4.1.1 has not been downloaded from it before.
+[ERROR] dependency: org.springframework.boot:spring-boot-starter-amqp-test:jar:4.1.1 (test)
+[ERROR] 	Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact org.springframework.boot:spring-boot-starter-amqp-test:jar:4.1.1 has not been downloaded from it before.
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException
