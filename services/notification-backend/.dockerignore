@@ -1,6 +1,0 @@
-# Only the verified executable JAR is part of the image build context.
-*
-!Dockerfile
-!target
-target/*
-!target/notification-backend-0.0.1-SNAPSHOT.jar
