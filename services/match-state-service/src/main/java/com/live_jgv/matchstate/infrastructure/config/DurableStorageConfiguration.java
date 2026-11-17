@@ -17,11 +17,18 @@ import java.time.Duration;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.ssl.SslBundles;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.ObjectProvider;
 
 @Configuration(proxyBeanMethods = false)
 @Profile("!memory")
 public class DurableStorageConfiguration {
+    private final StartupPolicy startup;
+
+    public DurableStorageConfiguration(StartupPolicy startup) {
+        this.startup = startup;
+    }
+
     @Bean
     @DependsOnDatabaseInitialization
     public JdbcMatchStateStore jdbcMatchStateStore(JdbcTemplate jdbc, PlatformTransactionManager manager,
@@ -29,15 +36,20 @@ public class DurableStorageConfiguration {
             @Value("${match-state.rabbit.exchange:live_updates}") String exchange,
             @Value("${match-state.rabbit.routing-key:score.{matchId}}") String routingKey) {
         var store = new JdbcMatchStateStore(jdbc, new TransactionTemplate(manager), mapper, exchange, routingKey);
-        catalog.getMatches().stream().filter(d -> hasText(d.matchId()) || hasText(d.homeTeamId()) || hasText(d.awayTeamId()))
-                .forEach(d -> store.register(MatchState.start(d.matchId(), d.homeTeamId(), d.awayTeamId())));
-        for (var match : store.matchIds()) store.load(match); // fail startup on corrupt history, never reset it
+        if (startup.catalog()) {
+            catalog.getMatches().stream().filter(d -> hasText(d.matchId()) || hasText(d.homeTeamId()) || hasText(d.awayTeamId()))
+                    .forEach(d -> store.register(MatchState.start(d.matchId(), d.homeTeamId(), d.awayTeamId())));
+        }
+        if (startup.recovery()) {
+            for (var match : store.matchIds()) store.load(match); // fail on corrupt history, never reset it
+        }
         return store;
     }
 
     private static boolean hasText(String value) { return value != null && !value.isBlank(); }
 
     @Bean(destroyMethod = "close")
+    @ConditionalOnProperty(name = "spring.kafka.listener.auto-startup", havingValue = "true", matchIfMissing = true)
     public KafkaInputSource kafkaInputSource(KafkaProperties properties, ObjectProvider<SslBundles> bundles,
             @Value("${match-state.kafka.source-id:local/1}") String source) {
         return new KafkaInputSource(AdminClient.create(properties.buildAdminProperties(bundles.getIfAvailable())), source);
@@ -50,6 +62,7 @@ public class DurableStorageConfiguration {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "match-state.recovery.enabled", havingValue = "true", matchIfMissing = true)
     public DurableRecoveryRunner durableRecoveryRunner(JdbcMatchStateStore store, ProcessAndPublishMatchEvent processor,
             KafkaListenerEndpointRegistry registry, ConfigurableApplicationContext context,
             @Value("${spring.kafka.listener.auto-startup:true}") boolean startListener,

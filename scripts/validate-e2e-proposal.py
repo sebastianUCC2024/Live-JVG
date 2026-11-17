@@ -42,13 +42,30 @@ def validate(manifest):
     assert manifest == expected, 'Review manifest drifted from committed DEV 3 source; review/regenerate explicitly'
     env = dict(os.environ, **environment(manifest))
     base = ['docker', 'compose', '-p', manifest['project'], '-f', 'docker-compose.yml',
-            '-f', 'scripts/e2e/compose.manifest-proposed.yml', '--profile', 'integration-prepared', 'config']
+            '-f', 'scripts/e2e/compose.manifest-proposed.yml', '--profile', 'integration-prepared',
+            '--profile', 'provisioning-explicit', 'config']
     subprocess.run(base + ['--quiet'], cwd=ROOT, env=env, capture_output=True, text=True, check=True)
     result = subprocess.run(base + ['--format', 'json'], cwd=ROOT, env=env, capture_output=True, text=True, check=True)
     config = json.loads(result.stdout)  # Never print resolved credentials.
     module(ROOT / 'scripts/validate-compose.py', 'compose_safety').validate(config, manifest['resources'])
     services = config['services']
     resources = manifest['resources']
+    # Both profiles above are used for config inspection only, never for startup.
+    assert services['kafka-init']['profiles'] == ['provisioning-explicit']
+    for name in ['producer', 'dashboard', 'match-state', 'archiver', 'suspension', 'worker', 'notification']:
+        assert not services[name].get('depends_on'), name
+        env = services[name]['environment']
+        for key in ['SPRING_FLYWAY_ENABLED', 'SPRING_RABBITMQ_DYNAMIC', 'SPRING_KAFKA_ADMIN_AUTO_CREATE',
+                    'SPRING_KAFKA_LISTENER_AUTO_STARTUP', 'SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP',
+                    'SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP']:
+            assert env[key] == 'false', (name, key)
+        assert env['SPRING_SQL_INIT_MODE'] == 'never'
+    for name in ['producer', 'dashboard']:
+        assert services[name]['environment']['SIMULATOR_WRITE_ENABLED'] == 'false'
+    assert services['dashboard']['environment']['DASHBOARD_RABBIT_LISTENER_ENABLED'] == 'false'
+    for key in ['KAFKA_LISTENER_AUTO_STARTUP', 'MATCH_STATE_CATALOG_BOOTSTRAP_ENABLED',
+                'MATCH_STATE_RECOVERY_ENABLED', 'MATCH_STATE_PUBLICATION_ENABLED']:
+        assert services['match-state']['environment'][key] == 'false'
     assert services['postgres']['environment']['POSTGRES_DB'] == resources['database']
     assert resources['topic'] in services['kafka-init']['command']
     assert not services['dashboard'].get('container_name')
