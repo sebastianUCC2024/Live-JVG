@@ -1,5 +1,10 @@
-type Name = 'grid' | 'star' | 'search' | 'arrow' | 'refresh' | 'check' | 'monitor'
+type Name = 'grid' | 'star' | 'search' | 'arrow' | 'refresh' | 'check' | 'monitor' | 'bolt' | 'ball' | 'cancel' | 'bell' | 'clock'
 const paths: Record<Name, string> = {
+  bolt: 'm13 2-9 12h7l-1 8 10-13h-7l1-7Z',
+  ball: 'M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M12 7l5 4-2 6H9l-2-6 5-4Z M12 2v5 M22 12l-5-1 M18 20l-3-3 M6 20l3-3 M2 12l5-1',
+  cancel: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M8 8l8 8 M16 8l-8 8',
+  bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4',
+  clock: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M12 7v5l3 2',
   grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   star: 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z',
   search: 'M21 21l-5-5 M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0',
