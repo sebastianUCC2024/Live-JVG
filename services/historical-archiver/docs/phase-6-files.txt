@@ -1,7 +1,0 @@
-MODIFICADOS EN FASE 6:
-docs/README.md
-src/test/java/com/live_jgv/archiver/integration/IsolatedPostgres.java
-
-CREADOS EN FASE 6:
-docs/evidence/phase-6-local-verification.txt
-docs/phase-6-files.txt

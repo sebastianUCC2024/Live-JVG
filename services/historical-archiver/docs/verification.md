@@ -14,7 +14,7 @@ Servicio Java 17 / Boot 3.5.7 con puertos/adaptadores, decoder provisional compa
 
 ## Archivos creados
 
-La lista completa figura en `files-created.txt`: clases de dominio, aplicación, adaptadores, listener/controlador/errores, V1 SQL, pruebas, fixture histórico, configuración Mockito de test y esta documentación/evidencias. La clase principal existente no se modificó. `target/` contiene solo artefactos generados ignorados.
+La lista completa figura en [files-created.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/historical-archiver/docs/files-created.txt) (inventario histórico retirado del árbol actual): clases de dominio, aplicación, adaptadores, listener/controlador/errores, V1 SQL, pruebas, fixture histórico, configuración Mockito de test y esta documentación/evidencias. La clase principal existente no se modificó. `target/` contiene solo artefactos generados ignorados.
 
 ## Migraciones y endpoint
 

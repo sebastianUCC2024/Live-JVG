@@ -8,7 +8,7 @@ Betting Suspension Service implementado exclusivamente en su módulo con Java 17
 
 ## 2. Archivos creados y modificados
 
-Tres existentes modificados: `pom.xml`, `src/main/resources/application.properties` y `src/test/java/com/live_jgv/betting/BettingSuspensionServiceApplicationTests.java`. Clase principal intacta. Inventario completo de nuevos archivos en `files-created.txt`.
+Tres existentes modificados: `pom.xml`, `src/main/resources/application.properties` y `src/test/java/com/live_jgv/betting/BettingSuspensionServiceApplicationTests.java`. Clase principal intacta. Inventario completo de nuevos archivos en [files-created.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/files-created.txt) (inventario histórico retirado del árbol actual).
 
 ## 3. Estados y transiciones
 

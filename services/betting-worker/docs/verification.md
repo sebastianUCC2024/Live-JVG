@@ -8,7 +8,7 @@ Procesador durable de operaciones simuladas con Java 17 / Boot 3.5.7, separació
 
 ## 2. Archivos creados y modificados
 
-Tres archivos existentes modificados: `pom.xml`, `src/main/resources/application.properties` y `src/test/java/com/live_jgv/worker/BettingWorkerApplicationTests.java`. La clase principal se conservó. Inventario exhaustivo de nuevos archivos en `files-created.txt`; `target/` contiene artefactos generados ignorados.
+Tres archivos existentes modificados: `pom.xml`, `src/main/resources/application.properties` y `src/test/java/com/live_jgv/worker/BettingWorkerApplicationTests.java`. La clase principal se conservó. Inventario exhaustivo de nuevos archivos en [files-created.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-worker/docs/files-created.txt) (inventario histórico retirado del árbol actual); `target/` contiene artefactos generados ignorados.
 
 ## 3. Dominio
 

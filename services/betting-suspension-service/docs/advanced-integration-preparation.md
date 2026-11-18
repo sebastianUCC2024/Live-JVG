@@ -186,7 +186,7 @@ fuente/monitorización aprobadas; readiness UP nunca habilita apuestas.
 ## Pruebas y E2E pendiente
 
 Resultados exactos y archivos: `evidence/advanced-preparation-results.json`,
-`advanced-preparation-files.txt` y `evidence/advanced-preparation-maven.txt`.
+[advanced-preparation-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/advanced-preparation-files.txt) y `evidence/advanced-preparation-maven.txt`.
 Maven verify ejecuta tests y package. PostgreSQL gated no se ejecutó esta vez; no hubo cambios
 SQL/roles/autorización y sus checksums/evidencias previas se conservaron. Ver certificación
 anterior 17/17 en `postgres-real-certification.md` y `evidence/postgres-certification/`.

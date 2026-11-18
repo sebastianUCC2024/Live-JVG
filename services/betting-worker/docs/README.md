@@ -163,7 +163,7 @@ Esta sesión usa offline la copia escribible existente `/private/tmp/live-jvg-ar
 
 Tests de política, decoder y transiciones sin infraestructura; JDBC/transacciones/locks solicitados con mocks; retry interceptor real invocado sobre un target local y registry/container simulados; REST con MockMvc; reinicio simulado mediante nueva instancia de adaptador leyendo filas simuladas persistentes. No confundir esos resultados con recuperación o confirmación Rabbit/PostgreSQL reales.
 
-Resultados e inventario: `verification.md`, `files-created.txt` y `evidence/`.
+Resultados e inventario: `verification.md`, [files-created.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-worker/docs/files-created.txt) (histórico, fuera del árbol actual) y `evidence/`.
 
 ## Condiciones pendientes para integración final
 
