@@ -2,9 +2,9 @@
 
 ## Comportamiento
 
-Selector en la cabecera con iconos propios de sol, luna y sistema. Opciones Claro, Oscuro y Automático; la opción activa se expresa mediante `aria-pressed`. En pantallas pequeñas se conservan los iconos, nombres accesibles y títulos.
+Selector en la cabecera con iconos propios de sol y luna. Opciones Claro y Oscuro; la opción activa se expresa mediante `aria-pressed`. En pantallas pequeñas se conservan los iconos, nombres accesibles y títulos.
 
-La clave localStorage es `live-jvg.theme` (`light`, `dark`, `auto`). Sin preferencia válida se utiliza Automático. El sistema se consulta mediante `prefers-color-scheme: light`; los cambios se escuchan en vivo únicamente en Automático. Los cambios entre pestañas se sincronizan mediante el evento `storage`. Si el almacenamiento no está disponible, el tema funciona durante la sesión.
+La clave localStorage es `live-jvg.theme` (`light`, `dark`). Sin preferencia válida se utiliza Oscuro. Los valores anteriores `auto`, `automatic` y `system` se convierten y persisten como `dark`. Ya no se consulta ni se escucha `prefers-color-scheme`. Los cambios entre pestañas se sincronizan mediante el evento `storage`. Si el almacenamiento no está disponible, el tema funciona durante la sesión.
 
 `public/theme-init.js` se ejecuta de forma síncrona en head antes de React y aplica data-theme, color-scheme y theme-color. El selector utiliza la misma política de resolución, cubierta por pruebas separadas. La página no espera a un efecto React para pintar el tema inicial.
 
@@ -16,10 +16,10 @@ Cambiar el tema actualiza únicamente el selector y los atributos de documento: 
 
 - Build: PASS.
 - ESLint: PASS, cero warnings.
-- Vitest: 19 archivos, 160 pruebas aprobadas, cero fallos y cero omitidas (148 existentes y 12 nuevas).
-- Pruebas nuevas: preferencia inicial, persistencia/recuperación, elección manual independiente del sistema, cambios automáticos del sistema, almacenamiento inválido o bloqueado, sincronización entre pestañas, conservación de estado demo y transporte conectado, inicialización antes de React.
+- Vitest: 19 archivos, 165 pruebas aprobadas, cero fallos y cero omitidas (148 existentes y 17 nuevas).
+- Pruebas nuevas: preferencia inicial, persistencia/recuperación, elección manual independiente del sistema, migración de preferencias anteriores y ausencia de listeners del sistema, almacenamiento inválido o bloqueado, sincronización entre pestañas, conservación de estado demo y transporte conectado, inicialización antes de React.
 - Chromium: modos servidor y demo, Claro/Oscuro a 1440 y 390 px; comprobación adicional sin desbordamiento a 320, 820 y 1280 px.
-- Navegador: recarga persistente, cambios de esquema del sistema sin recargar, foco visible por teclado, movimiento reducido y ausencia de errores de página/consola. Se bloqueó deliberadamente la carga de React para comprobar que el script inicial aplica el tema por sí solo.
+- Navegador: recarga persistente, independencia respecto al esquema del sistema, foco visible por teclado, movimiento reducido y ausencia de errores de página/consola. Se bloqueó deliberadamente la carga de React para comprobar que el script inicial aplica el tema por sí solo.
 - Contraste: 32 combinaciones de tokens de texto/fondo, todas >=4,5:1; mínimo medido 5,99:1. Esto no constituye una certificación completa WCAG.
 - Se consultaron cinco eventos históricos y tres alertas existentes. No se generaron nuevos eventos ni se ejecutó otro E2E deportivo.
 
@@ -43,7 +43,7 @@ npm run build
 npm run dev -- --port 5185
 ```
 
-Abrir `http://127.0.0.1:5185/?mode=demo` y seleccionar Claro/Oscuro/Automático en la cabecera. Recargar para comprobar persistencia; en Automático, cambiar la apariencia del sistema operativo para comprobar actualización inmediata.
+Abrir `http://127.0.0.1:5185/?mode=demo` y seleccionar Claro/Oscuro en la cabecera. Recargar para comprobar persistencia. Cambiar la apariencia del sistema operativo no debe alterar la elección manual.
 
 Para consultar el laboratorio existente, sin modificar su configuración, se mantiene el proxy local opt-in incorporado en el PR #36:
 
