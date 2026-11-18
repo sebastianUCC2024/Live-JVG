@@ -44,3 +44,11 @@ Los checks Docker son estáticos y no sustituyen la ejecución posterior del bui
 Las versiones declaradas se comprobaron con Python 3.9 local; la instalación adicional con Python 3.12 de CI debe verificarse en esa plataforma.
 No se ejecutaron Docker, brokers, SQL, migraciones, servicios externos ni E2E. No se retiraron archivos del índice ni se borraron evidencias.
 La limpieza no certifica ORDER02, ACL, autoridad ni apuestas. No modifica recursos de demostración.
+
+## Validación Docker posterior sobre d3b25d9
+
+Se creó un clon Git nuevo de d3b25d932baf2eff7f2762cf95dcf8a69b513620, sin JAR ni target locales. Los siete builds con --target runtime y --platform linux/amd64 terminaron PASS, incluyendo verify dentro de Maven. Las siete imágenes declaran JAVA_VERSION=jdk-17.0.21+9 y USER=10001:10001. No se iniciaron contenedores de aplicación; inventario previo/posterior de contenedores sin cambios.
+
+El primer intento nativo ARM falló en las siete imágenes antes de compilar: eclipse-temurin:17-jre-alpine no tiene manifiesto linux/arm64. Se corrigió únicamente el comando documental para seleccionar AMD64; no se cambiaron imágenes, versiones ni código. ARM nativo sigue sin certificarse.
+
+El CI pull_request original tuvo HTTP 429 de Maven Central al resolver PostgreSQL y Flyway. El reintento solicitado para el job Historical Archiver terminó con el workflow 10/10 PASS en d3b25d9. Los checks del nuevo commit documental deben verificarse de forma independiente.

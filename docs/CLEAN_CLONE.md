@@ -85,12 +85,14 @@ Solo después de autorizar builds e instalaciones. Desde un clon nuevo sin targe
 
 ```sh
 for module in live-feed-producer match-state-service dashboard-backend historical-archiver betting-suspension-service betting-worker notification-backend; do
-  docker build --target runtime --build-arg "SERVICE_MODULE=$module" \
+  docker build --platform linux/amd64 --target runtime --build-arg "SERVICE_MODULE=$module" \
     -t "live-jvg-cleancheck/$module" . || exit 1
 done
 ```
 
-El target runtime compila y ejecuta verify en la etapa Maven, incluye migraciones del JAR y usa Java 17 JRE/no root. No utilizar el target prebuilt para demostrar un build limpio. Revisar contexto, imagen, usuario, secretos y reportes; no ejecutar Docker up ni E2E como parte del build. Esta limpieza documental no certifica ese build: debe ejecutarse en la fase posterior autorizada.
+Las bases Alpine declaradas se verificaron en linux/amd64. En macOS ARM se requiere emulación AMD64 habilitada en Docker; el manifiesto de eclipse-temurin:17-jre-alpine no ofrece ARM nativo. El comando fija la plataforma para evitar `no match for platform in manifest`. Esto no certifica soporte ARM nativo.
+
+El target runtime compila y ejecuta verify en la etapa Maven, incluye migraciones del JAR y usa Java 17 JRE/no root. No utilizar el target prebuilt para demostrar un build limpio. Revisar contexto, imagen, usuario, secretos y reportes; no ejecutar Docker up ni E2E como parte del build. Los siete builds AMD64 sobre d3b25d9 pasaron en la validación posterior autorizada; ver [resultados y límites](CLEAN_CLONE_REVIEW.md). Cada revisión futura debe comprobar sus propios builds.
 
 ## Evidencias y límites
 
