@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ThemeSelector } from './ThemeSelector'
 import { Icon } from './Icon'
 
 export function CommandShell({ mode, navigation, status, modeControls, children }: {
@@ -18,7 +19,7 @@ export function CommandShell({ mode, navigation, status, modeControls, children 
       <div className="sidebar-footer"><span className="workspace-symbol"><Icon name="grid" /></span><div>Live-JVG<small>{mode === 'demo' ? 'Exploración simulada' : 'Consulta del servidor'}</small></div><span className="workspace-dot" aria-hidden="true" /></div>
     </aside>
     <div className="workspace">{modeControls}
-      <header className="topbar"><div className="breadcrumb"><Icon name="grid" /><span>Workspace</span><span className="slash">/</span><strong>Centro de partidos</strong></div><div className="topbar-right">{status}<span className={`source-badge ${mode}`}>{mode === 'demo' ? 'DEMO · DATOS SIMULADOS' : 'DATOS DEL SERVIDOR'}</span></div></header>
+      <header className="topbar"><div className="breadcrumb"><Icon name="grid" /><span>Workspace</span><span className="slash">/</span><strong>Centro de partidos</strong></div><div className="topbar-right"><ThemeSelector />{status}<span className={`source-badge ${mode}`}>{mode === 'demo' ? 'DEMO · DATOS SIMULADOS' : 'DATOS DEL SERVIDOR'}</span></div></header>
       <main id="main" tabIndex={-1}>{children}</main>
     </div>
   </div>
