@@ -131,13 +131,13 @@ No demuestran envío de esos goles a través de Kafka/RabbitMQ.
 ## Evidencias
 
 Directorio local ignorado por Git:
-[dashboard-backend/target/phase7-evidence](../../dashboard-backend/target/phase7-evidence).
+`../../dashboard-backend/target/phase7-evidence` (salida histórica local, no distribuida).
 Se preservó fuera de los directorios eliminados por los clean y las ejecuciones
 Playwright, y se copió al directorio final después de terminar las compilaciones.
 
-- [summary.json](../../dashboard-backend/target/phase7-evidence/summary.json): resultados y bloqueo explícito.
-- [environment.json](../../dashboard-backend/target/phase7-evidence/environment.json): commit, herramientas, contratos y SHA-256 de los JAR.
-- [manifest.json](../../dashboard-backend/target/phase7-evidence/manifest.json): tamaño y SHA-256 de cada evidencia.
+- `../../dashboard-backend/target/phase7-evidence/summary.json` (salida histórica local, no distribuida): resultados y bloqueo explícito.
+- `../../dashboard-backend/target/phase7-evidence/environment.json` (salida histórica local, no distribuida): commit, herramientas, contratos y SHA-256 de los JAR.
+- `../../dashboard-backend/target/phase7-evidence/manifest.json` (salida histórica local, no distribuida): tamaño y SHA-256 de cada evidencia.
 - Logs Maven: live-feed-producer-verify.log, match-state-service-verify.log,
   dashboard-backend-verify.log.
 - Logs frontend: frontend-unit.log, frontend-build.log, frontend-browser.log,

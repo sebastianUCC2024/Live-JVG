@@ -5,37 +5,36 @@ permiso de ejecución. No usar recursos anteriores, no purgar colas, no borrar v
 
 ## 1. Dependencias y validaciones locales — completadas
 
-Desde `/private/tmp/live-jvg-local-academic-v1`, Java17:
+Guía histórica: los resultados siguientes pertenecen a su revisión original. Para un clon nuevo, usar [CLEAN_CLONE](../../CLEAN_CLONE.md). Los comandos se ejecutan desde la raíz del clon, con Java 17:
 
 ```sh
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+export JAVA_HOME="$(/usr/libexec/java_home -v 17)" # macOS
 export PATH="$JAVA_HOME/bin:$PATH"
 # Resolución original ya autorizada y ejecutada, sin downgrade:
-mvn -U -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/notification-backend/pom.xml verify
+mvn -U -f services/notification-backend/pom.xml verify
 # Tras tener las dependencias, repetir también offline:
-mvn -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/notification-backend/pom.xml verify
+mvn -o -f services/notification-backend/pom.xml verify
 ```
 
 La suite genera `services/notification-backend/target/live-alert-rest-fixture.json`. Solo si pertenece a ESTA
-revisión y pasó la suite, usar el script existente con el node_modules verificado del frontend:
+revisión y pasó la suite, usar el script existente con el node_modules del frontend instalado con `npm ci`:
 
 ```sh
-JVG_FRONTEND_NODE_MODULES=/Users/valeriaestefaniagongoratorres/Live-JVG/services/dashboard-frontend/node_modules \
+JVG_FRONTEND_NODE_MODULES="$(pwd)/services/dashboard-frontend/node_modules" \
   node services/notification-backend/scripts/verify-react-alert-contract.cjs
 ```
 
-El puente pasó con el fixture actual, no con uno antiguo ni fabricado. Las dependencias Python están en
-`/private/tmp/live-jvg-validation-venv`, con paquetes globales excluidos. No se alteraron dependencias de aplicación.
+El puente pasó con el fixture actual, no con uno antiguo ni fabricado. Para reconstruir el entorno Python: `python3 -m venv .venv` y `.venv/bin/python -m pip install -r requirements-validation.txt`. No se alteraron dependencias de aplicación.
 Validaciones repetibles sin infraestructura:
 
 ```sh
-/private/tmp/live-jvg-validation-venv/bin/python scripts/validate-dev1-contracts.py
-/private/tmp/live-jvg-validation-venv/bin/python scripts/test-validate-dev1-contracts.py
-/private/tmp/live-jvg-validation-venv/bin/python scripts/validate-integrated-contracts.py
-/private/tmp/live-jvg-validation-venv/bin/python scripts/test-integrated-contracts.py
+.venv/bin/python scripts/validate-dev1-contracts.py
+.venv/bin/python scripts/test-validate-dev1-contracts.py
+.venv/bin/python scripts/validate-integrated-contracts.py
+.venv/bin/python scripts/test-integrated-contracts.py
 ```
 
-La última pareja requiere los fixtures exportados por la suite Notification, ya presentes en este worktree.
+La última pareja requiere los fixtures exportados por la suite Notification del clon actual.
 Ver `skipped-tests.md`: las pruebas PostgreSQL/Kafka/Rabbit permanecen sin autorización ni ejecución.
 
 ## 2. Preparación de texto offline (sin Docker/SQL)
@@ -48,7 +47,7 @@ Para una propuesta nueva:
 ```sh
 umask 077
 RUN="$(python3 -c 'import uuid; print(uuid.uuid4().hex[:12])')"
-REVIEW="$(mktemp -d /private/tmp/live-jvg-academic-review.XXXXXX)"
+REVIEW="$(mktemp -d "${TMPDIR:-/tmp}/live-jvg-academic-review.XXXXXX")"
 python3 scripts/e2e/prepare-review.py --run "$RUN" > "$REVIEW/manifest.json"
 python3 services/notification-backend/docs/common-v1-proposal/prepare_common_v1.py \
   --run "$RUN" --output-dir "$REVIEW/db" --render
@@ -281,7 +280,7 @@ pg_case() {
     "$mode=true" DEV3_IT_MIGRATION_APPROVAL=I_APPROVE_ISOLATED_MIGRATIONS \
     "DEV3_IT_DB_URL=jdbc:postgresql://127.0.0.1:${DEV3_LAB_PG_PORT}/${database}" \
     "DEV3_IT_DB_USERNAME=$DEV3_LAB_FIXTURE_ROLE" "DEV3_IT_DB_PASSWORD=$DEV3_LAB_FIXTURE_PASSWORD" \
-    mvn -B -ntp -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 \
+    mvn -B -ntp \
       -f "services/$module/pom.xml" "-Dtest=$selector" \
       -DfailIfNoTests=true -Dsurefire.failIfNoSpecifiedTests=true test
 }
@@ -320,7 +319,7 @@ for module in historical-archiver betting-suspension-service; do
     DEV3_RUN_ISOLATED_BROKER_TESTS=true DEV3_BROKER_APPROVAL=I_APPROVE_ISOLATED_BROKER_PROBES \
     "DEV3_KAFKA_BOOTSTRAP_SERVERS=127.0.0.1:${DEV3_LAB_KAFKA_PORT:?Approved port}" \
     "DEV3_MATCH_EVENTS_TOPIC=dev3_it_${RUN:?Fresh run}_probe_events" \
-    mvn -B -ntp -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f "services/$module/pom.xml" \
+    mvn -B -ntp -f "services/$module/pom.xml" \
       '-Dtest=PreparedKafkaBrokerIntegrationTest#approvedIsolatedTopicExistsWithoutCreatingItOrCommittingOffsets' \
       -DfailIfNoTests=true -Dsurefire.failIfNoSpecifiedTests=true test
   # Conservar XML/log por módulo antes de continuar.
@@ -333,7 +332,7 @@ env -u DEV3_RUN_ATOMIC_POSTGRES_TESTS -u DEV3_RUN_POSTGRES_TESTS -u DEV3_RUN_ACA
   "DEV3_RABBITMQ_PASSWORD=${DEV3_LAB_RABBIT_PASSWORD:?Private password}" \
   "DEV3_RABBITMQ_VHOST=dev3_it_${RUN:?Fresh run}_probe" \
   "DEV3_WORKER_EXCHANGE=dev3_it_${RUN}_probe_exchange" "DEV3_WORKER_QUEUE=dev3_it_${RUN}_probe_queue" \
-  mvn -B -ntp -o -Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2 -f services/betting-worker/pom.xml \
+  mvn -B -ntp -f services/betting-worker/pom.xml \
     '-Dtest=PreparedRabbitBrokerIntegrationTest#approvedIsolatedCommandDestinationExists' \
     -DfailIfNoTests=true -Dsurefire.failIfNoSpecifiedTests=true test
 ```

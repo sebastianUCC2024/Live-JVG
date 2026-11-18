@@ -1,3 +1,5 @@
+> Guía actual de instalación y validación: [clon limpio](../../docs/CLEAN_CLONE.md). Las cifras y declaraciones de ejecución fechadas más abajo son históricas; no certifican una ejecución nueva.
+
 > MVP persistente: configura `VITE_DASHBOARD_ORIGIN=http://127.0.0.1:18080` en `.env.local` y ejecuta `npm.cmd run dev`. React descubre IDs y nombres mediante `/api/matches`. No se necesitan endpoints nuevos ni cambios en contratos. La integración REST/STOMP se describe en [Fase 2 durable](docs/phase2-durable-react.md).
 
 # Live-JVG — Dashboard frontend DEV 2
@@ -13,7 +15,7 @@ pruebas: [Fase 4.1 — validación y endurecimiento](docs/phase41-alert-validati
 Cierre local actual y requisitos pendientes de integración conjunta:
 [DEV 2 — cierre y preparación E2E](docs/dev2-local-closure-and-e2e.md).
 
-Configuración vigente por modo: [MVP, host durable y memory](../../docs/MODOS_EJECUCION.md).
+Configuración vigente por modo: [MVP, host durable y memory](../../docs/CLEAN_CLONE.md).
 También se puede omitir VITE_WS_URL y definir VITE_DASHBOARD_ORIGIN con el origen
 HTTP del dashboard; VITE_WS_URL conserva precedencia si ambas están definidas.
 
@@ -25,7 +27,7 @@ los destinos verificados. La demostración sigue disponible mediante su botón o
 Véase [Fase 6: protocolo, configuración y resultados](docs/phase6-realtime.md).
 La [auditoría de integración de Fase 7](docs/phase7-integration.md) registra evidencia
 histórica y bloqueos de aquella etapa. La configuración actual está en los modos
-de ejecución; la validación vigente está en el [informe 9E](../../docs/FASE_9E_CONTRATOS_CALIDAD_CI.md).
+de ejecución; la validación vigente está en el [informe 9E](../../docs/integration/local-academic-v1/report.md).
 La [revisión final de Fase 8](docs/phase8-final-review.md) consolida configuración,
 alcance autorizado, limitaciones y resultados de aceptación local.
 
@@ -53,7 +55,7 @@ query. Reinicia Vite después de cambiar `.env.local`.
 
 ## Requisitos y ejecución
 
-Node.js 22.12 o posterior. Verificado con Node 24.21.0 y npm 12.2.0 en Windows.
+Node.js 22.13.0 o posterior (CI: Node 24). Verificado con Node 24.21.0 y npm 12.2.0 en Windows.
 Desde esta carpeta:
 
 ```powershell

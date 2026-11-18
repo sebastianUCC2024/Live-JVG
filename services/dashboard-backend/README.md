@@ -1,4 +1,4 @@
-> Configuración vigente: [modos de ejecución](../../docs/MODOS_EJECUCION.md). El dashboard durable usa 8080 en el host y 18080 publicado por Compose; memory conserva 8081. La escritura está deshabilitada por defecto; Compose la habilita explícitamente para el MVP local. REST y STOMP consultan la proyección durable. Los resultados históricos siguientes no sustituyen la validación de la rama actual.
+> Configuración vigente: [modos de ejecución](../../docs/CLEAN_CLONE.md). El dashboard durable usa 8080 en el host y 18080 publicado por Compose; memory conserva 8081. La escritura está deshabilitada por defecto; Compose la habilita explícitamente para el MVP local. REST y STOMP consultan la proyección durable. Los resultados históricos siguientes no sustituyen la validación de la rama actual.
 >
 > Para ejecutar la implementación original del equipo sin PostgreSQL, usa `SPRING_PROFILES_ACTIVE=memory` con los comandos de este documento. Ese perfil conserva su consumidor, DLQ y proyección en memoria; su estado es volátil. No actives este perfil en el contenedor MVP que requiere persistencia.
 
@@ -198,10 +198,10 @@ Las pruebas incluyen modelo, casos de uso, decoder, compatibilidad con DEV 1,
 topología declarada, reintentos, duplicados, errores HTTP y WebSocket real local.
 Las pruebas de contexto desactivan Rabbit; no demuestran el consumo en broker.
 La [revisión final DEV 2](../dashboard-frontend/docs/phase8-final-review.md) es
-evidencia histórica; la validación vigente está en el [informe 9E](../../docs/FASE_9E_CONTRATOS_CALIDAD_CI.md).
+evidencia histórica; la validación vigente está en el [informe 9E](../../docs/integration/local-academic-v1/report.md).
 Los resultados históricos permanecen en los documentos de cada fase.
 
 Con DEV 1: aprobar contratos, IDs/equipos, orden, replay y fuente de snapshots.
 Con DEV 3: puertos, credenciales seguras, permisos, topología, políticas de DLQ,
-retención y garantías de recuperación. La [guía durable](../../docs/PRUEBAS_INTEGRACION_DURABLE.md)
+retención y garantías de recuperación. La [guía durable](../../docs/CLEAN_CLONE.md)
 separa las pruebas externas de la suite local. No se activan durante la auditoría.
