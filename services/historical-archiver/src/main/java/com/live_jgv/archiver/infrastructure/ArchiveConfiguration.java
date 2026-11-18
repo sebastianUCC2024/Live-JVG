@@ -1,6 +1,8 @@
 package com.live_jgv.archiver.infrastructure;
 
 import com.live_jgv.archiver.application.*;
+import com.live_jgv.archiver.infrastructure.jpa.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -15,8 +17,15 @@ import java.util.HashMap;
 @Configuration(proxyBeanMethods=false)
 public class ArchiveConfiguration {
     @Bean EventDecoder eventDecoder() { return new JsonEventDecoder(); }
-    @Bean ArchiveStore archiveStore(JdbcTemplate jdbc, PlatformTransactionManager manager) {
+    @Bean
+    @ConditionalOnProperty(name="archive.storage.adapter",havingValue="jdbc")
+    ArchiveStore jdbcArchiveStore(JdbcTemplate jdbc, PlatformTransactionManager manager) {
         return new JdbcArchiveStore(jdbc, new TransactionTemplate(manager));
+    }
+    @Bean
+    @ConditionalOnProperty(name="archive.storage.adapter",havingValue="jpa",matchIfMissing=true)
+    ArchiveStore jpaArchiveStore(ArchivedEventRepository events, InputReceiptRepository receipts, PlatformTransactionManager manager) {
+        return new JpaArchiveStore(events, receipts, manager);
     }
     @Bean ArchiveService archiveService(ArchiveStore store, EventDecoder decoder) { return new ArchiveService(store, decoder); }
     @Bean ArchiverErrorHandler archiveErrorHandler(@Value("${archive.retry-interval-ms:200}") long interval) {

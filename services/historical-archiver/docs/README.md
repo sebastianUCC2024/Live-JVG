@@ -1,3 +1,5 @@
+> Actualización JPA: el adaptador predeterminado es ahora `JpaArchiveStore`, con Spring Data JPA/Hibernate y PostgreSQL real verificado en un laboratorio nuevo. `ARCHIVER_STORAGE_ADAPTER=jdbc` selecciona el respaldo exclusivo. Véase [arquitectura, configuración y evidencias actuales](jpa-adapter-validation.md). El contenido de Fase 2 que sigue es histórico y describe la implementación JDBC inicial; no sustituye el estado actual ni los contratos integrados posteriormente.
+
 # Historical Archiver — implementación DEV 3, Fase 2
 
 Estado: implementación y verificación local sin brokers/DB reales. Formato consumido **provisional**, basado en el código y evidencias del productor; no se aprobaron ni modificaron contratos compartidos.

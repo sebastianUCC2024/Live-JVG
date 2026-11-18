@@ -1,0 +1,19 @@
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.71 s -- in com.live_jgv.archiver.HistoricalArchiverApplicationTests
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.live_jgv.archiver.integration.PreparedPostgresIntegrationTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in com.live_jgv.archiver.integration.IsolatedPostgresSafetyTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.live_jgv.archiver.integration.PreparedKafkaBrokerIntegrationTest
+[WARNING] Tests run: 17, Failures: 0, Errors: 0, Skipped: 17, Time elapsed: 0 s -- in com.live_jgv.archiver.integration.JpaPostgresIntegrationTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s -- in com.live_jgv.archiver.entrypoint.ArchiveKafkaListenerTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.144 s -- in com.live_jgv.archiver.entrypoint.HistoryControllerTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.live_jgv.archiver.application.ArchiveServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in com.live_jgv.archiver.infrastructure.ArchiverErrorHandlerTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s -- in com.live_jgv.archiver.infrastructure.jpa.JpaArchiveStoreTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s -- in com.live_jgv.archiver.infrastructure.jpa.ArchiveAdapterSelectionTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in com.live_jgv.archiver.infrastructure.jpa.ArchiveJpaSafetyTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in com.live_jgv.archiver.infrastructure.SafeIntegrationProfileTest
+[INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in com.live_jgv.archiver.infrastructure.JsonEventDecoderTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s -- in com.live_jgv.archiver.infrastructure.JdbcArchiveStoreTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.live_jgv.archiver.infrastructure.StorageReadinessTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in com.live_jgv.archiver.infrastructure.MessagingReadinessTest
+[WARNING] Tests run: 115, Failures: 0, Errors: 0, Skipped: 19
+[INFO] BUILD SUCCESS
