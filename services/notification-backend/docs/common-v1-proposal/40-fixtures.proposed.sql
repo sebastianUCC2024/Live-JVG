@@ -45,7 +45,7 @@ SELECT (obj_description((SELECT oid FROM pg_database WHERE datname=current_datab
 \endif
 BEGIN;
 INSERT INTO match_state.match_catalog(match_id,home_team_id,away_team_id) VALUES ('e2e-5c84548cf006','home','away') ON CONFLICT DO NOTHING;
-INSERT INTO dashboard.matches(match_id,home_team_id,away_team_id,home_name,away_name) VALUES ('e2e-5c84548cf006','home','away','AtlÃ©tico Local','Deportivo Visitante') ON CONFLICT DO NOTHING;
+INSERT INTO dashboard.matches(match_id,home_team_id,away_team_id,home_name,away_name) VALUES ('e2e-5c84548cf006','home','away','Atlético Local','Deportivo Visitante') ON CONFLICT DO NOTHING;
 -- fresh concordant Match State catalog
 SELECT ((SELECT count(*) FROM match_state.match_catalog)=1 AND EXISTS(SELECT 1 FROM match_state.match_catalog WHERE match_id='e2e-5c84548cf006' AND home_team_id='home' AND away_team_id='away' AND revision=0 AND rules_version=1)) AS gate_ok \gset
 \if :gate_ok
@@ -54,7 +54,7 @@ SELECT ((SELECT count(*) FROM match_state.match_catalog)=1 AND EXISTS(SELECT 1 F
 \quit 3
 \endif
 -- fresh concordant Dashboard catalog
-SELECT ((SELECT count(*) FROM dashboard.matches)=1 AND EXISTS(SELECT 1 FROM dashboard.matches WHERE match_id='e2e-5c84548cf006' AND home_team_id='home' AND away_team_id='away' AND home_name='AtlÃ©tico Local' AND away_name='Deportivo Visitante' AND home_score=0 AND away_score=0 AND var_status='CLEAR' AND last_event_id IS NULL AND updated_at IS NULL)) AS gate_ok \gset
+SELECT ((SELECT count(*) FROM dashboard.matches)=1 AND EXISTS(SELECT 1 FROM dashboard.matches WHERE match_id='e2e-5c84548cf006' AND home_team_id='home' AND away_team_id='away' AND home_name='Atlético Local' AND away_name='Deportivo Visitante' AND home_score=0 AND away_score=0 AND var_status='CLEAR' AND last_event_id IS NULL AND updated_at IS NULL)) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: fresh concordant Dashboard catalog'
@@ -200,6 +200,13 @@ SELECT (NOT EXISTS(SELECT 1 FROM betting_control.suspension_outbox)) AS gate_ok 
 \echo 'REFUSED: empty fresh fixture betting_control.suspension_outbox'
 \quit 3
 \endif
+-- empty fresh fixture betting_control.academic_outbox
+SELECT (NOT EXISTS(SELECT 1 FROM betting_control.academic_outbox)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: empty fresh fixture betting_control.academic_outbox'
+\quit 3
+\endif
 -- empty fresh fixture betting_control.authorization_lease
 SELECT (NOT EXISTS(SELECT 1 FROM betting_control.authorization_lease)) AS gate_ok \gset
 \if :gate_ok
@@ -247,6 +254,20 @@ SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.message_audit)) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: empty fresh fixture betting_worker.message_audit'
+\quit 3
+\endif
+-- empty fresh fixture betting_worker.academic_command
+SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.academic_command)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: empty fresh fixture betting_worker.academic_command'
+\quit 3
+\endif
+-- empty fresh fixture betting_worker.academic_delivery
+SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.academic_delivery)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: empty fresh fixture betting_worker.academic_delivery'
 \quit 3
 \endif
 -- empty fresh fixture betting_worker.operation_authorization

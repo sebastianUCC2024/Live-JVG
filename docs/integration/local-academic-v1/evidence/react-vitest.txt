@@ -1,0 +1,12 @@
+
+> live-jvg-dashboard@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /private/tmp/live-jvg-local-academic-v1/services/dashboard-frontend
+
+
+ Test Files  15 passed (15)
+      Tests  143 passed (143)
+   Start at  03:09:16
+   Duration  1.70s (transform 842ms, setup 1.52s, import 1.20s, tests 2.93s, environment 5.51s)

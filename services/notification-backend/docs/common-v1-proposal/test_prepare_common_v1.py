@@ -77,10 +77,10 @@ class CommonV1ProposalTest(unittest.TestCase):
         for run in ["ABCDEF123456", "../5c84548cf006", "x'; DROP ROLE x;--", "", "5c84548cf006 "]:
             with self.assertRaises(ValueError): proposal.build_plan(run)
 
-    def test_six_schemas_fourteen_migrations_and_control_before_worker(self):
+    def test_six_schemas_seventeen_migrations_and_control_before_worker(self):
         steps = self.plan["migrations"]
         self.assertEqual(len(steps), 6)
-        self.assertEqual(sum(len(step["files"]) for step in steps), 14)
+        self.assertEqual(sum(len(step["files"]) for step in steps), 17)
         self.assertEqual([s["schema"] for s in steps],
             ["match_state", "dashboard", "notification", "archiver", "betting_control", "betting_worker"])
         for step in steps:
@@ -208,6 +208,17 @@ class CommonV1ProposalTest(unittest.TestCase):
         candidate = self.approved_fixture()
         candidate["proposal_sources"]["prepare_common_v1.py"] = "0" * 64
         with self.assertRaises(ValueError): proposal.validate_approval(candidate, self.plan)
+
+    def test_academic_grants_never_write_operations_or_authority(self):
+        text=self.files["70-academic-dml.proposed.sql"]
+        self.assertIn("academic-only:",text)
+        self.assertIn("GRANT UPDATE(delivery_attempts) ON betting_worker.academic_command",text)
+        for line in text.splitlines():
+            if line.startswith("GRANT"):
+                self.assertNotIn("betting_worker.operation",line)
+                self.assertNotIn("authorization_lease",line)
+                self.assertNotIn("authorization_authority",line)
+                self.assertNotIn("EXECUTE",line)
 
     def test_rendered_artifacts_match_review_files(self):
         for name, content in self.files.items():

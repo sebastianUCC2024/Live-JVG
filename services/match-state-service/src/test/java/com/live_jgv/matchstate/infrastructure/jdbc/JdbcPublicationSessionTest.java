@@ -20,7 +20,7 @@ class JdbcPublicationSessionTest {
                 var rows=mock(ResultSet.class);when(rows.next()).thenReturn(true,false);
                 when(rows.getBoolean(1)).thenReturn(true);
                 when(rows.getString(1)).thenReturn(payload);when(rows.getString(2)).thenReturn("updates");
-                when(rows.getString(3)).thenReturn("score.m");return rows;
+                when(rows.getString(3)).thenReturn("score.m");when(rows.getLong(4)).thenReturn(1L);return rows;
             });
             when(statement.executeUpdate()).thenReturn(1);
             if(sql.contains("score_outbox") && !sql.startsWith("UPDATE")) assertTrue(sql.contains("NOT published"));

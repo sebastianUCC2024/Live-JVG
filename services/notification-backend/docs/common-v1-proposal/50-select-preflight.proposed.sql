@@ -273,8 +273,15 @@ SELECT (EXISTS(SELECT 1 FROM dashboard.flyway_schema_history WHERE version='2' A
 \echo 'REFUSED: migration history version dashboard.2'
 \quit 3
 \endif
+-- migration history version dashboard.3
+SELECT (EXISTS(SELECT 1 FROM dashboard.flyway_schema_history WHERE version='3' AND success) AND NOT EXISTS(SELECT 1 FROM dashboard.flyway_schema_history WHERE NOT success)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: migration history version dashboard.3'
+\quit 3
+\endif
 -- no unexpected migration versions dashboard
-SELECT (NOT EXISTS(SELECT 1 FROM dashboard.flyway_schema_history WHERE version IS NULL OR version NOT IN ('1','2'))) AS gate_ok \gset
+SELECT (NOT EXISTS(SELECT 1 FROM dashboard.flyway_schema_history WHERE version IS NULL OR version NOT IN ('1','2','3'))) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: no unexpected migration versions dashboard'
@@ -533,6 +540,21 @@ SELECT (NOT has_any_column_privilege('dev3_it_5c84548cf006_control_app','betting
 \quit 3
 \endif
 SELECT * FROM betting_control.suspension_outbox LIMIT 0;
+-- readable betting_control.academic_outbox
+SELECT (to_regclass('betting_control.academic_outbox') IS NOT NULL AND has_schema_privilege('dev3_it_5c84548cf006_control_app','betting_control','USAGE') AND has_table_privilege('dev3_it_5c84548cf006_control_app','betting_control.academic_outbox','SELECT')) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: readable betting_control.academic_outbox'
+\quit 3
+\endif
+-- passive runtime has no DML betting_control.academic_outbox
+SELECT (NOT has_any_column_privilege('dev3_it_5c84548cf006_control_app','betting_control.academic_outbox','INSERT') AND NOT has_any_column_privilege('dev3_it_5c84548cf006_control_app','betting_control.academic_outbox','UPDATE') AND NOT has_table_privilege('dev3_it_5c84548cf006_control_app','betting_control.academic_outbox','DELETE') AND NOT has_table_privilege('dev3_it_5c84548cf006_control_app','betting_control.academic_outbox','TRUNCATE')) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: passive runtime has no DML betting_control.academic_outbox'
+\quit 3
+\endif
+SELECT * FROM betting_control.academic_outbox LIMIT 0;
 -- readable betting_control.authorization_authority
 SELECT (to_regclass('betting_control.authorization_authority') IS NOT NULL AND has_schema_privilege('dev3_it_5c84548cf006_control_app','betting_control','USAGE') AND has_table_privilege('dev3_it_5c84548cf006_control_app','betting_control.authorization_authority','SELECT')) AS gate_ok \gset
 \if :gate_ok
@@ -585,8 +607,15 @@ SELECT (EXISTS(SELECT 1 FROM betting_control.flyway_schema_history WHERE version
 \echo 'REFUSED: migration history version betting_control.2'
 \quit 3
 \endif
+-- migration history version betting_control.3
+SELECT (EXISTS(SELECT 1 FROM betting_control.flyway_schema_history WHERE version='3' AND success) AND NOT EXISTS(SELECT 1 FROM betting_control.flyway_schema_history WHERE NOT success)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: migration history version betting_control.3'
+\quit 3
+\endif
 -- no unexpected migration versions betting_control
-SELECT (NOT EXISTS(SELECT 1 FROM betting_control.flyway_schema_history WHERE version IS NULL OR version NOT IN ('1','2'))) AS gate_ok \gset
+SELECT (NOT EXISTS(SELECT 1 FROM betting_control.flyway_schema_history WHERE version IS NULL OR version NOT IN ('1','2','3'))) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: no unexpected migration versions betting_control'
@@ -682,6 +711,36 @@ SELECT (NOT has_any_column_privilege('dev3_it_5c84548cf006_worker_app','betting_
 \quit 3
 \endif
 SELECT * FROM betting_worker.message_audit LIMIT 0;
+-- readable betting_worker.academic_command
+SELECT (to_regclass('betting_worker.academic_command') IS NOT NULL AND has_schema_privilege('dev3_it_5c84548cf006_worker_app','betting_worker','USAGE') AND has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_command','SELECT')) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: readable betting_worker.academic_command'
+\quit 3
+\endif
+-- passive runtime has no DML betting_worker.academic_command
+SELECT (NOT has_any_column_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_command','INSERT') AND NOT has_any_column_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_command','UPDATE') AND NOT has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_command','DELETE') AND NOT has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_command','TRUNCATE')) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: passive runtime has no DML betting_worker.academic_command'
+\quit 3
+\endif
+SELECT * FROM betting_worker.academic_command LIMIT 0;
+-- readable betting_worker.academic_delivery
+SELECT (to_regclass('betting_worker.academic_delivery') IS NOT NULL AND has_schema_privilege('dev3_it_5c84548cf006_worker_app','betting_worker','USAGE') AND has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_delivery','SELECT')) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: readable betting_worker.academic_delivery'
+\quit 3
+\endif
+-- passive runtime has no DML betting_worker.academic_delivery
+SELECT (NOT has_any_column_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_delivery','INSERT') AND NOT has_any_column_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_delivery','UPDATE') AND NOT has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_delivery','DELETE') AND NOT has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.academic_delivery','TRUNCATE')) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: passive runtime has no DML betting_worker.academic_delivery'
+\quit 3
+\endif
+SELECT * FROM betting_worker.academic_delivery LIMIT 0;
 -- readable betting_worker.operation_authorization
 SELECT (to_regclass('betting_worker.operation_authorization') IS NOT NULL AND has_schema_privilege('dev3_it_5c84548cf006_worker_app','betting_worker','USAGE') AND has_table_privilege('dev3_it_5c84548cf006_worker_app','betting_worker.operation_authorization','SELECT')) AS gate_ok \gset
 \if :gate_ok
@@ -719,8 +778,15 @@ SELECT (EXISTS(SELECT 1 FROM betting_worker.flyway_schema_history WHERE version=
 \echo 'REFUSED: migration history version betting_worker.2'
 \quit 3
 \endif
+-- migration history version betting_worker.3
+SELECT (EXISTS(SELECT 1 FROM betting_worker.flyway_schema_history WHERE version='3' AND success) AND NOT EXISTS(SELECT 1 FROM betting_worker.flyway_schema_history WHERE NOT success)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: migration history version betting_worker.3'
+\quit 3
+\endif
 -- no unexpected migration versions betting_worker
-SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.flyway_schema_history WHERE version IS NULL OR version NOT IN ('1','2'))) AS gate_ok \gset
+SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.flyway_schema_history WHERE version IS NULL OR version NOT IN ('1','2','3'))) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: no unexpected migration versions betting_worker'
@@ -748,7 +814,7 @@ SELECT ((SELECT count(*) FROM betting_control.authorization_authority)=1 AND EXI
 \quit 3
 \endif
 -- concordant initial catalogs
-SELECT ((SELECT count(*) FROM dashboard.matches)=1 AND (SELECT count(*) FROM match_state.match_catalog)=1 AND EXISTS(SELECT 1 FROM dashboard.matches d JOIN match_state.match_catalog c USING(match_id) WHERE d.match_id='e2e-5c84548cf006' AND d.home_team_id=c.home_team_id AND d.away_team_id=c.away_team_id AND d.home_team_id='home' AND d.away_team_id='away' AND d.home_name='AtlÃ©tico Local' AND d.away_name='Deportivo Visitante' AND d.home_score=0 AND d.away_score=0 AND d.var_status='CLEAR' AND d.last_event_id IS NULL AND d.updated_at IS NULL AND c.revision=0 AND c.rules_version=1)) AS gate_ok \gset
+SELECT ((SELECT count(*) FROM dashboard.matches)=1 AND (SELECT count(*) FROM match_state.match_catalog)=1 AND EXISTS(SELECT 1 FROM dashboard.matches d JOIN match_state.match_catalog c USING(match_id) WHERE d.match_id='e2e-5c84548cf006' AND d.home_team_id=c.home_team_id AND d.away_team_id=c.away_team_id AND d.home_team_id='home' AND d.away_team_id='away' AND d.home_name='Atlético Local' AND d.away_name='Deportivo Visitante' AND d.home_score=0 AND d.away_score=0 AND d.var_status='CLEAR' AND d.last_event_id IS NULL AND d.updated_at IS NULL AND c.revision=0 AND c.rules_version=1)) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: concordant initial catalogs'
@@ -938,6 +1004,13 @@ SELECT (NOT EXISTS(SELECT 1 FROM betting_control.suspension_outbox)) AS gate_ok 
 \echo 'REFUSED: fresh baseline empty betting_control.suspension_outbox'
 \quit 3
 \endif
+-- fresh baseline empty betting_control.academic_outbox
+SELECT (NOT EXISTS(SELECT 1 FROM betting_control.academic_outbox)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: fresh baseline empty betting_control.academic_outbox'
+\quit 3
+\endif
 -- fresh baseline empty betting_control.authorization_lease
 SELECT (NOT EXISTS(SELECT 1 FROM betting_control.authorization_lease)) AS gate_ok \gset
 \if :gate_ok
@@ -985,6 +1058,20 @@ SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.message_audit)) AS gate_ok \gset
 \if :gate_ok
 \else
 \echo 'REFUSED: fresh baseline empty betting_worker.message_audit'
+\quit 3
+\endif
+-- fresh baseline empty betting_worker.academic_command
+SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.academic_command)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: fresh baseline empty betting_worker.academic_command'
+\quit 3
+\endif
+-- fresh baseline empty betting_worker.academic_delivery
+SELECT (NOT EXISTS(SELECT 1 FROM betting_worker.academic_delivery)) AS gate_ok \gset
+\if :gate_ok
+\else
+\echo 'REFUSED: fresh baseline empty betting_worker.academic_delivery'
 \quit 3
 \endif
 -- fresh baseline empty betting_worker.operation_authorization

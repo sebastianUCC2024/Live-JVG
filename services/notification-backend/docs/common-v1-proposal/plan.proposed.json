@@ -18,7 +18,7 @@
     "match_id": "e2e-5c84548cf006",
     "home_team_id": "home",
     "away_team_id": "away",
-    "home_name": "AtlÃ©tico Local",
+    "home_name": "Atlético Local",
     "away_name": "Deportivo Visitante"
   },
   "migrations": [
@@ -69,6 +69,10 @@
         {
           "path": "services/dashboard-backend/src/main/resources/db/migration/V2__persistent_stream_epoch.sql",
           "sha256_utf8_lf": "a0a20fc6727fd2482590bd657a39dda0d6dd5e0e5c5b6cd028f1a26a0057567c"
+        },
+        {
+          "path": "services/dashboard-backend/src/main/resources/db/migration/V3__source_application_sequence.sql",
+          "sha256_utf8_lf": "f3e414934ee2b1e42b64651c0ae473e848a3916c5aec07e2f2dd5f995290454d"
         }
       ]
     },
@@ -132,6 +136,10 @@
         {
           "path": "services/betting-suspension-service/src/main/resources/db/migration/V2__atomic_authority.sql",
           "sha256_utf8_lf": "4102b72e8cce4811fa5c327e1a7cb7e2ce34697eb4dcf522479dcc23e31c2952"
+        },
+        {
+          "path": "services/betting-suspension-service/src/main/resources/db/migration/V3__academic_commands.sql",
+          "sha256_utf8_lf": "01f9a4479d652e3813ede750082ce00fc32856a10bbf0b54b3bfc8c65229f5ed"
         }
       ]
     },
@@ -153,14 +161,18 @@
         {
           "path": "services/betting-worker/src/main/resources/db/migration/V2__transactional_authorization.sql",
           "sha256_utf8_lf": "ca76343100989bfb2b1b64f4e8319dadfc3057ee9e984269eae26d594f40dfda"
+        },
+        {
+          "path": "services/betting-worker/src/main/resources/db/migration/V3__academic_commands.sql",
+          "sha256_utf8_lf": "06f168471f733226ab23cf1ebab6fb16aab1f15048a82c4ed9f0a5654c190b1e"
         }
       ]
     }
   ],
   "proposal_sources": {
-    "prepare_common_v1.py": "6370efbce13cef4f7e32f351a887e0379040158ada5afe4858c1dccb5cfe8ab5",
-    "test_prepare_common_v1.py": "050db6d8dec62c6536b4db685c9145f5c7c1cf3b478a058b9da8adc5c4a7b39c",
-    "README.md": "9fe6b1d91c6983857d25909e3f61d22e0575f0b4b94bf53126e6f5e591108d2e"
+    "prepare_common_v1.py": "4bcbc64ef7a66bcceecfabc528123643d6068f7bc48fa697109f279b9684bc2d",
+    "test_prepare_common_v1.py": "3730089d9db01dd02d4da75c32d08c795b5ec0f44330947cc705da9995cb40f5",
+    "README.md": "fa1ec4a50b8c805cbdd691dfebdcab35e8f7528cf06851b150b7a56df3c32383"
   },
   "flags": {
     "consumers": false,

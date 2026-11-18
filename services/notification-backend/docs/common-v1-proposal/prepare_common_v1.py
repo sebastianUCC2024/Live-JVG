@@ -10,19 +10,19 @@ ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 MODULES = [
     ("match_state", "match-state-service", "match_state", ["V1__durable_match_state.sql", "V2__quarantine_and_replay.sql", "V3__custody_integrity.sql", "V4__live_alert_outbox.sql"]),
-    ("dashboard", "dashboard-backend", "dashboard", ["V1__dashboard_projection.sql", "V2__persistent_stream_epoch.sql"]),
+    ("dashboard", "dashboard-backend", "dashboard", ["V1__dashboard_projection.sql", "V2__persistent_stream_epoch.sql", "V3__source_application_sequence.sql"]),
     ("notification", "notification-backend", "notification", ["V1__notification_inbox_and_alerts.sql", "V2__live_alert_identity.sql"]),
     ("archive", "historical-archiver", "archiver", ["V1__archive_events.sql", "V2__match_scoped_identity.sql"]),
-    ("control", "betting-suspension-service", "betting_control", ["V1__betting_control.sql", "V2__atomic_authority.sql"]),
-    ("worker", "betting-worker", "betting_worker", ["V1__simulated_operations.sql", "V2__transactional_authorization.sql"]),
+    ("control", "betting-suspension-service", "betting_control", ["V1__betting_control.sql", "V2__atomic_authority.sql", "V3__academic_commands.sql"]),
+    ("worker", "betting-worker", "betting_worker", ["V1__simulated_operations.sql", "V2__transactional_authorization.sql", "V3__academic_commands.sql"]),
 ]
 TABLES = {
     "match_state": ["match_catalog", "accepted_event", "score_outbox", "event_identity", "quarantine_case", "input_receipt", "replay_attempt", "alert_outbox"],
     "dashboard": ["matches", "inbox", "stream_epoch"],
     "notification": ["cursor_state", "inbox", "alerts", "live_alert_inbox"],
     "archiver": ["archived_event", "input_receipt"],
-    "betting_control": ["market_state", "processed_event", "pending_review", "input_receipt", "closure_command", "transition_history", "suspension_outbox", "authorization_authority", "authorization_lease"],
-    "betting_worker": ["market_guard", "command_inbox", "operation", "operation_transition", "operation_evidence", "message_audit", "operation_authorization"],
+    "betting_control": ["market_state", "processed_event", "pending_review", "input_receipt", "closure_command", "transition_history", "suspension_outbox", "academic_outbox", "authorization_authority", "authorization_lease"],
+    "betting_worker": ["market_guard", "command_inbox", "operation", "operation_transition", "operation_evidence", "message_audit", "academic_command", "academic_delivery", "operation_authorization"],
 }
 SEQUENCES = {"dashboard": "inbox_seq_seq", "archiver": "archived_event_seq_seq"}
 
@@ -53,7 +53,7 @@ def build_plan(run):
             "rabbit_host": "127.0.0.1", "rabbit_port": 56991, "rabbit_management_port": 15991,
             "vhost": "/", "rabbit_user": "notification_e2e_" + run,
             "match": {"match_id": "e2e-" + run, "home_team_id": "home", "away_team_id": "away",
-                      "home_name": "AtlÃ©tico Local", "away_name": "Deportivo Visitante"},
+                      "home_name": "Atlético Local", "away_name": "Deportivo Visitante"},
             "migrations": steps,
             "proposal_sources": {name: hashlib.sha256((HERE / name).read_text(encoding="utf-8").encode()).hexdigest()
                                  for name in ["prepare_common_v1.py", "test_prepare_common_v1.py", "README.md"]},
@@ -184,6 +184,30 @@ def future_dml_sql(plan):
     return result + "COMMIT;\n-- No grants on authorization_lease/authorization_authority or operation_authorization writes.\n-- No runtime EXECUTE on authority functions. Acceptance OFF and authorization disabled remain mandatory.\n"
 
 
+def academic_dml_sql(plan):
+    """Prepared only, separate authority from the legacy BLOCKED-operation rehearsal."""
+    result=guard(plan)+"-- ACADEMIC ONLY; separate authorization, no real operation or grant writes.\n"
+    result+="\\if :{?academic_dml_approved_run}\n\\else\n\\echo 'Separate academic DML approval required'\n\\quit 3\n\\endif\n"
+    result+=assertion(f":'academic_dml_approved_run'='academic-only:{plan['run']}'","separate academic DML scope")
+    roles={step['schema']:step['runtime'] for step in plan['migrations']}
+    control,worker=roles['betting_control'],roles['betting_worker']
+    result+="BEGIN;\n"
+    result+=f"GRANT INSERT ON betting_control.academic_outbox TO {control};\nGRANT UPDATE(published_at) ON betting_control.academic_outbox TO {control};\n"
+    result+=f"GRANT INSERT ON betting_worker.academic_command,betting_worker.academic_delivery TO {worker};\nGRANT UPDATE(delivery_attempts) ON betting_worker.academic_command TO {worker};\n"
+    sports={
+        "match_state":{"INSERT":["accepted_event","score_outbox","event_identity","quarantine_case","input_receipt","alert_outbox"],"UPDATE":["match_catalog","score_outbox","event_identity","input_receipt","alert_outbox"]},
+        "dashboard":{"INSERT":["inbox"],"UPDATE(home_score,away_score,var_status,last_event_id,updated_at)":["matches"]},
+        "notification":{"INSERT":["inbox","alerts","live_alert_inbox"],"UPDATE(last_sequence)":["cursor_state"]},
+        "archiver":{"INSERT":["archived_event","input_receipt"],"UPDATE":["input_receipt"]},
+        "betting_control":{"INSERT":["market_state","processed_event","pending_review","input_receipt","transition_history","suspension_outbox"],"UPDATE":["market_state","input_receipt"]}}
+    for schema,actions in sports.items():
+        for privilege,tables in actions.items():
+            result+=f"GRANT {privilege} ON {','.join(schema+'.'+table for table in tables)} TO {roles[schema]};\n"
+        if schema in SEQUENCES:result+=f"GRANT USAGE ON SEQUENCE {schema}.{SEQUENCES[schema]} TO {roles[schema]};\n"
+    result+="COMMIT;\n-- Includes sports runtime grants; do NOT apply legacy 60 in the academic scenario. No Worker operation DML.\n"
+    return result
+
+
 def fixtures_sql(plan):
     m = plan["match"]
     match, home, away, hn, an = (sql_text(m[k]) for k in ["match_id", "home_team_id", "away_team_id", "home_name", "away_name"])
@@ -284,6 +308,7 @@ def artifacts(plan):
         "40-fixtures.proposed.sql": fixtures_sql(plan),
         "50-select-preflight.proposed.sql": select_preflight_sql(plan),
         "60-future-runtime-dml.proposed.sql": future_dml_sql(plan),
+        "70-academic-dml.proposed.sql": academic_dml_sql(plan),
         "notification-rabbit.proposed.json": json.dumps(rabbit_plan(plan), ensure_ascii=False, indent=2) + "\n",
     }
     checksums = {name: hashlib.sha256(content.encode()).hexdigest() for name, content in result.items()}
@@ -295,6 +320,7 @@ def artifacts(plan):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True)
+    parser.add_argument("--output-dir", type=Path, default=HERE, help="Proposal text directory only; no SQL execution")
     commands = parser.add_mutually_exclusive_group(required=True)
     commands.add_argument("--render", action="store_true", help="Write review text only; never apply it")
     commands.add_argument("--check", action="store_true", help="Compare committed proposals with deterministic rendering")
@@ -305,13 +331,15 @@ def main():
         validate_approval(json.loads(args.validate_approval.read_text(encoding="utf-8-sig")), plan)
         print("Attestation structure accepted OFFLINE; no server identity or infrastructure verified")
         return
+    if args.render: args.output_dir.mkdir(parents=True, exist_ok=True)
     for name, content in artifacts(plan).items():
-        path = HERE / name
+        path = args.output_dir / name
         if args.check:
             if path.read_text(encoding="utf-8") != content:
                 raise SystemExit("Proposal differs: " + name)
         else:
-            path.write_text(content, encoding="utf-8", newline="\n")
+            with path.open("w", encoding="utf-8", newline="\n") as handle:
+                handle.write(content)
     print("Proposal text " + ("checked" if args.check else "rendered") + "; no SQL or infrastructure executed")
 
 

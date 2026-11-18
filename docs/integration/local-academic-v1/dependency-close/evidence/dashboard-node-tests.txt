@@ -1,0 +1,42 @@
+✔ enabled local configuration lets the real goal button publish once and double-click is blocked (27.929083ms)
+✔ disabled local configuration keeps real controls read-only and does not POST (1.27325ms)
+✔ page reload restores the full pending operation and does not generate or send another event (0.812709ms)
+✔ catalog recovery retains the pending body and never publishes during recovery (1.014791ms)
+✔ real button displays safe HTTP 500 feedback while retaining the original operation (0.934125ms)
+✔ real button displays safe HTTP 503 feedback while retaining the original operation (0.797625ms)
+✔ initial catalog failure recovers automatically with loading and visible error states (2.328375ms)
+✔ repeated failures back off to thirty seconds, never a tight retry loop (0.892708ms)
+✔ late superseded catalog response cannot overwrite a newer selection (0.213167ms)
+✔ navigation aborts the old request and ignores its late match response (0.732625ms)
+✔ slow match response does not start overlapping polls; stop cancels navigation work (0.219666ms)
+✔ timed-out GET retains backoff and never issues a publication (0.190334ms)
+✔ success persists the entire body before sending, then retains it until processing is confirmed (1.65475ms)
+✔ timeout is uncertain and preserves the operation (6.048666ms)
+✔ timeout also covers reading a response body (6.524625ms)
+✔ lost response retries with byte-identical UUID, timestamp, reference and body (0.216792ms)
+✔ double click cannot start another operation while the first request is pending (0.092333ms)
+✔ reload restores sending state as uncertain without publishing or generating an identity (0.146417ms)
+✔ definite initial validation rejection is retained for explicit dismissal and is not retried (0.19425ms)
+✔ a validation rejection after a lost response cannot erase uncertainty about the first attempt (0.151583ms)
+✔ already processed operation is recovered by identity without another POST, even outside recent history (0.126083ms)
+✔ 5xx and malformed successful replies are uncertain, never definitive rejection (0.108959ms)
+✔ storage unavailable means no POST; corrupt storage is never silently removed (0.154708ms)
+✔ two tabs cannot send or discard concurrently and a failed status lookup does not trigger a POST (0.209625ms)
+✔ forgetting an uncertain operation requires explicit confirmation and does not publish a replacement (0.06425ms)
+✔ HTTP 500 recovery retains the saved identity and never confirms or automatically republishes (0.120459ms)
+✔ HTTP 503 recovery retains the saved identity and never confirms or automatically republishes (0.074208ms)
+✔ 409 stays pending without inventing a definitive conflict policy (0.043334ms)
+✔ a lost HTTP body preserves the operation without manufacturing recovered data (0.052959ms)
+✔ 202 with an incompatible ID never overwrites the saved operation or confirms acceptance (0.040167ms)
+✔ incompatible recovery event_id is detected without replacing the original body (0.072208ms)
+✔ incompatible recovery timestamp is detected without replacing the original body (0.030958ms)
+✔ incompatible recovery minute is detected without replacing the original body (0.030334ms)
+✔ incompatible recovery match_id is detected without replacing the original body (0.026ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 80.779708

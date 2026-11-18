@@ -1,0 +1,10 @@
+{
+  "venv": "/private/tmp/live-jvg-validation-venv",
+  "system_packages_enabled": false,
+  "maven_repository": "/private/tmp/live-jvg-archiver-m2",
+  "spring_boot_pom": "4.1.2",
+  "pom_sha256": "87c5e6625a11c465be904263c2eaa738d0e9e1fe9e3a6fd77773ae149f82b9a4",
+  "pom_matches_integration_head": true,
+  "packaged_boot_library": "BOOT-INF/lib/spring-boot-4.1.2.jar",
+  "real_infrastructure_used": false
+}

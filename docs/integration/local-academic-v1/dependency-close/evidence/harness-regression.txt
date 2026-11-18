@@ -1,0 +1,8 @@
+CONFIG_VALIDATED_ONLY: passive
+CONFIG_VALIDATED_ONLY: active
+PREPARED_ONLY: /private/var/folders/rp/911pj31d3qq_1v90dtdt8s0r0000gn/T/offline-harness-1fchycdd/tmp/live-jvg-e2e-abcdef123456/plan.json
+........................................
+----------------------------------------------------------------------
+Ran 40 tests in 0.192s
+
+OK

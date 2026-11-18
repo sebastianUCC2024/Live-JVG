@@ -1,0 +1,1 @@
+PASS: actual Notification REST page satisfies unchanged React guards and snapshot values; no services contacted

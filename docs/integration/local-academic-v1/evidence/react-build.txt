@@ -1,0 +1,13 @@
+
+> live-jvg-dashboard@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.8 building client environment for production...
+transforming...
+✓ 67 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.59 kB │ gzip:  0.37 kB
+dist/assets/index-Bas6L3cc.css   18.06 kB │ gzip:  4.75 kB
+dist/assets/index-D7ICUMBg.js   279.46 kB │ gzip: 87.17 kB
+✓ built in 318ms

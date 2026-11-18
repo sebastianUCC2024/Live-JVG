@@ -1,0 +1,119 @@
+[INFO] Scanning for projects...
+[INFO] Loaded 24493 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[INFO]
+[INFO] --------------< com.live-jgv:betting-suspension-service >---------------
+[INFO] Building betting-suspension-service 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Loaded 64 auto-discovered prefixes for remote repository apache.snapshots (prefixes-apache.snapshots.txt)
+[INFO] Loaded 24494 auto-discovered prefixes for remote repository maven-central (prefixes-maven-central.txt)
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ betting-suspension-service ---
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO]
+[INFO] --- compiler:3.14.1:compile (default-compile) @ betting-suspension-service ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 28 source files with javac [debug parameters release 17] to target/classes
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ betting-suspension-service ---
+[INFO] Copying 2 resources from src/test/resources to target/test-classes
+[INFO]
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ betting-suspension-service ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 22 source files with javac [debug parameters release 17] to target/test-classes
+[INFO] /private/tmp/live-jvg-dev3-academic-work-queue/services/betting-suspension-service/src/test/java/com/live_jgv/betting/infrastructure/SuspensionErrorHandlerTest.java: /private/tmp/live-jvg-dev3-academic-work-queue/services/betting-suspension-service/src/test/java/com/live_jgv/betting/infrastructure/SuspensionErrorHandlerTest.java uses unchecked or unsafe operations.
+[INFO] /private/tmp/live-jvg-dev3-academic-work-queue/services/betting-suspension-service/src/test/java/com/live_jgv/betting/infrastructure/SuspensionErrorHandlerTest.java: Recompile with -Xlint:unchecked for details.
+[INFO]
+[INFO] --- surefire:3.5.4:test (default-test) @ betting-suspension-service ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.live_jgv.betting.academic.AcademicCommandMapperTest
+[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.031 s <<< FAILURE! -- in com.live_jgv.betting.academic.AcademicCommandMapperTest
+[ERROR] com.live_jgv.betting.academic.AcademicCommandMapperTest.M04_continuationResumesSimulation -- Time elapsed: 0.013 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: not <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertNotNull.failNull(AssertNotNull.java:49)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:35)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:30)
+	at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:304)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.maps(AcademicCommandMapperTest.java:12)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.M04_continuationResumesSimulation(AcademicCommandMapperTest.java:18)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[ERROR] com.live_jgv.betting.academic.AcademicCommandMapperTest.M02_varCheckSuspends -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: not <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertNotNull.failNull(AssertNotNull.java:49)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:35)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:30)
+	at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:304)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.maps(AcademicCommandMapperTest.java:12)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.M02_varCheckSuspends(AcademicCommandMapperTest.java:16)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[ERROR] com.live_jgv.betting.academic.AcademicCommandMapperTest.M01_goalSuspends -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: not <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertNotNull.failNull(AssertNotNull.java:49)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:35)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:30)
+	at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:304)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.maps(AcademicCommandMapperTest.java:12)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.M01_goalSuspends(AcademicCommandMapperTest.java:15)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[ERROR] com.live_jgv.betting.academic.AcademicCommandMapperTest.M03_annulmentResumesSimulation -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: not <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertNotNull.failNull(AssertNotNull.java:49)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:35)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:30)
+	at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:304)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.maps(AcademicCommandMapperTest.java:12)
+	at com.live_jgv.betting.academic.AcademicCommandMapperTest.M03_annulmentResumesSimulation(AcademicCommandMapperTest.java:17)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   AcademicCommandMapperTest.M01_goalSuspends:15->maps:12 expected: not <null>
+[ERROR]   AcademicCommandMapperTest.M02_varCheckSuspends:16->maps:12 expected: not <null>
+[ERROR]   AcademicCommandMapperTest.M03_annulmentResumesSimulation:17->maps:12 expected: not <null>
+[ERROR]   AcademicCommandMapperTest.M04_continuationResumesSimulation:18->maps:12 expected: not <null>
+[INFO]
+[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[ERROR] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.829 s
+[INFO] Finished at: 2026-11-17T02:01:15-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project betting-suspension-service: There are test failures.
+[ERROR]
+[ERROR] See /private/tmp/live-jvg-dev3-academic-work-queue/services/betting-suspension-service/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

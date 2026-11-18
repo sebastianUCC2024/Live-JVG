@@ -23,6 +23,11 @@ class BettingWorkerApplicationTests {
     @Autowired org.springframework.core.env.Environment environment;
     @Test void externalIntegrationsAreDisabledAndDefaultEvidenceIsUnknown(){
         assertTrue(context.getBeansOfType(WorkerRabbitListener.class).isEmpty());
+        assertTrue(context.getBeansOfType(com.live_jgv.worker.academic.AcademicWorkerListener.class).isEmpty());
+        assertTrue(context.getBeansOfType(com.live_jgv.worker.academic.AcademicCommandStore.class).isEmpty());
+        assertTrue(context.getBeansOfType(org.springframework.amqp.rabbit.core.RabbitAdmin.class).isEmpty());
+        assertEquals("false",environment.getProperty("academic.consumer.enabled"));
+        assertEquals("false",environment.getProperty("academic.topology.enabled"));
         assertTrue(registry.getListenerContainers().isEmpty());
         assertEquals("false",environment.getProperty("spring.flyway.enabled"));
         assertEquals("false",environment.getProperty("worker.acceptance.enabled"));

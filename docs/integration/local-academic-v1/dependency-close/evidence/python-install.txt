@@ -1,0 +1,28 @@
+Collecting fastjsonschema
+  Downloading fastjsonschema-2.21.2-py3-none-any.whl (24 kB)
+Collecting ruamel.yaml
+  Downloading ruamel_yaml-0.19.1-py3-none-any.whl (118 kB)
+Installing collected packages: ruamel.yaml, fastjsonschema
+Successfully installed fastjsonschema-2.21.2 ruamel.yaml-0.19.1
+WARNING: You are using pip version 21.2.4; however, version 26.0.1 is available.
+You should consider upgrading via the '/private/tmp/live-jvg-validation-venv/bin/python -m pip install --upgrade pip' command.
+Collecting jsonschema
+  Downloading jsonschema-4.25.1-py3-none-any.whl (90 kB)
+Collecting rfc3339-validator
+  Downloading rfc3339_validator-0.1.4-py2.py3-none-any.whl (3.5 kB)
+Collecting jsonschema-specifications>=2023.03.6
+  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Collecting attrs>=22.2.0
+  Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+Collecting rpds-py>=0.7.1
+  Downloading rpds_py-0.27.1-cp39-cp39-macosx_11_0_arm64.whl (354 kB)
+Collecting referencing>=0.28.4
+  Downloading referencing-0.36.2-py3-none-any.whl (26 kB)
+Collecting six
+  Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Collecting typing-extensions>=4.4.0
+  Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Installing collected packages: typing-extensions, rpds-py, attrs, referencing, six, jsonschema-specifications, rfc3339-validator, jsonschema
+Successfully installed attrs-26.1.0 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 referencing-0.36.2 rfc3339-validator-0.1.4 rpds-py-0.27.1 six-1.17.0 typing-extensions-4.16.0
+WARNING: You are using pip version 21.2.4; however, version 26.0.1 is available.
+You should consider upgrading via the '/private/tmp/live-jvg-validation-venv/bin/python -m pip install --upgrade pip' command.

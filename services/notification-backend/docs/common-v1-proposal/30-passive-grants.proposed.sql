@@ -73,12 +73,12 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA betting_control FROM dev3_it_5c84548cf006_
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA betting_control FROM dev3_it_5c84548cf006_control_app;
 REVOKE CREATE ON SCHEMA betting_control FROM dev3_it_5c84548cf006_control_app;
 GRANT USAGE ON SCHEMA betting_control TO dev3_it_5c84548cf006_control_app;
-GRANT SELECT ON betting_control.market_state,betting_control.processed_event,betting_control.pending_review,betting_control.input_receipt,betting_control.closure_command,betting_control.transition_history,betting_control.suspension_outbox,betting_control.authorization_authority,betting_control.authorization_lease TO dev3_it_5c84548cf006_control_app;
+GRANT SELECT ON betting_control.market_state,betting_control.processed_event,betting_control.pending_review,betting_control.input_receipt,betting_control.closure_command,betting_control.transition_history,betting_control.suspension_outbox,betting_control.academic_outbox,betting_control.authorization_authority,betting_control.authorization_lease TO dev3_it_5c84548cf006_control_app;
 REVOKE ALL ON ALL TABLES IN SCHEMA betting_worker FROM dev3_it_5c84548cf006_worker_app;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA betting_worker FROM dev3_it_5c84548cf006_worker_app;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA betting_worker FROM dev3_it_5c84548cf006_worker_app;
 REVOKE CREATE ON SCHEMA betting_worker FROM dev3_it_5c84548cf006_worker_app;
 GRANT USAGE ON SCHEMA betting_worker TO dev3_it_5c84548cf006_worker_app;
-GRANT SELECT ON betting_worker.market_guard,betting_worker.command_inbox,betting_worker.operation,betting_worker.operation_transition,betting_worker.operation_evidence,betting_worker.message_audit,betting_worker.operation_authorization TO dev3_it_5c84548cf006_worker_app;
+GRANT SELECT ON betting_worker.market_guard,betting_worker.command_inbox,betting_worker.operation,betting_worker.operation_transition,betting_worker.operation_evidence,betting_worker.message_audit,betting_worker.academic_command,betting_worker.academic_delivery,betting_worker.operation_authorization TO dev3_it_5c84548cf006_worker_app;
 COMMIT;
 -- Runtime cannot issue leases, forge authorization, migrate or mutate passive fixtures.

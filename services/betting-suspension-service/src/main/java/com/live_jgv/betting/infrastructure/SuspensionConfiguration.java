@@ -19,9 +19,11 @@ public class SuspensionConfiguration {
     LeaseSourceVerifier unavailableLeaseSourceVerifier(){return new UnavailableLeaseSourceVerifier();}
     @Bean EventDecoder eventDecoder() { return new JsonEventDecoder(); }
     @Bean Clock suspensionClock() { return Clock.systemUTC(); }
-    @Bean SuspensionStore suspensionStore(JdbcTemplate jdbc,PlatformTransactionManager manager,Clock clock) {
+    @Bean SuspensionStore suspensionStore(JdbcTemplate jdbc,PlatformTransactionManager manager,Clock clock,
+            @Value("${academic.commands.enabled:false}") boolean academicEnabled,
+            @Value("${academic.rabbit.queue:betting_commands}") String queue) {
         var transaction=new TransactionTemplate(manager);transaction.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);transaction.setTimeout(5);
-        return new JdbcSuspensionStore(jdbc,transaction,clock);
+        return new JdbcSuspensionStore(jdbc,transaction,clock,academicEnabled,queue);
     }
     @Bean SuspensionService suspensionService(SuspensionStore store,EventDecoder decoder) { return new SuspensionService(store,decoder); }
     @Bean SuspensionErrorHandler suspensionErrorHandler(@Value("${betting.retry-interval-ms:200}") long interval) { return new SuspensionErrorHandler(interval); }

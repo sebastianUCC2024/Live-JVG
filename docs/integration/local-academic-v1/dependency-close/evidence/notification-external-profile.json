@@ -1,0 +1,12 @@
+[
+  {
+    "file": "services/notification-backend/src/test/java/com/live_jgv/notification/integration/NotificationRabbitIT.java",
+    "methods": 6,
+    "status": "EXCLUDED_EXTERNAL_PROFILE_NOT_EXECUTED"
+  },
+  {
+    "file": "services/notification-backend/src/test/java/com/live_jgv/notification/integration/NotificationPostgresIT.java",
+    "methods": 7,
+    "status": "EXCLUDED_EXTERNAL_PROFILE_NOT_EXECUTED"
+  }
+]

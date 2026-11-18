@@ -300,3 +300,10 @@ Los nombres anteriores de tablas vac?as se ampl?an con alert_outbox y live_alert
 stream_epoch y cursor_state siguen cre?ndose exclusivamente por las migraciones
 originales, sin reseteos. La recuperaci?n LiveAlert la hace un dispatcher separado;
 no adelanta ni modifica el published de score_outbox.
+
+## Integración local académica
+
+El inventario integrado tiene 17 migraciones: añade Dashboard V3 y las V3 académicas de Control/Worker.
+`70-academic-dml.proposed.sql` es una propuesta separada, no ejecutada: sports + tablas académicas, sin
+escritura de operaciones, grants, leases ni funciones de autoridad. No aplicar el fichero legacy 60 en ese ensayo.
+El render solo produce texto y hashes; aprobarlo no autoriza migraciones ni DML.

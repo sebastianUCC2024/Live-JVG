@@ -135,8 +135,8 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
 
     @Override
     public Optional<StoredScoreUpdate> storedPublication(ScoreUpdate update) {
-        var results = publicationJdbc().query("SELECT payload,exchange_name,routing_key FROM match_state.score_outbox WHERE match_id=? AND event_id=? AND NOT published",
-                (rs, index) -> new StoredScoreUpdate(decode(rs.getString(1), ScoreUpdate.class), rs.getString(1), rs.getString(2), rs.getString(3)),
+        var results = publicationJdbc().query("SELECT payload,exchange_name,routing_key,application_seq FROM match_state.score_outbox WHERE match_id=? AND event_id=? AND NOT published",
+                (rs, index) -> new StoredScoreUpdate(decode(rs.getString(1), ScoreUpdate.class), rs.getString(1), rs.getString(2), rs.getString(3), rs.getLong(4)),
                 update.matchId(), update.eventId());
         if (results.size() != 1 || !results.get(0).update().equals(update)) {
             throw new IllegalStateException("Pending durable publication mismatch");

@@ -7,6 +7,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class MessagingReadinessTest {
+    @Test void academicReadinessObservesOnlyTheDedicatedListenerAndNeverAuthorizes(){
+        var r=mock(RabbitListenerEndpointRegistry.class);var l=mock(SimpleMessageListenerContainer.class);
+        when(r.getListenerContainer("academicBettingWorker")).thenReturn(l);
+        org.springframework.test.util.ReflectionTestUtils.setField(l,"running",true);when(l.getActiveConsumerCount()).thenReturn(1);
+        var h=new MessagingReadiness(r,false,true);assertEquals(Status.UP,h.health().getStatus());
+        assertEquals(false,h.health().getDetails().get("betting_authorized_by_health"));verify(r,never()).getListenerContainer("simulatedBettingWorker");
+        assertEquals(Status.OUT_OF_SERVICE,new MessagingReadiness(r,true,true).health().getStatus());
+    }
     @Test void disabledConsumerDoesNotInspectOrStartBroker(){
         var r=mock(RabbitListenerEndpointRegistry.class);
         assertEquals(Status.OUT_OF_SERVICE,new MessagingReadiness(r,false).health().getStatus());verifyNoInteractions(r);

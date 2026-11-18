@@ -55,6 +55,8 @@ services:
   match-state:
     depends_on: !reset {}
     environment:
+      MATCH_STATE_ALERTS_ENABLED: "false"
+      MATCH_STATE_ALERTS_PUBLICATION_ENABLED: "false"
       SPRING_SQL_INIT_MODE: never
       SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
       SPRING_FLYWAY_ENABLED: "false"
@@ -94,6 +96,8 @@ services:
   suspension:
     depends_on: !reset {}
     environment:
+      ACADEMIC_COMMANDS_ENABLED: "false"
+      ACADEMIC_PUBLICATION_ENABLED: "false"
       SPRING_SQL_INIT_MODE: never
       SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
       SPRING_FLYWAY_ENABLED: "false"
@@ -111,8 +115,12 @@ services:
       BETTING_CONTROL_CONSUMER_ENABLED: "false"
       BETTING_CONTROL_PUBLICATION_ENABLED: "false"
   worker:
+    deploy:
+      replicas: 2
     depends_on: !reset {}
     environment:
+      ACADEMIC_CONSUMER_ENABLED: "false"
+      ACADEMIC_TOPOLOGY_ENABLED: "false"
       SPRING_SQL_INIT_MODE: never
       SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
       SPRING_FLYWAY_ENABLED: "false"
@@ -133,6 +141,7 @@ services:
   notification:
     depends_on: !reset {}
     environment:
+      NOTIFICATION_LIVE_ALERTS_ENABLED: "false"
       SPRING_SQL_INIT_MODE: never
       SPRING_KAFKA_ADMIN_AUTO_CREATE: "false"
       SPRING_FLYWAY_ENABLED: "false"

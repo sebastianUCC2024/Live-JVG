@@ -99,4 +99,59 @@ class ComposeOffProposalTest {
             }
         }
     }
+    @Test
+    void academicResourcesBuildTargetsAndReplicaIsolation() throws Exception {
+        var base = map(read("docker-compose.yml").get("services"));
+        var overlay = map(read("scripts/e2e/compose.manifest-proposed.yml").get("services"));
+        var modules = Map.of("producer", "live-feed-producer", "dashboard", "dashboard-backend",
+                "match-state", "match-state-service", "archiver", "historical-archiver",
+                "suspension", "betting-suspension-service", "worker", "betting-worker",
+                "notification", "notification-backend");
+        for (var name : List.of("producer", "dashboard", "match-state", "archiver", "suspension",
+                "worker", "notification", "postgres", "kafka", "rabbitmq", "kafka-init")) {
+            var service = map(base.get(name));
+            var limits = map(map(map(service.get("deploy")).get("resources")).get("limits"));
+            assertTrue(Double.parseDouble(limits.get("cpus").toString()) > 0);
+            assertTrue(limits.get("memory").toString().matches("[1-9][0-9]*M"));
+            if (modules.containsKey(name)) {
+                var args = map(map(service.get("build")).get("args"));
+                assertEquals(modules.get(name), args.get("SERVICE_MODULE"));
+                assertTrue(args.get("JAR_FILE").toString().endsWith("-SNAPSHOT.jar"));
+                var env = map(service.get("environment"));
+                assertFalse(env.containsKey("JAVA_OPTS"));
+                assertFalse(env.containsKey("JAVA_TOOL_OPTIONS"));
+            }
+        }
+        assertEquals(2, map(map(base.get("worker")).get("deploy")).get("replicas"));
+        assertEquals(1, map(map(base.get("dashboard")).get("deploy")).get("replicas"));
+        assertEquals(2, map(map(overlay.get("worker")).get("deploy")).get("replicas"));
+        var dockerfile = Files.readString(root().resolve("Dockerfile"));
+        assertTrue(dockerfile.contains("FROM maven:3.9.6-eclipse-temurin-17-alpine AS build"));
+        assertTrue(dockerfile.contains("FROM eclipse-temurin:17-jre-alpine AS runtime-base"));
+        assertTrue(dockerfile.contains("dependency:go-offline"));
+        assertTrue(dockerfile.indexOf("dependency:go-offline") < dockerfile.indexOf("COPY . /build"));
+        assertTrue(dockerfile.contains("services/${SERVICE_MODULE}/pom.xml verify"));
+        assertFalse(dockerfile.contains("skipTests"));
+        assertTrue(dockerfile.contains("USER 10001:10001"));
+        assertTrue(dockerfile.contains("FROM runtime-base AS prebuilt"));
+        assertTrue(dockerfile.contains("COPY --from=build"));
+    }
+
+    @Test
+    void academicOnProposalRequiresSeparatePolicyAndNeverEnablesAuthority() throws Exception {
+        var services=map(read("scripts/e2e/compose.academic-proposed.yml").get("services"));
+        var worker=map(map(services.get("worker")).get("environment"));
+        assertEquals("false",worker.get("BETTING_WORKER_ACCEPTANCE_ENABLED"));
+        assertEquals("disabled",worker.get("BETTING_WORKER_AUTHORIZATION_MODE"));
+        assertEquals("false",worker.get("BETTING_WORKER_CONSUMER_ENABLED"));
+        assertEquals("true",worker.get("ACADEMIC_CONSUMER_ENABLED"));
+        assertEquals("false",worker.get("ACADEMIC_TOPOLOGY_ENABLED"));
+        assertTrue(worker.get("SPRING_RABBITMQ_VIRTUAL_HOST").toString().contains("E2E_ACADEMIC_VHOST"));
+        assertEquals("http://127.0.0.1:15173",map(map(services.get("dashboard")).get("environment")).get("DASHBOARD_ALLOWED_ORIGINS"));
+        assertEquals("http://127.0.0.1:15173",map(map(services.get("notification")).get("environment")).get("NOTIFICATION_ALLOWED_ORIGINS"));
+        assertEquals(List.of("127.0.0.1:18192:8082"),((Tagged)map(services.get("notification")).get("ports")).value());
+        var off=map(read("scripts/e2e/compose.manifest-proposed.yml").get("services"));
+        assertEquals("false",map(map(off.get("worker")).get("environment")).get("ACADEMIC_CONSUMER_ENABLED"));
+    }
+
 }

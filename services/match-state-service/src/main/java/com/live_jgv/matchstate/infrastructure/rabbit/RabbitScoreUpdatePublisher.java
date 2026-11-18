@@ -46,21 +46,22 @@ public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
             log.warn("Score update serialization failed; failureType={}", failure.getClass().getName());
             throw new ScoreUpdatePublicationException("Could not serialize score update", failure);
         }
-        send(update, json, exchange, routingKeyPattern.replace("{matchId}", update.matchId()));
+        send(update, json, exchange, routingKeyPattern.replace("{matchId}", update.matchId()), null);
     }
 
     @Override
     public void publishStored(StoredScoreUpdate publication) {
         send(publication.update(), publication.payload().getBytes(StandardCharsets.UTF_8),
-                publication.exchange(), publication.routingKey());
+                publication.exchange(), publication.routingKey(), publication.applicationSeq());
     }
 
-    private void send(ScoreUpdate update, byte[] json, String destination, String routingKey) {
+    private void send(ScoreUpdate update, byte[] json, String destination, String routingKey, Long sequence) {
         var properties = new MessageProperties();
         properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
         properties.setContentEncoding("UTF-8");
         properties.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
         properties.setMessageId(update.eventId());
+        if(sequence!=null)properties.setHeader("application_seq",sequence);
         var correlation = new CorrelationData(UUID.randomUUID().toString());
         try {
             template.send(destination, routingKey, new Message(json, properties), correlation);

@@ -1,0 +1,78 @@
+{
+  "live-feed-producer": {
+    "tests": 78,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 78,
+    "status": "PASS"
+  },
+  "match-state-service": {
+    "tests": 129,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 129,
+    "status": "PASS"
+  },
+  "dashboard-backend": {
+    "tests": 166,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 166,
+    "status": "PASS"
+  },
+  "notification-backend": {
+    "tests": 0,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 0,
+    "status": "BLOCKED_DEPENDENCIES"
+  },
+  "historical-archiver": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "passed": 80,
+    "status": "PASS"
+  },
+  "betting-suspension-service": {
+    "tests": 160,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 3,
+    "passed": 157,
+    "status": "PASS"
+  },
+  "betting-worker": {
+    "tests": 159,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 17,
+    "passed": 142,
+    "status": "PASS"
+  },
+  "python": {
+    "harness": 40,
+    "academic": 11,
+    "docker-runtime": 5,
+    "common-generator": 26,
+    "isolated-generator": 4,
+    "total_passed": 86
+  },
+  "react": {
+    "passed": 143,
+    "files": 15,
+    "build": "PASS"
+  },
+  "limitations": [
+    "No infrastructure, SQL, migrations or E2E executed",
+    "Notification real Boot4.1.2 POM blocked offline",
+    "Boot4.1.1 diagnostic also blocked, production POM unchanged",
+    "validate-dev1-contracts.py blocked: fastjsonschema absent",
+    "ORDER02 strict mode opt-in; legacy and arbitrary reorder not certified"
+  ]
+}
