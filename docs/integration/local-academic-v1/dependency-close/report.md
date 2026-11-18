@@ -15,7 +15,7 @@ Las ramas publicadas y dev no se modificaron. No se inició ni utilizó infraest
   El JAR contiene BOOT-INF/lib/spring-boot-4.1.2.jar. No se usó 4.1.1 como sustitución.
 - Python: `/private/tmp/live-jvg-validation-venv`, Python3.9.6, include-system-site-packages=false.
   Instalación exclusiva desde PyPI oficial: fastjsonschema2.21.2, ruamel.yaml0.19.1, jsonschema4.25.1 y
-  rfc3339-validator0.1.4, más sus dependencias. `python-packages.txt` es evidencia, no un lockfile de aplicación.
+  rfc3339-validator0.1.4, más sus dependencias. [python-packages.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/docs/integration/local-academic-v1/dependency-close/evidence/python-packages.txt) es evidencia histórica archivada en Git, retirada del árbol actual; no es un lockfile de aplicación. Las dependencias vigentes se declaran en `requirements-validation.txt` en la raíz.
   No se actualizaron pip ni paquetes globales.
 
 ## Resultados reales

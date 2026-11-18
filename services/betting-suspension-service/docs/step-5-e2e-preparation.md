@@ -4,7 +4,7 @@
 
 ## Resultado funcional
 
-No se encontró un defecto nuevo ni una capacidad independiente faltante respecto del alcance solicitado. No se reimplementaron servicios, añadieron DTO/destinos hipotéticos o pruebas redundantes. Cambios de este paso: este informe, `evidence/step-5-local-results.json` y `step-5-pr-files.txt`. Todo el código de pasos anteriores se conserva sin cambios.
+No se encontró un defecto nuevo ni una capacidad independiente faltante respecto del alcance solicitado. No se reimplementaron servicios, añadieron DTO/destinos hipotéticos o pruebas redundantes. Cambios de este paso: este informe, `evidence/step-5-local-results.json` y [step-5-pr-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/step-5-pr-files.txt). Todo el código de pasos anteriores se conserva sin cambios.
 
 | Servicio | Comportamiento existente comprobado en código/pruebas |
 |---|---|
@@ -49,7 +49,7 @@ Se verificaron hashes SHA-256 de los cuatro logs contra results.json, 17 casos r
 
 ## Lista futura de PR y estado Git
 
-`step-5-pr-files.txt` contiene la selección exacta de archivos **pendientes respecto de HEAD** de los tres módulos DEV 3, incluidos los cambios previos, certificación y este cierre. Excluye archivos ya comprometidos sin modificaciones, módulos ajenos y artefactos ignorados/generados. Es un inventario, no staging; debe regenerarse si el árbol cambia antes del commit.
+[step-5-pr-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/step-5-pr-files.txt) conserva la selección histórica de archivos que estaban **pendientes respecto de HEAD en aquel paso** de los tres módulos DEV 3, incluidos los cambios previos, certificación y este cierre. Excluye archivos ya comprometidos sin modificaciones, módulos ajenos y artefactos ignorados/generados. Era un inventario de entrega, no staging; se retiró del árbol actual tras la entrega. No usarlo para staging del estado vigente.
 
 `git diff --check` satisfactorio. Ningún archivo previo fue sobrescrito, eliminado o modificado por este paso. Sin operaciones de integración Git, staging, commits o push; sin comandos Docker ni modificaciones de recursos. El PostgreSQL de laboratorio y sus evidencias se conservaron.
 

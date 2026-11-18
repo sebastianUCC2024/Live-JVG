@@ -32,7 +32,7 @@ Suspension usa una transacción separada, serializada por ese lock, no una trans
 - Pruebas unitarias de protocolo, permiso antiguo, sesiones, límites/rollback/leases y guard estable; preparación de 11 casos PostgreSQL con dos conexiones y rol dedicado.
 - Propuestas finales de contratos y documentación actualizada, sin tocar contracts/events ni servicios ajenos.
 
-Inventario exacto por módulo: docs/phase-6-files.txt. V1 y migraciones previas se conservaron; no se borró ningún archivo anterior.
+Inventarios históricos por módulo, conservados en el commit previo a la limpieza: [phase-6-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/phase-6-files.txt), [phase-6-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-worker/docs/phase-6-files.txt), [phase-6-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/historical-archiver/docs/phase-6-files.txt). Se retiraron del árbol actual. V1 y migraciones previas se conservaron; no se borró ningún archivo anterior.
 
 ## 4. Qué prueban y qué no prueban los tests
 

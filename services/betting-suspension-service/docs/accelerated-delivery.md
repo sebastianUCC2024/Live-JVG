@@ -150,4 +150,4 @@ aceptación, emisor de leases, VAR V2 externo ni adapters en infraestructura com
    VAR/autoridad y certificar fuente/leases antes de considerar aceptación.
 
 No se hizo push ni se abrió PR. El commit local es la entrega autorizada; su hash se informa
-fuera de este documento para evitar autorreferencia. Manifest: accelerated-delivery-files.txt.
+fuera de este documento para evitar autorreferencia. Manifest histórico: [accelerated-delivery-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/accelerated-delivery-files.txt) (retirado del árbol actual).

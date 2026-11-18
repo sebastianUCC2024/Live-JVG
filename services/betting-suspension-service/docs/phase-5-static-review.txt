@@ -1,7 +1,7 @@
 DEV 3 Fase 5 — revisión final
 Rama integration/Valeria-mvp-dev; HEAD 9d8aae20a5371d41b18bda7f10bfd66f42f22094, ambos sin cambios.
 Fuentes/documentos fuera del alcance: 452 hashes idénticos.
-Archivos modificados esta fase: 12; creados: 29. Listas por módulo en phase-5-files.txt.
+Archivos modificados esta fase: 12; creados: 29. Listas por módulo retiradas del árbol actual; conservadas en Git, commit 29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c, rutas services/{betting-suspension-service,betting-worker,historical-archiver}/docs/phase-5-files.txt. El respaldo privado de limpieza conserva también sus bytes originales.
 Todos pertenecen a los tres módulos autorizados. No se eliminó ningún archivo previo.
 git diff --check: PASS. Nuevos/modificados sin espacios finales ni marcadores de conflicto.
 Patrones de claves privadas/tokens: ninguno; variables password solo placeholders/validaciones, no credenciales reales.

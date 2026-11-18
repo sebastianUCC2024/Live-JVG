@@ -25,7 +25,7 @@ Evidencias por módulo: `docs/evidence/phase-5-local-verification.txt`, con coma
 - Los tres: probes Boot, perfil `dev3-integration` inactivo por defecto, conexiones explícitas, flags false, variables de ejemplo sin secretos, instrucciones y test PostgreSQL preparado con doble habilitación/validación de aislamiento.
 - Sin cambios POM/dependencias de esta fase. No se modificó código ajeno ni contratos/Compose.
 
-Listas exactas diferenciadas de las fases anteriores en `docs/phase-5-files.txt` de cada módulo. Los informes de las fases 2–4 permanecen como evidencia histórica; los README actuales describen los cambios de preparación.
+Listas históricas exactas conservadas en el commit previo a la limpieza: [phase-5-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-suspension-service/docs/phase-5-files.txt), [phase-5-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/betting-worker/docs/phase-5-files.txt), [phase-5-files.txt](https://github.com/sebastianUCC2024/Live-JVG/blob/29fc8b041f22ec1f05cea5c9a200ceba47f1fb0c/services/historical-archiver/docs/phase-5-files.txt). Los inventarios se retiraron del árbol actual. Los informes de las fases 2–4 permanecen como evidencia histórica; los README actuales describen los cambios de preparación.
 
 ## Contratos y bloqueos
 
