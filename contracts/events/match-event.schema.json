@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MatchEvent",
+  "description": "Proposed contract pending team approval. JSON validation cannot guarantee that a reference identifies an existing original GOAL in the same match or that it has not already been annulled; these checks belong to match-state-service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "match_id", "event_type", "minute", "timestamp"],
+  "properties": {
+    "event_id": { "$ref": "#/$defs/identifier" },
+    "match_id": { "$ref": "#/$defs/identifier" },
+    "event_type": {
+      "enum": ["GOAL", "VAR_CHECK", "GOAL_ANNULLED", "MATCH_CONTINUES"]
+    },
+    "team_id": { "type": ["string", "null"] },
+    "minute": { "type": "integer", "minimum": 0, "maximum": 130, "description": "Initial project simulation limit, not a universal football rule." },
+    "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 timestamp using the RFC 3339 date-time profile. Validators must enable format assertion." },
+    "reference_event_id": { "type": ["string", "null"], "description": "For GOAL_ANNULLED, identifies the original GOAL event; existence is not checked by JSON Schema." }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "const": "GOAL" } } },
+      "then": {
+        "required": ["team_id"],
+        "properties": { "team_id": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "GOAL_ANNULLED" } } },
+      "then": {
+        "required": ["reference_event_id"],
+        "properties": { "reference_event_id": { "$ref": "#/$defs/identifier" } }
+      }
+    }
+  ]
+}

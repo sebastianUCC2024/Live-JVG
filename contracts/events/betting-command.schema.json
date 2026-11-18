@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SimulatedCommand V1 (existing legacy Worker wire)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "command_id",
+    "operation_id",
+    "match_id",
+    "simulated_user_id",
+    "timestamp"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "command_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "match_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "simulated_user_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "description": "Existing six-field format consumed by betting-worker JsonCommandDecoder. This is NOT AcademicCommand: SUSPEND_BETS/RESUME_BETS use the separate academic-command-v1 schema and listener. No integrated production publisher for this legacy wire is demonstrated; fixtures prove decoder compatibility only. This schema neither enables acceptance nor supplies authority, grants or leases. Enable date-time format assertions.",
+  "$comment": "JSON Schema integer is mathematical: 1.0 also validates as integer, while the existing Jackson decoder requires an integral JSON token. Duplicate keys, invalid UTF-8 and trailing tokens must be rejected by the codec before schema validation; schemas cannot enforce those lexical constraints."
+}
