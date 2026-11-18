@@ -1,6 +1,6 @@
 # DEV 3 — Fase 6: autorización transaccional y cierre de seguridad
 
-Fecha: 2026-11-16, America/Bogota. Implementación preparada e inactiva. No se ejecutaron migraciones, PostgreSQL, brokers o contenedores. Los resultados locales y el inventario están en `phase-6-results.md`.
+Fecha: 2026-11-16, America/Bogota. Implementación preparada e inactiva. No se ejecutaron migraciones, PostgreSQL, brokers o contenedores. Los resultados locales y el inventario están en [phase-6-results.md (histórico archivado)](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/betting-suspension-service/docs/phase-6-results.md).
 
 ## 1. Decisión y condiciones de atomicidad
 

@@ -23,14 +23,14 @@ Cambiar el tema actualiza únicamente el selector y los atributos de documento: 
 - Contraste: 32 combinaciones de tokens de texto/fondo, todas >=4,5:1; mínimo medido 5,99:1. Esto no constituye una certificación completa WCAG.
 - Se consultaron cinco eventos históricos y tres alertas existentes. No se generaron nuevos eventos ni se ejecutó otro E2E deportivo.
 
-Evidencias: [validación visual](visual-validation.json), [contrastes medidos](contrast.json).
+Evidencias: [validación visual](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/visual-validation.json), [contrastes medidos](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/contrast.json).
 
 | Vista | Claro | Oscuro |
 | --- | --- | --- |
-| Servidor, escritorio | [Captura](live-light-desktop.png) | [Captura](live-dark-desktop.png) |
-| Servidor, móvil | [Captura](live-light-mobile.png) | [Captura](live-dark-mobile.png) |
-| Demo, escritorio | [Captura](demo-light-desktop.png) | [Captura](demo-dark-desktop.png) |
-| Demo, móvil | [Captura](demo-light-mobile.png) | [Captura](demo-dark-mobile.png) |
+| Servidor, escritorio | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/live-light-desktop.png) | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/live-dark-desktop.png) |
+| Servidor, móvil | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/live-light-mobile.png) | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/live-dark-mobile.png) |
+| Demo, escritorio | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/demo-light-desktop.png) | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/demo-dark-desktop.png) |
+| Demo, móvil | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/demo-light-mobile.png) | [Captura](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/themes/demo-dark-mobile.png) |
 
 ## Cómo probar
 
