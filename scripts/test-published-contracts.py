@@ -56,6 +56,23 @@ class PublishedContractTest(unittest.TestCase):
                 checked += 1
             self.assertGreaterEqual(checked, 4)
 
+    def test_annulment_accepts_either_goal_reference_without_changing_other_events(self):
+        wire = copy.deepcopy(self.valid['match-event'])
+        wire['event_type'] = 'GOAL_ANNULLED'
+        wire.pop('reference_event_id', None)
+        wire['annuls_event_id'] = 'goal-1'
+        self.assert_valid('match-event', wire)
+        wire['reference_event_id'] = 'goal-1'
+        self.assert_valid('match-event', wire)
+        for invalid in [None, '', ' ', 7, [], {}]:
+            candidate = copy.deepcopy(wire)
+            candidate.pop('reference_event_id')
+            candidate['annuls_event_id'] = invalid
+            self.assert_invalid('match-event', candidate)
+        wire['event_type'] = 'MATCH_CONTINUES'
+        self.assert_invalid('match-event', wire)
+        # JSON Schema cannot compare arbitrary sibling values; Java codecs reject conflicts.
+
     def test_captured_producer_events_match_both_consumer_fixtures(self):
         paths = [ROOT / 'services' / module / 'src/test/resources/fixtures/producer-events.jsonl'
                  for module in ('historical-archiver', 'betting-suspension-service')]

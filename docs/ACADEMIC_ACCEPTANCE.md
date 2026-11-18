@@ -1,24 +1,24 @@
 # Live-JVG — aceptación académica V1
 
 Fecha de consolidación: 18 de noviembre de 2026, America/Bogota.
-Base inspeccionada: dev `29ab42e22c9042871de36a7b3799120f421e91b9` (merge del PR #40).
+Base de la compatibilidad VAR: dev `7c7d727043133e75726c144879ee76e571a0e2c2`. Las evidencias históricas mantienen sus revisiones originales; esta corrección solo se valida localmente sin brokers ni bases reales.
 Este documento propone la aceptación del alcance académico demostrado; no aprueba contratos ni excepciones en nombre del profesor y no certifica producción.
 
 ## Fuente y estados
 
-No se encontró el enunciado original entre los archivos versionados (incluidos documentos PDF/Word/ODT). Los requisitos de la matriz se reconstruyen exclusivamente de instrucciones del equipo y de la [matriz académica histórica](integration/local-academic-v1/report.md). **Todas las filas requieren cotejo literal con el documento oficial.** No se inventan citas, números de rúbrica ni requisitos faltantes.
+El equipo confirmó los requisitos oficiales: Kafka con clave match_id, VAR con annuls_event_id, ZooKeeper, RabbitMQ Topic/Fanout/Work Queue, PostgreSQL/JPA, TDD, SOLID y Docker con límites de recursos. Se evalúan como requisitos confirmados, no se marcan pendientes por falta del texto. El usuario aclaró que el archivo completo de 129 líneas «Texto pegado(20261118-053352).txt» está en su conversación y aún no es accesible localmente; queda pendiente únicamente el cotejo literal que necesite leer esas líneas, sin inventar citas ni cláusulas adicionales. La [matriz histórica](integration/local-academic-v1/report.md) conserva sus resultados, no sustituye el texto oficial.
 
 PASS acredita únicamente el alcance indicado por su evidencia. PARCIAL indica límites técnicos o cobertura incompleta; PENDIENTE requiere decisión/evidencia; DIFERENCIA LITERAL identifica una divergencia terminológica o tecnológica reportada en las fuentes secundarias. Una ejecución histórica no es una ejecución nueva sobre el dev actual.
 
 ## Matriz de trazabilidad
 
-| Requisito reconstruido, pendiente de cotejo oficial | Implementación | Prueba / evidencia existente | Estado y límite |
+| Requisito confirmado / alcance declarado | Implementación | Prueba / evidencia existente | Estado y límite |
 |---|---|---|---|
 | Java 17 y microservicios | Siete módulos con POM independiente | Clon limpio CLONE: siete verify, 885 aprobadas, 39 omitidas, cero fallos/errores | PASS del ciclo local; no todos los servicios usan la misma versión Spring Boot |
 | Kafka y publicación por partido | [KafkaMatchEventPublisher](../services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/infrastructure/kafka/KafkaMatchEventPublisher.java): clave event.matchId(); topic match_events y grupos independientes | E2E histórico E2E; laboratorio JPA_KAFKA con siete posiciones y offset confirmado 7 | PASS del recorrido ensayado; orden Kafka por partición, no orden global |
-| ZooKeeper | Compose declara Kafka 3.9.1 KRaft broker/controller, sin ZooKeeper | [Compose](../docker-compose.yml) y documentación del laboratorio | DIFERENCIA LITERAL si el original exige ZooKeeper; requiere aceptación del profesor |
+| ZooKeeper | Compose declara Kafka 3.9.1 KRaft broker/controller, sin ZooKeeper | [Compose](../docker-compose.yml) y documentación del laboratorio | DIFERENCIA LITERAL confirmada: ZooKeeper exigido, KRaft implementado; requiere dispensa explícita del profesor o cambio de infraestructura autorizado aparte |
 | GOAL, VAR_CHECK, GOAL_ANNULLED, MATCH_CONTINUES y corrección de marcador | Dominio Match State y codecs; anulación referencia el gol original | [MatchStateTest](../services/match-state-service/src/test/java/com/live_jgv/matchstate/domain/model/MatchStateTest.java), E2E: 1-0 CLEAR → 1-0 IN_PROGRESS → 0-0 CLEAR → 0-0 CLEAR | PASS de secuencia V1 controlada |
-| Campo de referencia VAR | Wire existente reference_event_id; no se introduce alias annuls_event_id | [Schema MatchEvent](../contracts/events/match-event.schema.json), fixtures y evidencia E2E | DIFERENCIA LITERAL reportada: fuentes secundarias atribuyen annuls_event_id al enunciado; cotejar y aceptar equivalencia antes de afirmar cumplimiento literal |
+| Campo de referencia VAR | Lectores deportivos aceptan annuls_event_id y reference_event_id como una referencia; contradicciones rechazadas. Producer conserva emisión reference_event_id | [Schema MatchEvent](../contracts/events/match-event.schema.json), tests locales VarFieldCompatibilityTest y replay de adaptadores | PASS de lectura compatible local; PARCIAL del requisito de emisión literal hasta una transición coordinada. No hay E2E nuevo |
 | Contratos JSON | Cuatro schemas compartidos implementados; comando académico separado del comando de operaciones | [Contratos](../contracts/events), validadores y 84 tests Python del clon limpio | PASS estructural; reglas semánticas adicionales permanecen en dominio/codecs |
 | Topic live_updates y marcador Dashboard | Outbox Match State, routing score.{matchId}, consumidor Dashboard, inbox/snapshot durable | E2E histórico y pruebas Dashboard | PASS de entrega/actualización observada; no certifica todas las ventanas de confirmación incierta |
 | Fanout live_alerts | Outbox de alertas independiente y Notification con cola propia | E2E: alertas GOAL, VAR_CHECK y GOAL_ANNULLED, historial REST y PostgreSQL | PASS de difusión observada |
@@ -32,7 +32,7 @@ PASS acredita únicamente el alcance indicado por su evidencia. PARCIAL indica l
 | Recuperación y errores | Outboxes, recibos, deduplicación y reintentos existentes | JPA_KAFKA demuestra reinicio/offsets; tests locales de errores | PARCIAL: reentrega Rabbit real y todos los fallos inducidos no certificados |
 | Seguridad del alcance simulado | Operaciones reales BLOCKED; acceptance OFF, autoridad disabled, sin habilitar grants/leases | E2E: cero operaciones, ACCEPTED, grants y leases; OFF independiente confirma baselines estables | PASS del RUN académico; fixtures atómicos de otro laboratorio no son operaciones del E2E |
 | Cierre OFF verificable | Flags explícitos, comprobación CLI/HTTP y parada conservando recursos | OFF: tres muestras consecutivas en cero consumidores/conexiones AMQP, baselines conservados y once contenedores detenidos | PASS posterior independiente; E2E conserva su FAIL histórico de cierre |
-| Cumplimiento literal integral | Documento oficial no disponible en Git | Comparación secundaria únicamente | PENDIENTE: profesor/equipo deben cotejar y aprobar excepciones |
+| Cumplimiento literal integral | Requisitos oficiales confirmados por el usuario; lectura compatible VAR implementada, ZooKeeper distinto | Matriz y evidencias por alcance | PARCIAL: emisión literal VAR y diferencia KRaft; pendiente solo cotejo de líneas del archivo completo cuando sea accesible |
 
 ## Inventario exacto de 39 omisiones del clon limpio
 
@@ -97,10 +97,25 @@ Material a preparar por el equipo: diagrama, capturas React con partido y VAR, r
 
 ## Decisiones de aceptación y responsables
 
-- Profesor y DEV1: cotejar el original y aceptar o rechazar KRaft frente a ZooKeeper y reference_event_id frente a annuls_event_id. No cambiar contratos unilateralmente para ajustar nombres.
+- Profesor y DEV1: resolver la diferencia KRaft/ZooKeeper. Equipo: revisar esta compatibilidad VAR autorizada y acordar cuándo cambiar la emisión a annuls_event_id, después de desplegar todos los lectores compatibles. No se exige dispensa para implementar el nombre oficial; mantener indefinidamente solo el nombre anterior sí requiere aceptar esa excepción.
 - Equipo y profesor: aceptar el alcance V1 controlado y las exclusiones explícitas (ORDER02 global, fallos inducidos no certificados, apuestas reales/autoridad/leases). DEV1/DEV2 mantienen el seguimiento del orden; DEV3 preserva las guardas de operaciones.
 - DEV2: registrar mitigación temporal npm; no declarar las 11 alertas corregidas.
 - DEV3: custodiar originales y preparar paquete sanitizado si se aprueba compartirlo, conservando FAIL y PASS posteriores como resultados distintos.
 - Equipo: aprobar este documento por PR, fijar SHA final de entrega y revisar el paquete académico. No hace falta repetir el E2E o builds para aprobar solo esta consolidación documental.
 
-**Dictamen propuesto: listo para aceptación académica con condiciones explícitas; sin bloqueos funcionales nuevos demostrados, pendiente cotejo literal y decisiones del profesor.** Este documento no realiza ese cierre por su cuenta.
+**Dictamen propuesto: compatibilidad de lectura VAR preparada para revisión, con emisión anterior conservada por instrucción del equipo. El cumplimiento literal sigue PARCIAL hasta la transición de emisión y resolución ZooKeeper/KRaft.** Este documento no realiza ese cierre por su cuenta.
+
+
+## Compatibilidad VAR autorizada: lectores primero, emisión sin cambios
+
+Solo GOAL_ANNULLED puede usar annuls_event_id. En Producer REST, Match State, Archiver y Suspension se normaliza al referenceEventId de dominio. Si ambos campos son no nulos deben coincidir exactamente, sin trim ni selección del último valor. Null se trata como ausencia; una anulación sigue necesitando al menos una referencia textual no vacía. Tipos incorrectos, blancos y propiedades JSON repetidas se rechazan. El alias no modifica semánticas VAR_CHECK/MATCH_CONTINUES ni introduce VAR V2.
+
+Los JSON Schema permiten una referencia válida en cualquiera de los dos campos y mantienen additionalProperties=false. JSON Schema no compara dinámicamente dos valores hermanos: la igualdad obligatoria la verifican los adaptadores Java. El descriptor del Producer y el schema compartido se mantienen idénticos. Las fixtures históricas permanecen intactas.
+
+En Archiver/Suspension la whitelist de entrada acepta el alias, pero la representación canónica conserva exactamente las siete claves históricas y reference_event_id normalizado. Nunca se agrega annuls_event_id a canonical_payload. Esto permite deduplicar formatos equivalentes sin reescribir los registros existentes. Los bytes originales permanecen en el evento archivado y en cada recibo de transporte; cambiar bytes en la misma posición Kafka sigue siendo un error de identidad de origen, no un duplicado permitido. Un nuevo offset sí puede llevar el formato equivalente. Match State compara los eventos normalizados y mantiene sus invariantes de gol existente, partido, equipo y anulación única.
+
+El Producer continúa serializando reference_event_id, tanto en Kafka como en la respuesta REST; no se cambia ScoreUpdate, LiveAlert, Work Queue, tablas, migraciones o topología. Desplegar primero los lectores compatibles de los tres consumidores deportivos y el Producer REST. Solo después de verificar el despliegue se podrá autorizar la emisión oficial de annuls_event_id. La prueba local de todos los lectores no certifica que el entorno desplegado ya los esté usando. Los lectores anteriores estrictos no aceptarían el campo nuevo.
+
+Validación local de esta corrección: siete Maven verify PASS; 954 pruebas ejecutadas aprobadas, 39 omitidas, cero fallos y errores. Producer 93/0 omitidas; Match State 145/0; Archiver 115/19; Suspension 176/3; Worker 142/17; Dashboard 166/0; Notification 117/0. Son 69 pruebas adicionales frente a la base local anterior. Los tests VarFieldCompatibilityTest cubren ambos nombres, ambos iguales/en orden inverso, contradicciones, null/blanco/tipos inválidos, duplicación JSON, continuidad sin alias y replay. Pruebas del adaptador JPA y Suspension usan el decoder real con dobles de persistencia para verificar DUPLICATE, ausencia de nuevas transiciones/comandos, bytes originales y conflictos reales. No certifican semántica PostgreSQL; las 39 externas permanecen omitidas. Las pruebas de dominio preservan rechazo de gol inexistente y de segunda anulación con otro ID.
+
+No se ejecutan aquí E2E, builds Docker, PostgreSQL, Kafka ni RabbitMQ. Los resultados reales históricos se conservan sin convertirlos en evidencia nueva del cambio. El texto completo de 129 líneas se cotejará cuando el usuario lo facilite, según su instrucción; no bloquea el PR de compatibilidad solicitado.

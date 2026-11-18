@@ -119,6 +119,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
             var tree = mapper.readTree(utf8(input.value()));
             if (tree != null && tree.isObject()) {
                 match = textual(tree.get("match_id")); event = textual(tree.get("event_id")); reference = textual(tree.get("reference_event_id"));
+                if (reference == null) reference = textual(tree.get("annuls_event_id"));
             }
         } catch (com.fasterxml.jackson.core.JsonProcessingException | IllegalArgumentException ignored) {
             // Malformed JSON has no trustworthy extracted identity; raw bytes remain authoritative.

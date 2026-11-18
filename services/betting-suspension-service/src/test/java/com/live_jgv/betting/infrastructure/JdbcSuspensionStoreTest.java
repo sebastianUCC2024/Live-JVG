@@ -118,6 +118,20 @@ class JdbcSuspensionStoreTest {
         verify(jdbc,never()).update(contains("suspension_outbox"),any(Object[].class));
         verify(jdbc).update(contains("UPDATE betting_control.market_state"),eq("SUSPENDED"),eq(2L),eq("continue"),anyString(),eq(false),eq("m"),eq(1L));
     }
+    @Test void realDecoderAliasReplayNeverCreatesAnotherTransitionOrAcademicCommand() {
+        String old="{\"event_id\":\"annul\",\"match_id\":\"m\",\"event_type\":\"GOAL_ANNULLED\",\"minute\":10,\"timestamp\":\"2026-11-15T00:00:00Z\",\"reference_event_id\":\"goal\"}";
+        var decoder=new JsonEventDecoder();
+        java.util.function.BiFunction<String,Long,InputRecord> input=(wire,offset)->new InputRecord("s","match_events",0,offset,123,new byte[]{'m'},wire.getBytes(java.nio.charset.StandardCharsets.UTF_8),"[]");
+        var legacy=input.apply(old,1L);var alias=input.apply(old.replace("reference_event_id","annuls_event_id"),2L);
+        when(jdbc.queryForList(contains("canonical_payload FROM betting_control.processed_event"),eq("m"),eq("annul")))
+            .thenReturn(List.of(Map.of("canonical_payload",decoder.decode(legacy).canonicalPayload())));
+        var academic=new JdbcSuspensionStore(jdbc,new TransactionTemplate(manager),Clock.fixed(now,ZoneOffset.UTC),true,"betting_commands");
+        assertEquals(SuspensionStore.Outcome.DUPLICATE,academic.handle(alias,decoder.decode(alias)));
+        verify(jdbc,never()).update(contains("UPDATE betting_control.market_state"),any(Object[].class));
+        verify(jdbc,never()).update(contains("INSERT INTO betting_control.processed_event"),any(Object[].class));
+        verify(jdbc,never()).update(contains("academic_outbox"),any(Object[].class));
+        verify(jdbc).update(contains("INSERT INTO betting_control.input_receipt"),eq("s"),eq("match_events"),eq(0),eq(2L),eq(123L),org.mockito.AdditionalMatchers.aryEq(alias.key()),org.mockito.AdditionalMatchers.aryEq(alias.value()),eq("[]"));
+    }
     @Test void exactDuplicateHasNoNewRevisionTransitionOrOutbox() {
         when(jdbc.queryForList(contains("canonical_payload FROM betting_control.processed_event"),eq("m"),eq("var")))
             .thenReturn(List.of(Map.of("canonical_payload","canonical")));

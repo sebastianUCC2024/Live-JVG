@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "MatchEvent",
-  "description": "Proposed contract pending team approval. JSON validation cannot guarantee that a reference identifies an existing original GOAL in the same match or that it has not already been annulled; these checks belong to match-state-service.",
+  "description": "MatchEvent wire contract. GOAL_ANNULLED accepts legacy reference_event_id or annuls_event_id. If both are non-null they must be identical; equality, existence and same-match GOAL validation are enforced by codecs/domain, not JSON Schema. Producer emission remains reference_event_id during reader migration.",
   "type": "object",
   "additionalProperties": false,
   "required": ["event_id", "match_id", "event_type", "minute", "timestamp"],
@@ -14,7 +14,8 @@
     "team_id": { "type": ["string", "null"] },
     "minute": { "type": "integer", "minimum": 0, "maximum": 130, "description": "Initial project simulation limit, not a universal football rule." },
     "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 timestamp using the RFC 3339 date-time profile. Validators must enable format assertion." },
-    "reference_event_id": { "type": ["string", "null"], "description": "For GOAL_ANNULLED, identifies the original GOAL event; existence is not checked by JSON Schema." }
+    "reference_event_id": { "type": ["string", "null"], "description": "For GOAL_ANNULLED, identifies the original GOAL event; existence is not checked by JSON Schema." },
+    "annuls_event_id": { "type": ["string", "null"], "description": "GOAL_ANNULLED-only alias of reference_event_id. Non-null aliases must match when both are provided." }
   },
   "$defs": {
     "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
@@ -30,9 +31,15 @@
     {
       "if": { "properties": { "event_type": { "const": "GOAL_ANNULLED" } } },
       "then": {
-        "required": ["reference_event_id"],
-        "properties": { "reference_event_id": { "$ref": "#/$defs/identifier" } }
+        "anyOf": [
+          { "required": ["reference_event_id"], "properties": { "reference_event_id": { "$ref": "#/$defs/identifier" } } },
+          { "required": ["annuls_event_id"], "properties": { "annuls_event_id": { "$ref": "#/$defs/identifier" } } }
+        ]
       }
+    },
+    {
+      "if": { "not": { "properties": { "event_type": { "const": "GOAL_ANNULLED" } } } },
+      "then": { "not": { "required": ["annuls_event_id"] } }
     }
   ]
 }
