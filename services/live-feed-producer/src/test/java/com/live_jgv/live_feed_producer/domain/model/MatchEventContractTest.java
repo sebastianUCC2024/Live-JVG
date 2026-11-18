@@ -57,7 +57,8 @@ class MatchEventContractTest {
                 strings(schema.get("required")));
         assertFalse(schema.get("additionalProperties").asBoolean());
         var properties = schema.get("properties");
-        assertEquals(7, properties.size());
+        assertEquals(8, properties.size());
+        assertNotNull(properties.get("annuls_event_id"));
         for (String name : Set.of("event_id", "match_id", "event_type", "team_id",
                 "minute", "timestamp", "reference_event_id")) {
             assertNotNull(properties.get(name), name);
@@ -80,18 +81,12 @@ class MatchEventContractTest {
         assertEquals(1, identifier.get("minLength").asInt());
         assertEquals("\\S", identifier.get("pattern").asText());
         var rules = schema.get("allOf");
-        assertEquals(2, rules.size());
-        for (var rule : rules) {
-            String type = rule.get("if").get("properties").get("event_type").get("const").asText();
-            String field = switch (EventType.valueOf(type)) {
-                case GOAL -> "team_id";
-                case GOAL_ANNULLED -> "reference_event_id";
-                default -> throw new AssertionError("Unexpected conditional event type");
-            };
-            assertEquals(Set.of(field), strings(rule.get("then").get("required")));
-            assertEquals("#/$defs/identifier",
-                    rule.get("then").get("properties").get(field).get("$ref").asText());
-        }
+        assertEquals(3, rules.size());
+        assertEquals(Set.of("team_id"),strings(rules.get(0).get("then").get("required")));
+        var aliases=rules.get(1).get("then").get("anyOf");
+        assertEquals(2,aliases.size());
+        assertEquals(Set.of("reference_event_id"),strings(aliases.get(0).get("required")));
+        assertEquals(Set.of("annuls_event_id"),strings(aliases.get(1).get("required")));
         assertEquals(Set.of("GOAL", "GOAL_ANNULLED"), Set.of(
                 rules.get(0).get("if").get("properties").get("event_type").get("const").asText(),
                 rules.get(1).get("if").get("properties").get("event_type").get("const").asText()));

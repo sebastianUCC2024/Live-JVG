@@ -25,6 +25,21 @@ class JpaArchiveStoreTest {
         when(receipts.lock(any())).thenReturn(Optional.of(receipt));
         when(events.insertIfAbsent(any(),any(),any(),any(),anyInt(),any(),any(),any(),any())).thenReturn(1);
     }
+    @Test void realDecoderAliasReplayUsesHistoricalCanonicalAndKeepsOriginalBytes() {
+        String old="{\"event_id\":\"annul\",\"match_id\":\"match\",\"event_type\":\"GOAL_ANNULLED\",\"minute\":10,\"timestamp\":\"2026-11-15T00:00:00Z\",\"reference_event_id\":\"goal\"}";
+        var decoder=new com.live_jgv.archiver.infrastructure.JsonEventDecoder();
+        java.util.function.BiFunction<String,Long,InputRecord> input=(wire,offset)->new InputRecord("source","match_events",0,offset,123,"match".getBytes(java.nio.charset.StandardCharsets.UTF_8),wire.getBytes(java.nio.charset.StandardCharsets.UTF_8),"[]");
+        var legacy=input.apply(old,1L);var alias=input.apply(old.replace("reference_event_id","annuls_event_id"),2L);
+        var persisted=new ArchivedEventEntity();ReflectionTestUtils.setField(persisted,"canonicalPayload",decoder.decode(legacy).canonicalPayload());ReflectionTestUtils.setField(persisted,"originalPayload",legacy.value());
+        when(events.insertIfAbsent(any(),any(),any(),any(),anyInt(),any(),any(),any(),any())).thenReturn(0);
+        when(events.findByMatchIdAndEventId("match","annul")).thenReturn(Optional.of(persisted));
+        assertEquals(ArchiveOutcome.DUPLICATE,store.save(alias,decoder.decode(alias)));
+        assertArrayEquals(legacy.value(),(byte[])ReflectionTestUtils.getField(persisted,"originalPayload"));
+        verify(receipts).insertPending(eq("source"),eq("match_events"),eq(0),eq(2L),eq(123L),aryEq(alias.key()),aryEq(alias.value()),eq("[]"));
+        var conflict=input.apply(old.replace("reference_event_id","annuls_event_id").replace("\"goal\"","\"other\""),3L);
+        assertEquals(ArchiveOutcome.IDENTITY_CONFLICT,store.save(conflict,decoder.decode(conflict)));
+        assertArrayEquals(legacy.value(),(byte[])ReflectionTestUtils.getField(persisted,"originalPayload"));
+    }
     @Test void nativeInsertAndManagedReceiptCompleteBeforeCommit() {
         assertEquals(ArchiveOutcome.STORED,store.save(record,valid));
         var order=inOrder(receipts,events);
