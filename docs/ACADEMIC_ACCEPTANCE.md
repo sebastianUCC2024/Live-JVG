@@ -1,7 +1,7 @@
 # Live-JVG — aceptación académica V1
 
 Fecha de consolidación: 18 de noviembre de 2026, America/Bogota.
-Base de la compatibilidad VAR: dev `7c7d727043133e75726c144879ee76e571a0e2c2`. Las evidencias históricas mantienen sus revisiones originales; esta corrección solo se valida localmente sin brokers ni bases reales.
+Base de este cierre: dev `a50ba417f960260624c1313b2b6321033bda100a` (merge del PR #44). La compatibilidad VAR se implementó sobre 7c7d727; su validación real posterior se identifica como VAR_JPA_KAFKA. Las demás evidencias conservan sus revisiones originales.
 Este documento propone la aceptación del alcance académico demostrado; no aprueba contratos ni excepciones en nombre del profesor y no certifica producción.
 
 ## Fuente y estados
@@ -16,9 +16,9 @@ PASS acredita únicamente el alcance indicado por su evidencia. PARCIAL indica l
 |---|---|---|---|
 | Java 17 y microservicios | Siete módulos con POM independiente | Clon limpio CLONE: siete verify, 885 aprobadas, 39 omitidas, cero fallos/errores | PASS del ciclo local; no todos los servicios usan la misma versión Spring Boot |
 | Kafka y publicación por partido | [KafkaMatchEventPublisher](../services/live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/infrastructure/kafka/KafkaMatchEventPublisher.java): clave event.matchId(); topic match_events y grupos independientes | E2E histórico E2E; laboratorio JPA_KAFKA con siete posiciones y offset confirmado 7 | PASS del recorrido ensayado; orden Kafka por partición, no orden global |
-| ZooKeeper | Compose declara Kafka 3.9.1 KRaft broker/controller, sin ZooKeeper | [Compose](../docker-compose.yml) y documentación del laboratorio | DIFERENCIA LITERAL confirmada: ZooKeeper exigido, KRaft implementado; requiere dispensa explícita del profesor o cambio de infraestructura autorizado aparte |
+| ZooKeeper | Compose declara Kafka 3.9.1 KRaft broker/controller, sin ZooKeeper | [Compose](../docker-compose.yml) y documentación del laboratorio | DIFERENCIA LITERAL pendiente del profesor: KRaft funciona en los laboratorios reales, pero no sustituye el ZooKeeper exigido sin aceptación explícita; no se cambia topología |
 | GOAL, VAR_CHECK, GOAL_ANNULLED, MATCH_CONTINUES y corrección de marcador | Dominio Match State y codecs; anulación referencia el gol original | [MatchStateTest](../services/match-state-service/src/test/java/com/live_jgv/matchstate/domain/model/MatchStateTest.java), E2E: 1-0 CLEAR → 1-0 IN_PROGRESS → 0-0 CLEAR → 0-0 CLEAR | PASS de secuencia V1 controlada |
-| Campo de referencia VAR | Lectores deportivos aceptan annuls_event_id y reference_event_id como una referencia; contradicciones rechazadas. Producer conserva emisión reference_event_id | [Schema MatchEvent](../contracts/events/match-event.schema.json), tests locales VarFieldCompatibilityTest y replay de adaptadores | PASS de lectura compatible local; PARCIAL del requisito de emisión literal hasta una transición coordinada. No hay E2E nuevo |
+| Campo de referencia VAR | Lectores deportivos aceptan annuls_event_id y reference_event_id como una referencia; contradicciones rechazadas. Producer conserva emisión reference_event_id | [Schema MatchEvent](../contracts/events/match-event.schema.json), tests locales VarFieldCompatibilityTest y replay de adaptadores | PASS de lectores locales y lectura/archivo JPA con Kafka real en RUN f835870c8e96; PARCIAL de emisión literal hasta transición coordinada. No hay E2E nuevo |
 | Contratos JSON | Cuatro schemas compartidos implementados; comando académico separado del comando de operaciones | [Contratos](../contracts/events), validadores y 84 tests Python del clon limpio | PASS estructural; reglas semánticas adicionales permanecen en dominio/codecs |
 | Topic live_updates y marcador Dashboard | Outbox Match State, routing score.{matchId}, consumidor Dashboard, inbox/snapshot durable | E2E histórico y pruebas Dashboard | PASS de entrega/actualización observada; no certifica todas las ventanas de confirmación incierta |
 | Fanout live_alerts | Outbox de alertas independiente y Notification con cola propia | E2E: alertas GOAL, VAR_CHECK y GOAL_ANNULLED, historial REST y PostgreSQL | PASS de difusión observada |
@@ -89,9 +89,9 @@ Este guion usa capturas y evidencias existentes; no autoriza arrancar servicios.
 1. **0:00–1:00 — arquitectura:** mostrar Producer → Kafka → Match State; Topic live_updates → Dashboard; Fanout live_alerts → Notification; Kafka → Archiver/JPA y Suspension → Work Queue → dos Workers simulados.
 2. **1:00–2:30 — marcador/VAR:** mostrar capturas y REST/STOMP/React del RUN: GOAL 1-0 CLEAR, VAR_CHECK 1-0 IN_PROGRESS, GOAL_ANNULLED 0-0 CLEAR con referencia al GOAL, MATCH_CONTINUES 0-0. Identificar datos reales persistidos frente a modo demo con fixtures.
 3. **2:30–3:30 — mensajería:** mostrar tres alertas Fanout, cinco comandos académicos y cinco entregas distribuidas 3/2 entre Workers; distinguir SIMULATED_RESUMED de abrir un mercado real. No afirmar reentrega Rabbit: no fue ejecutada.
-4. **3:30–4:30 — persistencia:** mostrar auditoría PostgreSQL y resumen JPA_KAFKA con siete offsets, duplicados, conflicto, original intacto y reinicio. No ejecutar SQL ni migraciones durante la exposición de evidencias.
-5. **4:30–5:30 — calidad/reproducción:** mostrar resumen CLONE, omisiones intencionales, RED/GREEN disponible y siete builds runtime AMD64. No convertir mocks en certificación de transacciones reales.
-6. **5:30–7:00 — cierre y límites:** mostrar cero ACCEPTED/grants/leases, FAIL histórico de cierre y PASS OFF independiente con tres muestras cero. Explicar KRaft, nombre VAR, ORDER02 abierto, PLAINTEXT de laboratorio y alertas de desarrollo.
+4. **3:30–4:45 — persistencia y VAR compatible:** mostrar los resultados separados JPA_KAFKA (siete offsets y reinicio) y VAR_JPA_KAFKA (cuatro offsets: anulación nueva, replay histórico y replay nuevo). Destacar 2 eventos, 4 recibos, 2 duplicados, offset confirmado 4 y bytes originales intactos. Son laboratorios distintos; no ejecutar SQL, migraciones ni publicaciones durante la exposición.
+5. **4:45–5:45 — calidad/reproducción:** mostrar resumen CLONE, omisiones intencionales, RED/GREEN disponible y siete builds runtime AMD64. No convertir mocks en certificación de transacciones reales.
+6. **5:45–7:00 — cierre y límites:** mostrar cero ACCEPTED/grants/leases, FAIL histórico de cierre y PASS OFF independiente con tres muestras cero. Explicar KRaft, nombre VAR, ORDER02 abierto, PLAINTEXT de laboratorio y alertas de desarrollo.
 
 Material a preparar por el equipo: diagrama, capturas React con partido y VAR, respuestas REST/STOMP, alertas, auditoría de comandos con identidad de ambas instancias, resúmenes de PG/JPA/Kafka, reportes de tests/builds y muestras OFF CLI/HTTP. Revisar que el paquete no contenga credenciales, env privados, datos ajenos o logs completos sin sanitizar. No inventar capturas si un original no está disponible.
 
@@ -103,7 +103,7 @@ Material a preparar por el equipo: diagrama, capturas React con partido y VAR, r
 - DEV3: custodiar originales y preparar paquete sanitizado si se aprueba compartirlo, conservando FAIL y PASS posteriores como resultados distintos.
 - Equipo: aprobar este documento por PR, fijar SHA final de entrega y revisar el paquete académico. No hace falta repetir el E2E o builds para aprobar solo esta consolidación documental.
 
-**Dictamen propuesto: compatibilidad de lectura VAR preparada para revisión, con emisión anterior conservada por instrucción del equipo. El cumplimiento literal sigue PARCIAL hasta la transición de emisión y resolución ZooKeeper/KRaft.** Este documento no realiza ese cierre por su cuenta.
+**Dictamen propuesto: compatibilidad VAR aprobada localmente y validada con Kafka/PostgreSQL reales para Archiver JPA; no certifica otro E2E ni todos los lectores desplegados. La emisión anterior se conserva por instrucción del equipo. El cumplimiento literal sigue PARCIAL hasta la transición de emisión y aceptación del profesor sobre ZooKeeper/KRaft.** Este documento no realiza ese cierre por su cuenta.
 
 
 ## Compatibilidad VAR autorizada: lectores primero, emisión sin cambios
@@ -118,4 +118,33 @@ El Producer continúa serializando reference_event_id, tanto en Kafka como en la
 
 Validación local de esta corrección: siete Maven verify PASS; 954 pruebas ejecutadas aprobadas, 39 omitidas, cero fallos y errores. Producer 93/0 omitidas; Match State 145/0; Archiver 115/19; Suspension 176/3; Worker 142/17; Dashboard 166/0; Notification 117/0. Son 69 pruebas adicionales frente a la base local anterior. Los tests VarFieldCompatibilityTest cubren ambos nombres, ambos iguales/en orden inverso, contradicciones, null/blanco/tipos inválidos, duplicación JSON, continuidad sin alias y replay. Pruebas del adaptador JPA y Suspension usan el decoder real con dobles de persistencia para verificar DUPLICATE, ausencia de nuevas transiciones/comandos, bytes originales y conflictos reales. No certifican semántica PostgreSQL; las 39 externas permanecen omitidas. Las pruebas de dominio preservan rechazo de gol inexistente y de segunda anulación con otro ID.
 
-No se ejecutan aquí E2E, builds Docker, PostgreSQL, Kafka ni RabbitMQ. Los resultados reales históricos se conservan sin convertirlos en evidencia nueva del cambio. El texto completo de 129 líneas se cotejará cuando el usuario lo facilite, según su instrucción; no bloquea el PR de compatibilidad solicitado.
+La implementación del PR #44 se verificó sin infraestructura. La validación real posterior de Archiver JPA se registra abajo como ejecución separada; no hubo un E2E nuevo ni builds Docker nuevos. Los resultados anteriores se conservan sin convertirlos en evidencia de otra revisión. El texto completo de 129 líneas se cotejará cuando el usuario lo facilite, según su instrucción; no bloquea el PR de compatibilidad solicitado.
+
+
+## Validación real VAR_JPA_KAFKA: cierre acotado
+
+Ejecución autorizada del RUN `f835870c8e96`, proyecto `live-jvg-var-compat-f835870c8e96`, SHA `a50ba417f960260624c1313b2b6321033bda100a`. Resultado **PASS**, registrado el 18 de noviembre de 2026 a las 00:57:34 America/Bogota (05:57:34 UTC). Se utilizaron PostgreSQL 17 y Kafka 3.9.1 nuevos y exclusivos, sin reutilizar los laboratorios anteriores. Archiver arrancó con JPA activo, Hibernate validate, Flyway OFF y consumidor inicialmente OFF, tras aplicar V1/V2 originales en la base nueva.
+
+| Offset | Evento / formato | Recibo observado |
+|---:|---|---|
+| 0 | GOAL | STORED |
+| 1 | GOAL_ANNULLED con annuls_event_id | STORED |
+| 2 | Mismo evento con reference_event_id | DUPLICATE |
+| 3 | Replay del formato nuevo | DUPLICATE |
+
+Conteos comprobados: **2 eventos archivados, 4 recibos, 2 DUPLICATE, 0 conflictos, 0 pendientes; offset confirmado 4**. Cada recibo conserva exactamente su clave, payload y timestamp Kafka. El evento de anulación mantiene los bytes originales con annuls_event_id, mientras canonical_payload usa únicamente la referencia histórica normalizada reference_event_id. El replay no sobrescribe el original ni crea otro evento.
+
+Al finalizar se detuvo el proceso Archiver y solo los dos contenedores del RUN; cuatro volúmenes exclusivos y su red quedaron conservados. Se verificó que las identidades y estados de los contenedores preexistentes no cambiaron. Evidencias privadas conservadas sin publicarlas: result.json, byte-evidence.json, recibos por offset, registros Kafka, migraciones, permisos, logs y resources-latest.json. No son dependencias para instalar el proyecto ni se copian en esta entrega documental.
+
+SHA-256 del resumen result.json: `9b662e793045114e8df433a47c27f5cbc46aed4585fd3d22dc0e50ac7c9fb011`.
+SHA-256 de byte-evidence.json: `b63dd76675929e519b5066b6db4ff1d75839c2d191712eb457c2035c78eed466`.
+La identificación por hash no sustituye la revisión del original bajo custodia; no modifica los archivos del ZIP académico preparado anteriormente ni afirma que ya estén incluidos en él.
+
+**Alcance:** confirma la lectura/normalización, deduplicación y preservación de bytes de Archiver JPA con Kafka/PostgreSQL reales. **Límites:** no prueba otro E2E de marcador, Match State, Suspension, RabbitMQ, REST/STOMP/React ni reentrega Rabbit; no hubo reinicio adicional del Archiver en este RUN ni fallos inducidos. No cambia la emisión del Producer, la topología KRaft, los resultados históricos ni las 39 omisiones de las suites locales. El PASS funcional histórico, su FAIL de cierre y el PASS OFF posterior permanecen independientes.
+
+## Resumen de entrega académica
+
+- Base documental: dev a50ba417; PR #44 integrado y CI posterior 10/10 PASS según la comprobación anterior, sin reejecutarlo en este cierre.
+- Implementación VAR: 954 pruebas Maven locales aprobadas, 39 omitidas, cero fallos/errores; validación real adicional VAR_JPA_KAFKA PASS dentro del alcance anterior. No sumar sus cuatro registros como pruebas JUnit.
+- Demostración: seguir el guion de 5–7 minutos de este documento usando evidencia existente; mostrar por separado marcador/alertas/Workers históricos y el nuevo resultado de archivo VAR. No arrancar infraestructura ni repetir el harness para presentar las evidencias.
+- Pendientes concretos: aceptación explícita del profesor de KRaft frente a ZooKeeper, transición futura de emisión VAR solo tras verificar lectores desplegados y cotejo del texto de 129 líneas cuando se facilite. ORDER02 global y apuestas reales siguen fuera de lo certificado; las 11 alertas npm de desarrollo conservan su mitigación temporal.
