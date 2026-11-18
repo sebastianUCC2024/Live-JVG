@@ -1,0 +1,93 @@
+/* Semantic paint tokens. Team crest gradients are decorative identities shared by both themes. */
+:root {
+  --scheme: dark;
+  --bg: #080e19;
+  --surface-deep: #0c1421;
+  --panel: #111b2b;
+  --panel-raised: #1b2b40;
+  --text: #edf2fb;
+  --muted: #b0bed1;
+  --line: #40536c;
+  --lime: #cbf66b;
+  --on-accent: #142006;
+  --success-text: #cbf0b1;
+  --success-bg: #203428;
+  --success-border: #587447;
+  --amber: #f8cf8c;
+  --warning-bg: #372d1e;
+  --warning-border: #8c6a37;
+  --red: #ffb5b5;
+  --danger-bg: #3c252e;
+  --danger-border: #9a5b6a;
+  --shadow: #02060c33;
+  --glow: #cbf66b18;
+  --crest-ink: #fff;
+}
+:root[data-theme='light'] {
+  --scheme: light;
+  --bg: #f3f6fa;
+  --surface-deep: #f8fafd;
+  --panel: #fff;
+  --panel-raised: #e8eef6;
+  --text: #17253b;
+  --muted: #465b73;
+  --line: #8b9db2;
+  --lime: #356015;
+  --on-accent: #fff;
+  --success-text: #2b5318;
+  --success-bg: #edf5e5;
+  --success-border: #688d4c;
+  --amber: #79500c;
+  --warning-bg: #fff4dc;
+  --warning-border: #a07a36;
+  --red: #a4263a;
+  --danger-bg: #fff0f2;
+  --danger-border: #b56777;
+  --shadow: #17253b12;
+  --glow: #35601512;
+}
+.theme-selector {
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-deep);
+}
+.theme-selector button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 650;
+}
+.theme-selector button:hover { background: var(--panel-raised); color: var(--text); }
+.theme-selector button[aria-pressed='true'] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.theme-selector button:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+/* Tokens shared by positive labels; accent buttons retain their contrasting ink. */
+.primary-button, .skip-link, .brand-mark { color: var(--on-accent); }
+.watch-form select { color-scheme: var(--scheme); }
+@media (max-width: 1200px) { .theme-selector button span { display: none; } }
+@media (max-width: 760px) {
+  .topbar { height: auto; min-height: 70px; padding-block: 12px; flex-wrap: wrap; }
+  .topbar-right { flex-wrap: wrap; }
+  .theme-selector button { min-width: 36px; }
+}
+@media (max-width: 600px) {
+  .topbar { gap: 10px; }
+  .topbar-right { gap: 9px; justify-content: flex-end; flex: 1; }
+  .breadcrumb { flex: 1 0 100%; }
+  .theme-selector { margin-right: auto; }
+}

@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "mode": "live",
+      "theme": "light",
+      "device": "desktop",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "mode": "live",
+      "theme": "light",
+      "device": "mobile",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "mode": "live",
+      "theme": "dark",
+      "device": "desktop",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "mode": "live",
+      "theme": "dark",
+      "device": "mobile",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "mode": "live",
+      "persistence": true,
+      "ignoresSystemTheme": true,
+      "keyboardFocus": true,
+      "errors": []
+    },
+    {
+      "mode": "demo",
+      "theme": "light",
+      "device": "desktop",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "mode": "demo",
+      "theme": "light",
+      "device": "mobile",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "mode": "demo",
+      "theme": "dark",
+      "device": "desktop",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "mode": "demo",
+      "theme": "dark",
+      "device": "mobile",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "mode": "demo",
+      "persistence": true,
+      "ignoresSystemTheme": true,
+      "keyboardFocus": true,
+      "errors": []
+    },
+    {
+      "legacyValue": "auto",
+      "migratedTo": "dark",
+      "pass": true
+    },
+    {
+      "legacyValue": "automatic",
+      "migratedTo": "dark",
+      "pass": true
+    },
+    {
+      "legacyValue": "system",
+      "migratedTo": "dark",
+      "pass": true
+    },
+    {
+      "preReactInitialization": "PASS"
+    }
+  ]
+}
