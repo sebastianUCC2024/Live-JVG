@@ -4,7 +4,6 @@
 .aws
 .m2
 .mvp
-docs
 **/node_modules
 **/.env*
 **/target/*
@@ -15,3 +14,25 @@ tmp
 temp
 logs
 .9f
+
+# Reconstructible host output and private local state
+**/.venv
+**/venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.m2
+**/.npm-cache
+**/.sites-runtime
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+**/*.tsbuildinfo
+**/*.log
+**/*.pyc
+**/*.key
+**/*.p12
+**/*.pfx
+**/.envrc

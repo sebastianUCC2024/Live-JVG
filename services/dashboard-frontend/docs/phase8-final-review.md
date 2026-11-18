@@ -177,7 +177,7 @@ solo afecta dashboard-backend y dashboard-frontend. Esa comparación no atribuye
 al agente los commits hechos previamente por el usuario.
 
 Evidencias locales de esta fase en
-[dashboard-backend/target/phase8-evidence](../../dashboard-backend/target/phase8-evidence):
+`../../dashboard-backend/target/phase8-evidence` (salida histórica local, no distribuida):
 backend-verify.log, frontend-unit.log, frontend-build.log, browser-verify.log,
 review-summary.json, capturas y logs de las instancias aisladas. Los logs npm
 pueden incluir avisos NativeCommandError de PowerShell por stderr; los procesos

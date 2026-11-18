@@ -22,7 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!-- Default root lifecycle validates this descriptor only; DEV 3 skeletons stay out. -->
+    <!-- Default root lifecycle validates this descriptor only; audit-services is a three-module subset. Verify all seven services individually; see docs/CLEAN_CLONE.md. -->
     <profiles>
         <profile>
             <id>audit-services</id>

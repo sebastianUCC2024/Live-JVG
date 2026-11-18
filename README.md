@@ -37,7 +37,7 @@ Microservicios orientados a eventos con arquitectura hexagonal.
 ## Validación local y CI (auditoría 9E)
 
 `mvn test` o `mvn verify` en la raíz **sin perfil** solo procesa el POM raíz.
-Para ejecutar los tres servicios implementados, sin infraestructura externa:
+Para ejecutar el subconjunto de tres servicios del perfil, sin infraestructura externa:
 
 ```powershell
 mvn -Paudit-services test
@@ -47,31 +47,12 @@ node --test services/dashboard-backend/src/test/js/operations.test.cjs services/
 
 GitHub Actions ejecuta verify por cada servicio, pruebas/build React y scripts
 Node. No inicia brokers ni contenedores, no publica imágenes y no despliega.
-La [guía de integración durable](docs/PRUEBAS_INTEGRACION_DURABLE.md) explica las
-pruebas externas excluidas y su autorización separada. Los cuatro schemas están
-vacíos: véase la [propuesta de contratos](docs/CONTRATOS_VERSIONADOS_PROPUESTA.md),
-pendiente de aprobación del equipo. Los [permisos PostgreSQL propuestos](docs/POSTGRES_MINIMO_PRIVILEGIO_PROPUESTA.md)
-no se han aplicado a ningún servidor.
+La [guía de clon limpio](docs/CLEAN_CLONE.md) documenta instalación, validación, modos OFF/ON y provisión separada. Los cuatro JSON Schema están implementados en [contracts/events](contracts/events). La validación estructural no sustituye las invariantes de dominio ni certifica E2E.
 
-## Ejecución del MVP (inicia infraestructura)
+## Arranque y seguridad
 
-Consulta los [modos de ejecución y su configuración](docs/MODOS_EJECUCION.md)
-para distinguir Compose, procesos en el host y el perfil histórico `memory`.
+El Compose base inicia infraestructura y aplicaciones activas; no equivale a un arranque pasivo. No ejecutarlo sobre laboratorios conservados. El script existente `bash scripts/start-mvp.sh` exige `MVP_DB_PASSWORD` y `MVP_RABBIT_PASSWORD` definidos previamente y usa el proyecto fijo `live-jvg-dev1-isolated`; no genera credenciales ni garantiza un RUN nuevo. Revisar puertos, proyecto y recursos antes de autorizar su ejecución.
 
-El MVP local conecta simulador REST → Kafka → estado durable → RabbitMQ → dashboard web.
+Para preparar un entorno aislado nuevo, seguir [la guía de reproducción](docs/CLEAN_CLONE.md). Las migraciones y la provisión requieren un paso separado. React se ejecuta aparte mediante npm; el puerto 18080 del Compose pertenece al Dashboard backend. No existe `scripts/check-mvp.py` en esta revisión.
 
-```sh
-./scripts/start-mvp.sh
-```
-
-Interfaz: http://localhost:18080. El script compila los tres módulos esenciales,
-genera credenciales locales en `.mvp/local.env` y arranca un proyecto Docker propio
-sin borrar volúmenes. Requiere Java 17, Maven, Docker Compose y Python 3.
-
-Comprobación sin publicar eventos: `python3 scripts/check-mvp.py`.
-Demostración automatizada con cinco eventos nuevos: `python3 scripts/check-mvp.py --publish`.
-
-Las credenciales y el identificador de partido se conservan en `.mvp/`, ignorado
-por Git. No elimines ese archivo si quieres reutilizar los volúmenes existentes.
-Este MVP es para uso local; los cuatro servicios secundarios no se incluyen en
-el arranque. Consulta el [informe final y guion de demostración](docs/live-jvg-mvp-final-report.md).
+Los [informes históricos de integración](docs/integration/local-academic-v1/report.md) conservan alcance, resultados y limitaciones de sus revisiones; no representan una nueva certificación del clon actual.
