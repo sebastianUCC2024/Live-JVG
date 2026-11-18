@@ -1,0 +1,103 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "version": "before",
+      "mode": "live",
+      "url": "http://127.0.0.1:5173/",
+      "pageErrors": []
+    },
+    {
+      "version": "before",
+      "mode": "demo",
+      "url": "http://127.0.0.1:5173/?mode=demo",
+      "pageErrors": []
+    },
+    {
+      "mode": "live",
+      "viewport": "laptop",
+      "width": 1280,
+      "height": 900,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "live",
+      "viewport": "tablet",
+      "width": 820,
+      "height": 1180,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "live",
+      "viewport": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "live",
+      "viewport": "small-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "live",
+      "keyboardSkip": true,
+      "focusVisible": true
+    },
+    {
+      "version": "after",
+      "mode": "live",
+      "url": "http://127.0.0.1:5184/",
+      "pageErrors": []
+    },
+    {
+      "mode": "demo",
+      "viewport": "laptop",
+      "width": 1280,
+      "height": 900,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "demo",
+      "viewport": "tablet",
+      "width": 820,
+      "height": 1180,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "demo",
+      "viewport": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "demo",
+      "viewport": "small-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "reducedMotion": true
+    },
+    {
+      "mode": "demo",
+      "keyboardSkip": true,
+      "focusVisible": true
+    },
+    {
+      "version": "after",
+      "mode": "demo",
+      "url": "http://127.0.0.1:5184/?mode=demo",
+      "pageErrors": []
+    }
+  ]
+}
