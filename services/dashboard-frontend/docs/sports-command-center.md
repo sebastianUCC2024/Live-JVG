@@ -21,16 +21,16 @@ Los datos del servidor tienen identificación explícita. Una conexión activa n
 - Datos persistidos observados: marcador 0-0, cinco eventos históricos y tres alertas. No se publicaron eventos para esta revisión.
 - `git diff --check`: PASS.
 
-El detalle de las comprobaciones de navegador está en [visual-validation.json](visual-validation.json). Estas verificaciones no constituyen una auditoría completa WCAG ni un nuevo E2E deportivo.
+El detalle de las comprobaciones de navegador está en [visual-validation.json](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/visual-validation.json). Estas verificaciones no constituyen una auditoría completa WCAG ni un nuevo E2E deportivo.
 
 ## Capturas reales
 
 | Vista | Antes | Después |
 | --- | --- | --- |
-| Servidor, escritorio | [Antes](screenshots/before-live-desktop.png) | [Después](screenshots/after-live-desktop.png) |
-| Demo, escritorio | [Antes](screenshots/before-demo-desktop.png) | [Después](screenshots/after-demo-desktop.png) |
+| Servidor, escritorio | [Antes](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/before-live-desktop.png) | [Después](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/after-live-desktop.png) |
+| Demo, escritorio | [Antes](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/before-demo-desktop.png) | [Después](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/after-demo-desktop.png) |
 
-[Detalle con línea de tiempo](screenshots/after-live-detail-desktop.png), [móvil con datos del servidor](screenshots/after-live-mobile.png), [demo móvil](screenshots/after-demo-mobile.png), [portátil](screenshots/after-live-laptop.png).
+[Detalle con línea de tiempo](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/after-live-detail-desktop.png), [móvil con datos del servidor](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/after-live-mobile.png), [demo móvil](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/after-demo-mobile.png), [portátil](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/screenshots/after-live-laptop.png).
 
 ## Ejecución local
 

@@ -197,7 +197,7 @@ contraseñas en argumentos de terminal ni en documentación versionada.
 Las pruebas incluyen modelo, casos de uso, decoder, compatibilidad con DEV 1,
 topología declarada, reintentos, duplicados, errores HTTP y WebSocket real local.
 Las pruebas de contexto desactivan Rabbit; no demuestran el consumo en broker.
-La [revisión final DEV 2](../dashboard-frontend/docs/phase8-final-review.md) es
+La [revisión final DEV 2](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/phase8-final-review.md) es
 evidencia histórica; la validación vigente está en el [informe 9E](../../docs/integration/local-academic-v1/report.md).
 Los resultados históricos permanecen en los documentos de cada fase.
 
@@ -205,3 +205,22 @@ Con DEV 1: aprobar contratos, IDs/equipos, orden, replay y fuente de snapshots.
 Con DEV 3: puertos, credenciales seguras, permisos, topología, políticas de DLQ,
 retención y garantías de recuperación. La [guía durable](../../docs/CLEAN_CLONE.md)
 separa las pruebas externas de la suite local. No se activan durante la auditoría.
+
+## Pruebas HTTP/STOMP y arranque aislado: guía consolidada
+
+Las Fases 7/8 frontend se archivan como informes históricos. Las instrucciones actuales de reconexión y sus prerrequisitos están en el [README frontend](../dashboard-frontend/README.md). Esta consolidación no ejecuta las pruebas ni amplía las certificaciones existentes.
+
+Desde la raíz, `mvn -B -ntp -f services/dashboard-backend/pom.xml verify` compila, prueba y empaqueta el JAR. No ejecutar clean sobre artefactos que utilicen procesos ya iniciados. Los tests de contexto usan dobles o desactivan Rabbit; el test WebSocket local no acredita entrega Kafka/RabbitMQ. Las suites de integración externas requieren autorización separada.
+
+Para una inspección HTTP/STOMP sin brokers, únicamente con autorización de procesos locales y un puerto loopback libre, el mecanismo existente es:
+
+```sh
+java -jar services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar \
+  --server.address=127.0.0.1 --server.port=18081 --spring.profiles.active=memory \
+  --spring.rabbitmq.listener.simple.auto-startup=false \
+  --spring.rabbitmq.dynamic=false --management.health.rabbit.enabled=false
+```
+
+18081 es solo un ejemplo; comprobar que esté libre y detener exclusivamente el proceso propio al finalizar. Revisar variables heredadas y no usar credenciales de otros entornos. `memory` evita la persistencia durable y, vacío, responde snapshot no disponible; esta configuración no inicia brokers ni demuestra recuperación de datos. El perfil durable `passive` es diferente: requiere esquema y catálogo PostgreSQL preexistentes y configuración OFF efectiva; consultar [arranque pasivo](docs/passive-startup.md), sin ejecutar migraciones para conseguir salud verde.
+
+STOMP no permite SEND del cliente ni suscripciones wildcard. CORS/orígenes no sustituyen autenticación por usuario. La revisión local usa `/ws`, live `/topic/matches/{matchId}/score` y snapshot `/app/matches/{matchId}/snapshot`; para HTTP usar los endpoints REST ya documentados. No inventar marcadores cuando falta snapshot ni inferir orden global de timestamps. Desactivar un listener por configuración no autoriza cambiar topología, permisos o recursos compartidos.

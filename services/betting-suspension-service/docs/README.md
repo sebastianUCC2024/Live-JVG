@@ -169,7 +169,7 @@ mvn -f services/betting-suspension-service/pom.xml package
 
 En esta sesión se usó offline la copia escribible ya existente `/private/tmp/live-jvg-archiver-m2` con `-Dmaven.repo.local=...`; no se eliminó caché ni se detuvieron procesos. Mockito de test usa subclass MockMaker y no requiere agente dinámico. No se añaden mocks al código de producción.
 
-Cobertura y resultados reales: `verification.md`, `evidence/local-verification.txt` y `evidence/dependencies.txt`. Los tests JDBC y concurrencia verifican bloqueo solicitado, fencing, atomicidad de operaciones y rollback mediante mocks; **no demuestran semántica efectiva de locks/aislamiento en PostgreSQL 17**. Tampoco equivalen a pruebas de Kafka/RabbitMQ reales ni a un reinicio de producción.
+Cobertura y resultados reales: [verification.md (histórico archivado)](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/betting-suspension-service/docs/verification.md), `evidence/local-verification.txt` y `evidence/dependencies.txt`. Los tests JDBC y concurrencia verifican bloqueo solicitado, fencing, atomicidad de operaciones y rollback mediante mocks; **no demuestran semántica efectiva de locks/aislamiento en PostgreSQL 17**. Tampoco equivalen a pruebas de Kafka/RabbitMQ reales ni a un reinicio de producción.
 
 Actualización Fase 5: una anulación de un gol no correlacionado marca inconsistencia aun si hay otras revisiones pendientes. Ver `phase-5-integration-preparation.md` para perfiles, pruebas preparadas y propuesta de autorización atómica.
 

@@ -25,10 +25,10 @@ los destinos verificados. La demostración sigue disponible mediante su botón o
 `/?mode=demo` y utiliza solo fixtures identificados, sin abrir STOMP al backend.
 
 Véase [Fase 6: protocolo, configuración y resultados](docs/phase6-realtime.md).
-La [auditoría de integración de Fase 7](docs/phase7-integration.md) registra evidencia
+La [auditoría de integración de Fase 7](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/phase7-integration.md) registra evidencia
 histórica y bloqueos de aquella etapa. La configuración actual está en los modos
 de ejecución; la validación vigente está en el [informe 9E](../../docs/integration/local-academic-v1/report.md).
-La [revisión final de Fase 8](docs/phase8-final-review.md) consolida configuración,
+La [revisión final de Fase 8](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/dashboard-frontend/docs/phase8-final-review.md) consolida configuración,
 alcance autorizado, limitaciones y resultados de aceptación local.
 
 ## Inicio en tiempo real
@@ -75,7 +75,7 @@ No se publicaron sitios ni se realizaron commits o push.
 Scripts adicionales: `test:watch` (Vitest interactivo) y `test:e2e` (Playwright).
 `test:integration` ejecuta los reinicios de un backend aislado con un worker;
 requiere REAL_BACKEND_RESTART=1, JAVA17_BIN y VITE_WS_URL con un puerto local
-exclusivo. Las instrucciones están en el informe de Fase 7. Los smoke tests
+exclusivo. Las instrucciones vigentes están en la sección «Pruebas y recuperación: instrucciones consolidadas» de este README. Los smoke tests
 opcionales se omiten explícitamente si no se prepara su entorno.
 Las pruebas E2E utilizan Google Chrome local mediante `channel: 'chrome'`, sin
 descargar navegadores automáticamente. Si no está instalado, instalar Chrome o
@@ -186,3 +186,48 @@ volátil: reiniciarlo puede dejar el marcador no disponible hasta el siguiente e
 
 Referencias: [Vite](https://vite.dev/guide/) y
 [entornos de prueba Vitest](https://vitest.dev/guide/environment.html).
+
+## Pruebas y recuperación: instrucciones consolidadas
+
+Esta sección conserva las instrucciones operativas útiles de los informes históricos de Fases 7/8. No registra ejecuciones nuevas. Para instalar y comprobar los siete módulos desde cero, usar la [guía de clon limpio](../../docs/CLEAN_CLONE.md); para resultados y límites académicos, usar la [matriz de aceptación](../../docs/ACADEMIC_ACCEPTANCE.md).
+
+Desde la carpeta del frontend, con Node >=22.13.0:
+
+```sh
+npm ci
+npm test
+npm run lint
+npm run build
+```
+
+`npm run test:e2e` utiliza Playwright, Chrome local y proyectos desktop/mobile. Su configuración crea un servidor Vite en 127.0.0.1:5173 y puede reutilizar uno existente fuera de CI: revisar el puerto y no apuntarlo a una demostración compartida. Las pruebas deportivas usan STOMP.js real con un servidor WebSocket simulado; no certifican Kafka/RabbitMQ. `LIVE_BACKEND_SMOKE=1` habilita casos que requieren un backend vacío ya iniciado y aprobado; dejarlo sin definir en la suite local normal.
+
+### Reinicio real aislado del backend, sin brokers
+
+Es una prueba opt-in que crea y detiene procesos Java propios. Requiere autorización para esa ejecución local, Java 17, Chrome instalado, el JAR recién compilado del Dashboard y dos puertos locales libres: 5173 para Vite y un puerto exclusivo para el backend. No usar puertos de laboratorios ni procesos ya iniciados. La prueba rechaza un puerto backend ocupado y no termina procesos preexistentes.
+
+Preparar el JAR desde la raíz, sin limpiar artefactos en uso ni copiar JAR de otros worktrees:
+
+```sh
+mvn -B -ntp -f services/dashboard-backend/pom.xml verify
+```
+
+Después, desde `services/dashboard-frontend`, en macOS y solo tras verificar los puertos:
+
+```sh
+JAVA17_BIN="$(/usr/libexec/java_home -v 17)/bin/java" \
+VITE_WS_URL=ws://127.0.0.1:18081/ws \
+REAL_BACKEND_RESTART=1 LIVE_BACKEND_SMOKE=0 npm run test:integration
+```
+
+18081 es un ejemplo: sustituirlo por un puerto libre aprobado; no utilizarlo si ya pertenece a otro servicio. En PowerShell configurar `$env:JAVA17_BIN`, `$env:VITE_WS_URL`, `$env:REAL_BACKEND_RESTART='1'` y `$env:LIVE_BACKEND_SMOKE='0'`, y ejecutar `npm.cmd run test:integration`. Limitar esas variables a la sesión de la prueba y retirarlas después.
+
+El script versionado ejecuta un worker Playwright, perfil backend `memory`, listeners Rabbit y RabbitAdmin desactivados y health Rabbit excluido. No utiliza PostgreSQL, no ejecuta Flyway ni publica eventos. Verifica conexión, snapshot no disponible sin inventar un 0-0, desconexión/reconexión y recuperación tras reiniciar solo su proceso; guarda capturas y logs en `test-results/` y cierra sus procesos en `finally`. Sin `REAL_BACKEND_RESTART=1` se omite explícitamente. No ejecutar esta prueba contra un backend compartido ni confundirla con el smoke de una instancia ya iniciada.
+
+### Recuperación y límites del cliente
+
+En cada conexión el cliente suscribe `/topic/matches/{matchId}/score` y solicita snapshot mediante `/app/matches/{matchId}/snapshot` sobre `/ws`. Usa `stream_id` y `revision` para continuidad local; `updated_at` no es una secuencia global. Descarta callbacks de sesiones anteriores, duplicados y revisiones antiguas; conserva el último dato como desactualizado durante una desconexión. El timeout es 8 segundos, la espera de reconexión aumenta hasta 30 segundos y ocho fallos consecutivos sin recuperación detienen el reintento automático; la interfaz permite reconectar manualmente.
+
+Una conexión STOMP activa no acredita que un mensaje haya atravesado Kafka/Rabbit ni que exista un partido en curso. El perfil `memory` pierde su proyección al reiniciar; el modo durable consulta catálogo/historial y necesita PostgreSQL ya provisionado. No se resuelve ORDER02 global ni se demuestra exactly-once desde el navegador.
+
+Conservar logs y capturas de una ejecución antes de otra prueba Playwright o de limpiar salidas generadas. Los resultados anteriores de Fases 7/8 y las capturas del rediseño permanecen archivados en el historial Git y respaldos externos; no son requisitos de instalación.

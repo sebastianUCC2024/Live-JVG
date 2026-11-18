@@ -154,7 +154,7 @@ Las pruebas locales excluyen DataSource real y simulan exclusivamente puertos/JD
 
 En esta sesión, la caché original no era escribible por el sandbox (fallo de lock). Se copió a `/private/tmp/live-jvg-archiver-m2`, sin borrar JAR, cambiar caché original o detener procesos; se ejecutó offline con `-Dmaven.repo.local=/private/tmp/live-jvg-archiver-m2`.
 
-Cobertura: cinco payloads reales históricos, validación/UTF-8, referencias fuera de orden, bytes inmutables, duplicados, conflictos, rollback y cuarentena, fallo de conexión, orden de commit, límites/SQL de paginación, REST/errores, inicio condicionado al esquema y agotamiento de reintentos sin commit. Los detalles/resultados reales están en `verification.md` y `evidence/local-verification.txt`.
+Cobertura: cinco payloads reales históricos, validación/UTF-8, referencias fuera de orden, bytes inmutables, duplicados, conflictos, rollback y cuarentena, fallo de conexión, orden de commit, límites/SQL de paginación, REST/errores, inicio condicionado al esquema y agotamiento de reintentos sin commit. Los detalles/resultados reales están en [verification.md (histórico archivado)](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/historical-archiver/docs/verification.md) y `evidence/local-verification.txt`.
 
 ## Integración futura y permisos pendientes
 

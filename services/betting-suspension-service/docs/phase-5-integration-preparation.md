@@ -128,6 +128,6 @@ Son pruebas de repositorio PostgreSQL preparadas. **No son aún una prueba del f
 
 ## 8. Resultado y siguiente paso
 
-Las correcciones internas y preparación local se completan sin activar infraestructura. El informe de ejecución de los tres módulos, cambios exactos, hashes y conteos está en `phase-5-results.md`. Los informes de fases 2–4 conservan sus conteos históricos; no confundirlos con el total actualizado ni sumar ejecuciones repetidas.
+Las correcciones internas y preparación local se completan sin activar infraestructura. El informe de ejecución de los tres módulos, cambios exactos, hashes y conteos está en [phase-5-results.md (histórico archivado)](https://github.com/sebastianUCC2024/Live-JVG/blob/ed1ac2193a4adf863e772c040ef0431a4a7b3fd6/services/betting-suspension-service/docs/phase-5-results.md). Los informes de fases 2–4 conservan sus conteos históricos; no confundirlos con el total actualizado ni sumar ejecuciones repetidas.
 
 Siguiente paso: revisar decisiones/contratos y autorizar explícitamente implementación de la autorización atómica y pruebas reales aisladas. No activar el camino OPEN basado solo en lectura para “probar que funciona”.
