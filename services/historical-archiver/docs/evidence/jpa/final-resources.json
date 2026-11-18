@@ -1,0 +1,17 @@
+{
+  "status": "STOPPED_RESOURCES_PRESERVED",
+  "container": "live-jvg-archiver-jpa-fa71a3c070",
+  "id": "8a6d38efa603d355c59b92233de083480d85dbf08bbb629199a019a4ffb30f97",
+  "exit_code": 0,
+  "volume": "live-jvg-archiver-jpa-fa71a3c070-data",
+  "network": "live-jvg-archiver-jpa-fa71a3c070-net",
+  "port": 58147,
+  "databases": [
+    "dev3_it_archiver_jpa_fa71a3c070_fc0db8",
+    "dev3_it_archiver_jpa_fa71a3c070",
+    "dev3_it_archiver_jpa_fa71a3c070_36ef2c",
+    "dev3_it_archiver_jpa_fa71a3c070_21bc65",
+    "dev3_it_archiver_jpa_fa71a3c070_legacy"
+  ],
+  "shared_resources_modified": false
+}

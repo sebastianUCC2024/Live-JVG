@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 @SpringBootTest(properties={"management.endpoint.health.group.readiness.include=readinessState,messagingReadiness",
     "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
-    "spring.kafka.admin.auto-create=false"
+    "spring.kafka.admin.auto-create=false", "archive.storage.adapter=jdbc"
 })
 class HistoricalArchiverApplicationTests {
     @MockitoBean JdbcTemplate jdbc;
