@@ -17,6 +17,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.*;
 
+/**
+ * Declares durable notification queues and selects score-topic bindings or live-alert fanout.
+ * Each input queue owns a direct {@code <queue>.dlx}, {@code <queue>.dlq} and {@code rejected}
+ * routing key. Recovery explicitly republishes with correlated confirms and mandatory returns;
+ * the input queue does not rely on broker-configured dead-letter arguments.
+ * One manual-ACK consumer with prefetch one bounds in-flight work. Messaging requires durable
+ * storage and explicit enablement; connection readiness is tracked separately from publication.
+ */
 @Configuration(proxyBeanMethods=false)
 @EnableRabbit
 @ConditionalOnProperty(name="notification.messaging.enabled", havingValue="true")

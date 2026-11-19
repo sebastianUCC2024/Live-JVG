@@ -2,6 +2,11 @@ package com.live_jgv.notification.application;
 import com.live_jgv.notification.domain.*;
 import java.time.Clock;
 
+/**
+ * Creates notification content and delegates atomic inbox/alert acceptance to NotificationStore.
+ * Legacy score messages use the local clock and policy; live-alert messages retain their
+ * upstream identity and content. The store owns duplicate detection and transaction boundaries.
+ */
 public final class ProcessScoreUpdateService {
     private final NotificationStore store;
     private final NotificationPolicy policy;

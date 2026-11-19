@@ -10,6 +10,15 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Executes ProcessScoreUpdateService for the configured notification-owned RabbitMQ queue.
+ * Legacy input is a score update routed by match; optional live-alert input uses the
+ * {@code live_alerts} fanout exchange and validates scope and message identity.
+ * Manual ACK occurs after durable acceptance or confirmed DLQ transfer. Bounded processing
+ * retries do not include ACK I/O failures. If DLQ custody cannot be confirmed, the original
+ * is requeued and the consumer stops. The durable inbox handles broker redelivery.
+ * RabbitMQ distributes derived notifications; Kafka retains the upstream sporting-event feed.
+ */
 public final class ScoreUpdateListener {
     @FunctionalInterface public interface Sleeper { void sleep(long millis) throws InterruptedException; }
     private static final Logger LOG = LoggerFactory.getLogger(ScoreUpdateListener.class);

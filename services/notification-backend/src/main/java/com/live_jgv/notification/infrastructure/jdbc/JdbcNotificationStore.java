@@ -10,6 +10,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+/**
+ * Persists notification inbox identity and derived alert content in one independent transaction.
+ * REQUIRES_NEW ensures acceptance commits before the listener acknowledges its delivery,
+ * even if a caller has an outer transaction. Domain values are encoded at this boundary;
+ * duplicate and conflicting identities are classified without replacing accepted content.
+ * Database failures propagate so the listener can retry or retain message custody.
+ */
 public final class JdbcNotificationStore implements NotificationStore {
     private static final String SOURCE = "match-state-service";
     private final JdbcTemplate jdbc;
