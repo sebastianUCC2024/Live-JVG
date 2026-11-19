@@ -1,6 +1,6 @@
-package com.live_jgv.live_feed_producer.entrypoint.rest;
+package com.live_jgv.live_feed_producer.infrastructure.web;
 import com.live_jgv.live_feed_producer.application.service.MatchSimulationService;
-import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.port.out.MatchEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @WebMvcTest(controllers=MatchSimulationController.class,properties={"simulator.write-enabled=true","MATCH_ID=m"})
-@Import(MatchSimulationService.class)
+@Import(com.live_jgv.live_feed_producer.infrastructure.config.SimulationConfiguration.class)
 class VarFieldCompatibilityTest {
     @Autowired MockMvc mvc;
     @MockitoBean MatchEventPublisher publisher;

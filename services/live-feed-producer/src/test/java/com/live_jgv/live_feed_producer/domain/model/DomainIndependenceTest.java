@@ -1,6 +1,6 @@
 package com.live_jgv.live_feed_producer.domain.model;
 
-import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.port.out.MatchEventPublisher;
 import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;

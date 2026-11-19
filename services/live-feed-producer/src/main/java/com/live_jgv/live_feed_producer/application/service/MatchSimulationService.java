@@ -1,24 +1,21 @@
 package com.live_jgv.live_feed_producer.application.service;
 
-import com.live_jgv.live_feed_producer.config.SimulatorMatchCatalog;
+import com.live_jgv.live_feed_producer.application.model.SimulatorMatchCatalog;
 import com.live_jgv.live_feed_producer.domain.model.*;
-import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.port.out.MatchEventPublisher;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-@Service
+/** Validates simulation requests before asynchronous publication through the output port. */
 public class MatchSimulationService {
 
     private final MatchEventPublisher publisher;
     private final Map<String, SimulatorMatchCatalog.Match> matches;
 
-    @Autowired
     public MatchSimulationService(
             MatchEventPublisher publisher,
             SimulatorMatchCatalog catalog) {

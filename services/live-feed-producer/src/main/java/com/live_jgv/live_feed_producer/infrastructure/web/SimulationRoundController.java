@@ -1,6 +1,6 @@
-package com.live_jgv.live_feed_producer.entrypoint.rest;
+package com.live_jgv.live_feed_producer.infrastructure.web;
 
-import com.live_jgv.live_feed_producer.application.service.AutomaticMatchSimulator;
+import com.live_jgv.live_feed_producer.infrastructure.scheduling.AutomaticMatchSimulator;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.*;

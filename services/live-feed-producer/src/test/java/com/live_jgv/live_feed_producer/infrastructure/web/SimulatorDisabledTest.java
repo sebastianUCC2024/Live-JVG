@@ -1,4 +1,4 @@
-package com.live_jgv.live_feed_producer.entrypoint.rest;
+package com.live_jgv.live_feed_producer.infrastructure.web;
 
 import com.live_jgv.live_feed_producer.application.service.MatchSimulationService;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,6 @@
-package com.live_jgv.live_feed_producer.application.service;
+package com.live_jgv.live_feed_producer.infrastructure.scheduling;
+
+import com.live_jgv.live_feed_producer.application.service.MatchSimulationService;
 
 import com.live_jgv.live_feed_producer.config.SimulatorMatchCatalog;
 import com.live_jgv.live_feed_producer.domain.model.EventType;

@@ -1,7 +1,7 @@
-package com.live_jgv.live_feed_producer.entrypoint.rest;
+package com.live_jgv.live_feed_producer.infrastructure.web;
 
 import com.live_jgv.live_feed_producer.application.service.MatchSimulationService;
-import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.port.out.MatchEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers=MatchSimulationController.class, properties={"simulator.write-enabled=true","MATCH_ID=m"})
-@Import(MatchSimulationService.class)
+@Import(com.live_jgv.live_feed_producer.infrastructure.config.SimulationConfiguration.class)
 class SimulatorEnabledTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.live_jgv.live_feed_producer.domain.model.MatchEvent;
-import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.port.out.MatchEventPublisher;
 import com.live_jgv.live_feed_producer.application.service.OutgoingReferencePolicy;
 import com.live_jgv.live_feed_producer.application.service.EventPreparationException;
 import org.slf4j.Logger;
@@ -16,7 +16,15 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-/** Provisional wire format matching the local contract proposal. */
+/**
+ * Publishes events prepared by the simulation use case to the configured {@code match_events} topic.
+ * The match ID is the partition key; ordering is limited to a partition, not the whole topic.
+ * Payloads use snake-case JSON and ISO timestamps with string key/value serializers.
+ * The returned future completes after Kafka acknowledges the send. Producer configuration requests
+ * {@code acks=all} and idempotent transport retries; this does not deduplicate separate application
+ * submissions or make the database and Kafka one transaction. Preparation and send failures remain
+ * exceptional so callers retain their existing retry and error handling behavior.
+ */
 @Component
 public final class KafkaMatchEventPublisher implements MatchEventPublisher {
     private static final Logger log = LoggerFactory.getLogger(KafkaMatchEventPublisher.class);
