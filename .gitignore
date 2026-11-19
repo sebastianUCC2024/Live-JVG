@@ -13,6 +13,8 @@
 **/.env
 .env.local
 **/.env.local
+.env.*
+!.env.example
 
 # IDE
 .idea/
@@ -26,3 +28,41 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+# Local MVP credentials, logs and generated run state
+.mvp/
+*.temp
+tmp/
+temp/
+logs/
+
+# Temporary integration test workspaces
+integration-test-tmp/
+integration-test-temp/
+fase7b-run-*/
+
+# Private isolated 9F runs: credentials, approvals, resource manifests and evidence.
+.9f/
+__pycache__/
+*.pyc
+
+# Local validation environments and caches
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.m2/
+.npm-cache/
+.sites-runtime/
+.worktrees/
+**/playwright-report/
+**/test-results/
+*.tsbuildinfo
+
+# Private credentials; safe templates remain versionable
+.envrc
+*.key
+*.p12
+*.pfx
+!.env.example
+!**/.env.example

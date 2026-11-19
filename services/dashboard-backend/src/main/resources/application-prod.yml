@@ -1,0 +1,3 @@
+dashboard:
+  web:
+    allowed-origins: ${DASHBOARD_ALLOWED_ORIGINS:}

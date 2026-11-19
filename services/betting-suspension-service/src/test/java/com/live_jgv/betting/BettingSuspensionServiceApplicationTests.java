@@ -2,12 +2,41 @@ package com.live_jgv.betting;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.context.ApplicationContext;
+import com.live_jgv.betting.application.SuspensionPublisher;
+import com.live_jgv.betting.infrastructure.OutboxDispatcher;
+import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+@SpringBootTest(properties={"management.endpoint.health.group.readiness.include=readinessState,messagingReadiness","spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration","spring.kafka.admin.auto-create=false"})
 class BettingSuspensionServiceApplicationTests {
-
-	@Test
-	void contextLoads() {
-	}
-
+    @MockitoBean JdbcTemplate jdbc;
+    @MockitoBean PlatformTransactionManager transactions;
+    @Autowired KafkaListenerEndpointRegistry registry;
+    @Autowired ApplicationContext context;
+    @Autowired org.springframework.core.env.Environment environment;
+    @Test void contextLoadsWithoutExternalInfrastructureAndAllIntegrationsAreDisabled() {
+        assertFalse(registry.getListenerContainer("bettingSuspensionListener").isRunning());
+        assertEquals("false",environment.getProperty("spring.flyway.enabled"));
+        assertTrue(context.getBeansOfType(SuspensionPublisher.class).isEmpty());
+        assertTrue(context.getBeansOfType(OutboxDispatcher.class).isEmpty());
+        assertTrue(context.getBeansOfType(com.live_jgv.betting.academic.AcademicOutboxDispatcher.class).isEmpty());
+        assertTrue(context.getBeansOfType(org.springframework.amqp.rabbit.core.RabbitAdmin.class).isEmpty());
+        assertEquals("false",environment.getProperty("academic.commands.enabled"));
+        assertEquals("false",environment.getProperty("academic.publication.enabled"));
+        assertFalse(context.getBean(com.live_jgv.betting.application.LeaseSourceVerifier.class).verify("m",1,"unverified-checkpoint"));
+        assertTrue(context.getBeansOfType(com.live_jgv.betting.infrastructure.JdbcOpenLeaseIssuer.class).isEmpty());
+    }
+    @Autowired org.springframework.test.web.servlet.MockMvc http;
+    @Test void inactiveTransportIsNotReadyWhileProcessRemainsLive() throws Exception {
+        http.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/health/liveness"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        http.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/health/readiness"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isServiceUnavailable());
+    }
 }

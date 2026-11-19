@@ -1,0 +1,101 @@
+name: Validate services and clients
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install fastjsonschema==2.22.3 ruamel.yaml==0.19.1
+      - run: python scripts/validate-dev1-contracts.py
+      # Dependency direction is checked offline; no broker, database or deployment is contacted.
+      - run: python scripts/validate-architecture.py
+      - run: python scripts/test-architecture.py
+      # Resuelve los modos local, externo y web sin arrancar contenedores.
+      - run: python scripts/test-compose-consolidation.py
+      - run: python scripts/test-e2e-harness.py
+      - name: Validate OFF-only DEV 3 resource proposal without starting services
+        run: python scripts/validate-e2e-proposal.py --manifest scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json
+      - name: Validate isolated Compose without starting services
+        env:
+          MVP_DB_PASSWORD: validation-only
+          MVP_RABBIT_PASSWORD: validation-only
+        run: docker compose -p live-jvg-dev1-isolated --profile integration-prepared config --quiet
+      - name: Check Compose isolation, services and safety flags
+        env:
+          MVP_DB_PASSWORD: validation-only
+          MVP_RABBIT_PASSWORD: validation-only
+        run: python scripts/validate-compose.py
+
+  java:
+    name: Java 17 / ${{ matrix.service }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [live-feed-producer, match-state-service, dashboard-backend, historical-archiver, betting-suspension-service, betting-worker, notification-backend]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: services/**/pom.xml
+      # Each real service lifecycle runs tests and Spring Boot repackage in a fresh checkout.
+      # Local lifecycle only. DEV 3 external classes require explicit environment opt-in.
+      # PostgreSQL, broker and E2E certification are separate approval gates.
+      - name: Compile, test and package the service
+        run: mvn -B -ntp -f services/${{ matrix.service }}/pom.xml verify
+
+  react:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: services/dashboard-frontend
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: services/dashboard-frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  node:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Static dashboard scripts
+        run: node --test services/dashboard-backend/src/test/js/*.test.cjs

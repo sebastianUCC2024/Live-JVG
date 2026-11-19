@@ -1,0 +1,5 @@
+<configuration>
+    <!-- External suites write whitelisted JSONL evidence. Suppress library logs
+         that could include connection usernames/URLs during deliberate faults. -->
+    <root level="OFF"/>
+</configuration>

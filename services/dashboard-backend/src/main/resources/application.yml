@@ -1,0 +1,15 @@
+# La configuración común está en application.properties; estas propiedades también admiten modo memory.
+dashboard:
+  web:
+    allowed-origins: ${DASHBOARD_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:18080,http://127.0.0.1:18080}
+  rabbit:
+    exchange: ${RABBITMQ_EXCHANGE:live_updates}
+    queue: dashboard.score-updates
+    binding-key: score.#
+    dead-letter-exchange: dashboard.score-updates.dlx
+    dead-letter-queue: dashboard.score-updates.dlq
+    dead-letter-key: rejected
+    max-attempts: 3
+    retry-interval-ms: 1000
+  projection:
+    max-events: 10000

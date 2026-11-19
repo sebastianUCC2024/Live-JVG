@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Live JVG · Centro de partido</title><link rel="stylesheet" href="/styles.css"><script src="/operations.js" defer></script><script src="/loading.js" defer></script><script src="/app.js" defer></script></head>
+<body>
+<header><a class="brand" href="/" aria-label="Live JVG inicio"><span class="brand-mark">JVG</span><span>LIVE SPORTS<span class="brand-sub">MATCH CONTROL</span></span></a><span id="connection" class="connection">Conectando…</span></header>
+<main>
+<p id="catalog-status" role="status" aria-live="polite">Cargando partidos…</p>
+<button id="reload-catalog" disabled>Volver a consultar partidos</button>
+<section class="intro"><div><p class="eyebrow">CENTRO DE PARTIDO / EN VIVO</p><h1>El partido, al instante.</h1><p class="muted">Cada jugada cuenta. Cada decisión, también.</p></div><label class="match-picker">PARTIDO<select id="match-picker" aria-label="Seleccionar partido"><option>Cargando partidos…</option></select></label></section>
+<div class="workspace">
+<section class="scoreboard" aria-label="Marcador en vivo">
+<div class="board-top"><span class="live-pill"><i></i> EN VIVO</span><span class="board-caption">LIVE JVG · VAR ENABLED</span></div>
+<div class="pitch-lines" aria-hidden="true"></div>
+<div class="score-row"><div class="team"><span class="crest home">L</span><h2 id="home-name">Local</h2><span>LOCAL</span></div><div class="score"><div><b id="home-score">0</b><span>:</span><b id="away-score">0</b></div><p id="score-label">Esperando datos del partido</p></div><div class="team"><span class="crest away">V</span><h2 id="away-name">Visitante</h2><span>VISITANTE</span></div></div>
+<div id="var-state" class="var-state"><span>VAR</span><strong id="var-label">Sin revisión activa</strong><span id="var-icon">✓</span></div>
+<div class="board-bottom"><span id="last-updated">Sin eventos todavía</span><span id="event-count">0 eventos recibidos</span></div>
+</section>
+<section class="controls" aria-labelledby="controls-title"><p class="eyebrow">SIMULADOR DE PARTIDO</p><h2 id="controls-title">La próxima jugada</h2><p class="muted">Publica un evento y observa el marcador real.</p>
+<label class="field">Minuto de juego<input id="minute" type="number" min="0" max="130" value="10" inputmode="numeric"></label>
+<div class="goal-buttons"><button id="goal-home" class="primary">+ Gol local</button><button id="goal-away" class="primary secondary">+ Gol visitante</button></div>
+<div class="divider"></div><label class="field">Gol para revisión<select id="goal-select"><option value="">Sin goles activos</option></select></label>
+<div class="var-buttons"><button id="var-check">Revisar con VAR</button><button id="annul" class="danger">Anular gol</button></div><button id="continue" class="continue">Continuar partido <span>→</span></button>
+<p id="feedback" class="feedback" role="status" aria-live="polite">Elige una jugada para empezar.</p>
+<p id="pending-operation" role="status" aria-live="polite"></p>
+<button id="retry-operation" disabled>Consultar y reintentar la misma operación</button>
+<button id="forget-operation" disabled>Olvidar operación…</button></section>
+</div>
+<section class="timeline"><div class="section-title"><div><p class="eyebrow">TRAZABILIDAD EN VIVO</p><h2>Lo que pasó en el campo</h2></div><span class="small-tag">Actualizaciones recibidas por RabbitMQ</span></div><div id="events" class="events"><p class="empty">Aquí aparecerá la primera jugada.</p></div></section>
+<footer><span>LIVE JVG <span class="footer-dot">●</span> Plataforma deportiva con VAR</span><span>Demostración local · Datos persistentes</span></footer>
+</main>
+</body></html>

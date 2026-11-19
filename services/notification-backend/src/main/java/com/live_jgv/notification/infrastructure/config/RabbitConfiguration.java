@@ -1,0 +1,103 @@
+package com.live_jgv.notification.infrastructure.config;
+
+import com.live_jgv.notification.application.ProcessScoreUpdateService;
+import com.live_jgv.notification.infrastructure.amqp.*;
+import com.live_jgv.notification.infrastructure.json.ScoreUpdateCodec;
+import com.live_jgv.notification.infrastructure.health.ConsumerReadiness;
+import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.*;
+import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.*;
+
+/** Declara exchange topic de scores o fanout live_alerts, colas y bindings; usa DLX direct con routing rejected. */
+@Configuration(proxyBeanMethods=false)
+@EnableRabbit
+@ConditionalOnProperty(name="notification.messaging.enabled", havingValue="true")
+public class RabbitConfiguration {
+    /** Valida el tamaño de la routing key además de la lista de partidos permitidos. */
+    public static String scoreRoutingKey(String matchId) {
+        if (matchId == null || matchId.isBlank()) throw new IllegalArgumentException("Match ID required");
+        String key="score."+matchId;
+        if (key.getBytes(StandardCharsets.UTF_8).length>255)
+            throw new IllegalArgumentException("Score routing key exceeds 255 UTF-8 bytes");
+        return key;
+    }
+    public static Declarables topology(String exchange, String queue, String matchIds) {
+        if (!queue.startsWith("notification.") || !queue.matches("[A-Za-z0-9_.-]{1,200}"))
+            throw new IllegalArgumentException("A notification-owned queue is required");
+        if (exchange.isBlank() || matchIds.isBlank()) throw new IllegalArgumentException("Exchange and approved match IDs required");
+        var declarations = new ArrayList<Declarable>();
+        var topic = new TopicExchange(exchange, true, false);
+        var input = new org.springframework.amqp.core.Queue(queue, true);
+        declarations.add(topic); declarations.add(input);
+        for (String match : new LinkedHashSet<>(Arrays.asList(matchIds.split(",", -1)))) {
+            match = match.trim();
+            String routingKey=scoreRoutingKey(match);
+            if (!match.matches("[A-Za-z0-9_.-]+")) throw new IllegalArgumentException("Explicit safe match IDs required");
+            declarations.add(BindingBuilder.bind(input).to(topic).with(routingKey));
+            if (match.matches("demo-col-v4-00[1-6]")) {
+                declarations.add(BindingBuilder.bind(input).to(topic).with(routingKey + ".*"));
+            }
+        }
+        String dlx=queue+".dlx", dlq=queue+".dlq";
+        declarations.add(new DirectExchange(dlx,true,false));
+        declarations.add(new org.springframework.amqp.core.Queue(dlq,true));
+        declarations.add(new Binding(dlq,Binding.DestinationType.QUEUE,dlx,"rejected",null));
+        return new Declarables(declarations);
+    }
+    public static Declarables alertTopology(String queue) {
+        if(queue==null || !queue.startsWith("notification.") || !queue.matches("[A-Za-z0-9_.-]{1,200}")) throw new IllegalArgumentException("Notification-owned queue required");
+        String dlx=queue+".dlx", dlq=queue+".dlq";
+        return new Declarables(new FanoutExchange("live_alerts",true,false),new org.springframework.amqp.core.Queue(queue,true),new Binding(queue,Binding.DestinationType.QUEUE,"live_alerts","",null),new DirectExchange(dlx,true,false),new org.springframework.amqp.core.Queue(dlq,true),new Binding(dlq,Binding.DestinationType.QUEUE,dlx,"rejected",null));
+    }
+    @Bean Declarables notificationTopology(@Value("${notification.messaging.exchange}") String exchange,
+            @Value("${notification.messaging.queue}") String queue,@Value("${notification.messaging.match-ids:}") String ids,
+            @Value("${notification.storage.enabled:false}") boolean storage, @Value("${notification.messaging.live-alerts-enabled:false}") boolean liveAlerts) {
+        if (!storage) throw new IllegalArgumentException("Durable storage must be enabled before messaging");
+        if(liveAlerts) { if(ids.isBlank()) throw new IllegalArgumentException("Approved scope required"); return alertTopology(queue); }
+        return topology(exchange,queue,ids);
+    }
+    @Bean RabbitAdmin notificationAdmin(ConnectionFactory connectionFactory, ConsumerReadiness consumer) {
+        connectionFactory.addConnectionListener(consumer);
+        // Spring propaga los listeners a la conexión de publicación.
+        // La conexión de publicación no invalida al consumidor activo.
+        var publisher=connectionFactory.getPublisherConnectionFactory();
+        if (publisher!=null && publisher!=connectionFactory) publisher.removeConnectionListener(consumer);
+        return new RabbitAdmin(connectionFactory);
+    }
+    @Bean public RabbitTemplate notificationRabbitTemplate(ConnectionFactory connectionFactory) {
+        var publisher=connectionFactory.getPublisherConnectionFactory();
+        if (publisher==null) publisher=connectionFactory;
+        if (!publisher.isPublisherConfirms() || publisher.isSimplePublisherConfirms() || !publisher.isPublisherReturns())
+            throw new IllegalArgumentException("Correlated publisher confirms and returns are required for DLQ custody");
+        var template = new RabbitTemplate(connectionFactory); template.setMandatory(true); return template;
+    }
+    @Bean SimpleRabbitListenerContainerFactory notificationListenerFactory(ConnectionFactory connectionFactory) {
+        var factory = new SimpleRabbitListenerContainerFactory(); factory.setConnectionFactory(connectionFactory);
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); factory.setPrefetchCount(1);
+        factory.setConcurrentConsumers(1); factory.setMaxConcurrentConsumers(1); factory.setDefaultRequeueRejected(false);
+        return factory;
+    }
+    @Bean ConfirmedDlqRecovery confirmedDlqRecovery(RabbitTemplate template,
+            @Value("${notification.messaging.queue}") String queue,@Value("${notification.messaging.confirm-timeout:5s}") Duration timeout) {
+        return new ConfirmedDlqRecovery(template,queue+".dlx",timeout);
+    }
+    @Bean ScoreUpdateListener notificationListener(ProcessScoreUpdateService processor, ScoreUpdateCodec codec,
+            ConfirmedDlqRecovery recovery, RabbitListenerEndpointRegistry registry, ConsumerReadiness consumer,
+            @Value("${notification.messaging.max-attempts:3}") int attempts,@Value("${notification.messaging.retry-interval-ms:1000}") long interval, @Value("${notification.messaging.live-alerts-enabled:false}") boolean liveAlerts, @Value("${notification.messaging.match-ids:}") String matchIds) {
+        var listener = new ScoreUpdateListener(processor,codec,recovery,()->{
+            consumer.invalidate();
+            var container=registry.getListenerContainer("notificationScores");
+            if (container != null) container.stop(()->{});
+        },Thread::sleep,attempts,interval);
+        return liveAlerts ? listener.withLiveAlerts(new LinkedHashSet<>(Arrays.stream(matchIds.split(",",-1)).map(String::trim).toList())) : listener;
+    }
+}

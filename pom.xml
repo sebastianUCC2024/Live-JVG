@@ -22,4 +22,31 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <!-- Default root lifecycle validates this descriptor only. Explicit profiles select either
+         the three-module audit subset or the complete seven-service reactor. -->
+    <profiles>
+        <!-- Opt-in complete reactor; use instead of audit-services to avoid duplicate modules.
+             Every module retains its own Spring Boot parent and isolated test gates. -->
+        <profile>
+            <id>all-services</id>
+            <modules>
+                <module>services/live-feed-producer</module>
+                <module>services/match-state-service</module>
+                <module>services/dashboard-backend</module>
+                <module>services/historical-archiver</module>
+                <module>services/betting-suspension-service</module>
+                <module>services/betting-worker</module>
+                <module>services/notification-backend</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>audit-services</id>
+            <modules>
+                <module>services/live-feed-producer</module>
+                <module>services/match-state-service</module>
+                <module>services/dashboard-backend</module>
+            </modules>
+        </profile>
+    </profiles>
+
 </project>
