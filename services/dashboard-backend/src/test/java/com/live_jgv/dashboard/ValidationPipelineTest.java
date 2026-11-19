@@ -50,7 +50,10 @@ class ValidationPipelineTest {
         var parser=DocumentBuilderFactory.newInstance();
         parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
         var rootPom=parser.newDocumentBuilder().parse(root.resolve("pom.xml").toFile());
-        var modules=rootPom.getElementsByTagName("module");assertEquals(3,modules.getLength());
+        var xpath=javax.xml.xpath.XPathFactory.newInstance().newXPath();
+        assertEquals("0", xpath.evaluate("count(/project/modules/module)", rootPom));
+        assertEquals("3", xpath.evaluate("count(/project/profiles/profile[id='audit-services']/modules/module)", rootPom));
+        assertEquals("7", xpath.evaluate("count(/project/profiles/profile[id='all-services']/modules/module)", rootPom));
         for(String service:List.of("match-state-service","dashboard-backend")) {
             Path base=root.resolve("services/"+service);
             var pom=parser.newDocumentBuilder().parse(base.resolve("pom.xml").toFile());
