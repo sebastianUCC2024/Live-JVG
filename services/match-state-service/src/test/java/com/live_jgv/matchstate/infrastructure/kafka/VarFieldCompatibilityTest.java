@@ -1,4 +1,4 @@
-package com.live_jgv.matchstate.entrypoint.kafka;
+package com.live_jgv.matchstate.infrastructure.kafka;
 import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import com.live_jgv.matchstate.domain.model.*;
 import org.junit.jupiter.api.Test;

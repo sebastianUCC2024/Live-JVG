@@ -2,8 +2,8 @@ package com.live_jgv.matchstate.infrastructure.jdbc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.MatchStateRepository;
-import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
+import com.live_jgv.matchstate.application.port.out.MatchStateRepository;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.*;

@@ -1,4 +1,4 @@
-package com.live_jgv.matchstate.entrypoint.kafka;
+package com.live_jgv.matchstate.infrastructure.kafka;
 
 public final class InvalidKafkaMessageException extends RuntimeException {
     public InvalidKafkaMessageException(Throwable cause) {

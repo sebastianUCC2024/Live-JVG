@@ -1,4 +1,4 @@
-package com.live_jgv.matchstate.domain.port;
+package com.live_jgv.matchstate.application.port.in;
 
 import com.live_jgv.matchstate.domain.model.MatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;

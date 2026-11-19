@@ -3,7 +3,7 @@ package com.live_jgv.matchstate.infrastructure.rabbit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 import com.live_jgv.matchstate.domain.model.StoredScoreUpdate;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -16,6 +16,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Delivers pending ScoreUpdate output to the durable {@code live_updates} topic exchange,
+ * normally using {@code score.<matchId>}. Persistent JSON messages retain event identity.
+ * Correlated publisher confirms and mandatory returns detect negative or unroutable delivery;
+ * timeout or uncertainty fails the call so the outbox remains pending. Confirmation proves
+ * broker acceptance, not downstream processing. A later retry may deliver a duplicate.
+ * Stored publications preserve the original wire image during recovery.
+ */
 public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
     private static final Logger log = LoggerFactory.getLogger(RabbitScoreUpdatePublisher.class);
     private final RabbitTemplate template;

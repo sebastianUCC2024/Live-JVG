@@ -1,6 +1,6 @@
 package com.live_jgv.matchstate.domain.model;
 
-import com.live_jgv.matchstate.entrypoint.kafka.MatchEventMessage;
+import com.live_jgv.matchstate.infrastructure.kafka.MatchEventMessage;
 import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package com.live_jgv.matchstate.entrypoint.kafka;
+package com.live_jgv.matchstate.infrastructure.kafka;
 
 import com.live_jgv.matchstate.application.service.MatchStateService;
 import com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent;

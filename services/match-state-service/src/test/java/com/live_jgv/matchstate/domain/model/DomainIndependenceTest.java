@@ -16,7 +16,9 @@ class DomainIndependenceTest {
                 for (var source : paths.filter(path -> path.toString().endsWith(".java")).toList()) {
                     for (String line : Files.readAllLines(source)) {
                         if (line.strip().startsWith("import ")) {
-                            assertTrue(line.startsWith("import java.") || line.startsWith("import com.live_jgv.matchstate.domain."),
+                            boolean innerDependency = line.startsWith("import com.live_jgv.matchstate.domain.")
+                                    || (layer.equals("application") && line.startsWith("import com.live_jgv.matchstate.application."));
+                            assertTrue(line.startsWith("import java.") || innerDependency,
                                     source + " has forbidden dependency: " + line);
                         }
                     }

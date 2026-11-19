@@ -1,4 +1,4 @@
-package com.live_jgv.matchstate.domain.port;
+package com.live_jgv.matchstate.application.port.out;
 
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 import com.live_jgv.matchstate.domain.model.StoredScoreUpdate;

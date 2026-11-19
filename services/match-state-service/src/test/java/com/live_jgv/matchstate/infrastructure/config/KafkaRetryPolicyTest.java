@@ -1,6 +1,6 @@
 package com.live_jgv.matchstate.infrastructure.config;
 
-import com.live_jgv.matchstate.entrypoint.kafka.InvalidKafkaMessageException;
+import com.live_jgv.matchstate.infrastructure.kafka.InvalidKafkaMessageException;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;

@@ -2,7 +2,7 @@ package com.live_jgv.matchstate.infrastructure.jdbc;
 
 import com.live_jgv.matchstate.application.service.*;
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;

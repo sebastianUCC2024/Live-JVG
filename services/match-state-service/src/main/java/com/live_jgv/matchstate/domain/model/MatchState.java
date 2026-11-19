@@ -6,7 +6,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Immutable aggregate. Only accepted events contribute to state and history. */
+/**
+ * Immutable match aggregate whose accepted event ledger is the source of the score.
+ * Annulment excludes an existing active goal instead of decrementing a mutable counter.
+ * Reapplying an identical event returns this instance; reusing its ID with another payload fails.
+ * V1 VAR state is a single flag: a check opens it and continuation or annulment clears it.
+ * Finishing requires minute 15 and a resolved review; accepted history remains replayable.
+ * No persistence or messaging side effects occur while validating a transition.
+ */
 public final class MatchState {
     private final String matchId;
     private final String homeTeamId;

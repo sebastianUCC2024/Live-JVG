@@ -1,7 +1,7 @@
-package com.live_jgv.matchstate.entrypoint.kafka;
+package com.live_jgv.matchstate.infrastructure.kafka;
 
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
+import com.live_jgv.matchstate.application.port.in.ProcessMatchEvent;
 import com.live_jgv.matchstate.infrastructure.config.MessagingConfiguration;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;

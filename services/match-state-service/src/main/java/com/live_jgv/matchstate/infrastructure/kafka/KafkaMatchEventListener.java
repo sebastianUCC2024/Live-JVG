@@ -1,9 +1,9 @@
-package com.live_jgv.matchstate.entrypoint.kafka;
+package com.live_jgv.matchstate.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.domain.model.MatchEvent;
-import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
-import com.live_jgv.matchstate.domain.port.IncomingEventHandler;
+import com.live_jgv.matchstate.application.port.in.ProcessMatchEvent;
+import com.live_jgv.matchstate.application.port.in.IncomingEventHandler;
 import com.live_jgv.matchstate.domain.model.InputRecord;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -16,6 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 
+/**
+ * Adapts raw records from {@code match_events} for the {@code match-state-service} group.
+ * Durable mode invokes IncomingEventHandler with source/topic/partition/offset and original bytes;
+ * memory mode decodes the JSON contract and invokes ProcessMatchEvent directly.
+ * Byte-array deserialization preserves malformed input for durable classification.
+ * The container uses synchronous RECORD commits with auto-commit disabled: returning normally
+ * permits committing the record, while failures reach the bounded retry/pause handler.
+ * Match-key partitioning provides per-partition ordering; inbox identity and aggregate event IDs
+ * handle redelivery, without an atomic Kafka/PostgreSQL/RabbitMQ transaction.
+ */
 public final class KafkaMatchEventListener {
     private static final Logger log = LoggerFactory.getLogger(KafkaMatchEventListener.class);
     private final ObjectMapper mapper;

@@ -2,9 +2,9 @@ package com.live_jgv.matchstate.application.service;
 
 import com.live_jgv.matchstate.domain.model.MatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;
-import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
-import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.in.ProcessMatchEvent;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import java.util.Objects;
 
 /** Coordinates processing and delivery; business rules remain in MatchState. */
