@@ -28,6 +28,8 @@ jobs:
       # Dependency direction is checked offline; no broker, database or deployment is contacted.
       - run: python scripts/validate-architecture.py
       - run: python scripts/test-architecture.py
+      # Resuelve los modos local, externo y web sin arrancar contenedores.
+      - run: python scripts/test-compose-consolidation.py
       - run: python scripts/test-e2e-harness.py
       - name: Validate OFF-only DEV 3 resource proposal without starting services
         run: python scripts/validate-e2e-proposal.py --manifest scripts/e2e/live-jvg-e2e-5c84548cf006.proposed.json

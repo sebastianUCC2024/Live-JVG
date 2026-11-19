@@ -1,4 +1,4 @@
-"""Read-only validation of resolved Compose. No daemon calls or resource creation."""
+"""Valida el Compose resuelto sin acceder al motor Docker ni crear recursos."""
 import json
 from pathlib import Path
 import subprocess
@@ -43,7 +43,7 @@ def validate(config, resources=None):
     notification = services['notification']['environment']
     assert notification['NOTIFICATION_STORAGE_ENABLED'] == 'false'
     assert notification['NOTIFICATION_MESSAGING_ENABLED'] == 'false'
-    # Shared URL is necessary, but does not certify grants/functions/transaction isolation.
+    # Compartir la URL no demuestra permisos, funciones ni aislamiento transaccional.
     print('Compose: seven Java services, isolated resources, dependencies and safe flags validated')
     print('Suspension/Worker share database URL; approved distinct roles and migrations remain required')
 
@@ -52,5 +52,5 @@ if __name__ == '__main__':
     result = subprocess.run(['docker', 'compose', '-p', 'live-jvg-dev1-isolated',
                              '--profile', 'integration-prepared', 'config', '--format', 'json'],
                             cwd=ROOT, capture_output=True, text=True, check=True)
-    # Resolved config contains passwords: keep it in memory and never print it.
+    # La configuración resuelta puede contener contraseñas: no se imprime.
     validate(json.loads(result.stdout))
