@@ -27,7 +27,7 @@ export const initialStreamState = (ids: string[]): StreamState => ({
   matches: Object.fromEntries(ids.map(id => [id, { snapshot: null, events: [], recovery: 'pending' }])),
 })
 
-/** Per-connection recovery buffer and per-stream monotonic revisions. No domain calculations. */
+/** Recupera por conexión y controla revisiones por stream, sin recalcular reglas de negocio. */
 export class SnapshotStore {
   private buffers = new Map<string, MatchSnapshot[]>()
   private seen = new Map<string, Set<string>>()
@@ -68,7 +68,7 @@ export class SnapshotStore {
     if (previous.snapshot && previous.snapshot.revision >= snapshot.revision) return
     const seen = this.seen.get(id) ?? new Set<string>()
     const duplicate = seen.has(snapshot.event_id)
-    // Bound this client's visible-event identity cache; durable backend inbox history is retained.
+    // Limita la caché visible del cliente; el historial persistente permanece en el backend.
     seen.add(snapshot.event_id)
     if (seen.size > 10000) seen.delete(seen.values().next().value!)
     this.seen.set(id, seen)

@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.stereotype.Component;
 
-/** No automatic Flyway migration; verify a previously approved schema before starting consumption. */
+/** Verifica el esquema preparado antes de consumir; no ejecuta migraciones automáticas. */
 @Component
 public class StorageReadiness implements ApplicationRunner {
     private final JdbcTemplate jdbc;

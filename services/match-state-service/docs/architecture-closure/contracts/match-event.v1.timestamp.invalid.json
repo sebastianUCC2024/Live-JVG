@@ -1,9 +1,0 @@
-{
-  "event_id": "g1",
-  "match_id": "m1",
-  "event_type": "GOAL",
-  "team_id": "home",
-  "minute": 1,
-  "timestamp": "not-an-instant",
-  "reference_event_id": null
-}

@@ -3,7 +3,7 @@ package com.live_jgv.matchstate.domain.model;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Internal correlation primitive. No wire protocol or V1 aggregate activation. */
+/** Relaciona revisiones VAR internas; no modifica por sí sola el flujo V1. */
 public final class VarReviews {
     private final Map<String, Boolean> reviews;
 
@@ -15,7 +15,7 @@ public final class VarReviews {
 
     public VarReviews open(String reviewId) {
         requireId(reviewId);
-        // Identity survives closure: a redelivered opening cannot reopen it.
+        // Conserva la identidad al cerrar: una reentrega no reabre la revisión.
         if (reviews.containsKey(reviewId)) return this;
         var next = new HashMap<>(reviews);
         next.put(reviewId, true);

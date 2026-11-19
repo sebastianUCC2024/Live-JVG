@@ -14,6 +14,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.HashMap;
 
+/** Configura Kafka y persistencia; usa offsets RECORD síncronos y auto-commit desactivado. */
 @Configuration(proxyBeanMethods=false)
 public class ArchiveConfiguration {
     @Bean EventDecoder eventDecoder() { return new JsonEventDecoder(); }

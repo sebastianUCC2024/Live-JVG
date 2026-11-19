@@ -1,6 +1,7 @@
 package com.live_jgv.matchstate.domain.model;
 import java.time.Instant;
 import java.util.*;
+/** Valida la identidad y coherencia de la alerta con su snapshot de gol o VAR. */
 public record LiveAlertV1(String contractVersion,UUID alertId,String matchId,String sourceEventId,
         EventType eventType,String message,Instant timestamp,String referenceEventId,ScoreUpdate snapshot) {
     public LiveAlertV1 {

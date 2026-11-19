@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.amqp.rabbit.listener.*;
 import org.springframework.stereotype.Component;
 
-/** Transport readiness is not permission to accept an operation. No broker calls or auto-recovery. */
+/** La disponibilidad del transporte no autoriza aceptar operaciones. */
 @Component("messagingReadiness")
 public final class MessagingReadiness implements HealthIndicator {
     private final RabbitListenerEndpointRegistry registry;private final boolean enabled;private final boolean academic;

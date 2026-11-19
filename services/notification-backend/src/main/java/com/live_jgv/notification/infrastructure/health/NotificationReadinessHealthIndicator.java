@@ -8,7 +8,7 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 
-/** Fail-closed readiness for the current durable-consumer service profile. */
+/** Marca disponibilidad solo si el almacenamiento y el consumidor están preparados. */
 public final class NotificationReadinessHealthIndicator implements HealthIndicator {
     private final boolean storageEnabled;
     private final boolean consumerEnabled;

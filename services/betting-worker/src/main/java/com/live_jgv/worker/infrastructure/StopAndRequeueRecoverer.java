@@ -5,7 +5,7 @@ import org.springframework.amqp.ImmediateRequeueAmqpException;
 import org.springframework.amqp.rabbit.retry.MessageRecoverer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
 
-/** Retain the failed delivery, stop this service's listener, require operator recovery. */
+/** Conserva el mensaje fallido, detiene el listener y requiere recuperación explícita. */
 public final class StopAndRequeueRecoverer implements MessageRecoverer {
     private final RabbitListenerEndpointRegistry registry;
     public StopAndRequeueRecoverer(RabbitListenerEndpointRegistry registry){this.registry=registry;}

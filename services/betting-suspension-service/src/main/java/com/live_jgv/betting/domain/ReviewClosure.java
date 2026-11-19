@@ -3,11 +3,11 @@ package com.live_jgv.betting.domain;
 import java.time.Instant;
 import java.util.Objects;
 
-/** Internal, audited command. Not a Kafka DTO and not exposed as an HTTP operation. */
+/** Comando interno auditado; no se expone por Kafka ni HTTP. */
 public record ReviewClosure(String commandId, String matchId, String reviewId,
                             String continuationEventId, long expectedVersion, String actor, String reason,
                             Instant evidenceIssuedAt, Instant evidenceExpiresAt) {
-    /** Explicit internal interpretation; never inferred from an unversioned wire message. */
+    /** La versión se interpreta explícitamente, sin deducirla del mensaje. */
     public enum ReferenceMode { V1_GOAL, V2_REVIEW }
     public ReviewClosure {
         for (String value : new String[]{commandId,matchId,reviewId,continuationEventId,actor,reason})

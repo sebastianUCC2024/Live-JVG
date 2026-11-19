@@ -15,11 +15,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.live_jgv.matchstate.application.service.MatchStateService;
 import com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;
-import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
-import com.live_jgv.matchstate.domain.port.MatchStateRepository;
-import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
-import com.live_jgv.matchstate.entrypoint.kafka.KafkaMatchEventListener;
+import com.live_jgv.matchstate.application.port.in.ProcessMatchEvent;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.out.MatchStateRepository;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox;
+import com.live_jgv.matchstate.infrastructure.kafka.KafkaMatchEventListener;
 import com.live_jgv.matchstate.infrastructure.memory.InMemoryMatchStateStore;
 import com.live_jgv.matchstate.infrastructure.rabbit.RabbitScoreUpdatePublisher;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
-import com.live_jgv.matchstate.domain.port.IncomingEventHandler;
+import com.live_jgv.matchstate.application.port.in.IncomingEventHandler;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +42,7 @@ import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import java.time.Duration;
 
+/** Configura la mensajería y sus políticas de confirmación, reintento y recuperación. */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(MatchCatalogProperties.class)
 public class MessagingConfiguration {
@@ -108,8 +109,10 @@ public class MessagingConfiguration {
         var factory = new ConcurrentKafkaListenerContainerFactory<byte[], byte[]>();
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties()));
         factory.setConcurrency(1);
-        // Durable mode starts explicitly after migration, validation and outbox recovery.
+        // Inicia el consumo después de validar almacenamiento y recuperar el outbox.
         factory.setAutoStartup(environment.acceptsProfiles(Profiles.of("memory")) && properties.getListener().isAutoStartup());
+        // Configura RECORD y commits síncronos; auto-commit está desactivado.
+        // Los fallos conservan el registro para reintentar y pausar el consumidor.
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
         factory.getContainerProperties().setSyncCommits(true);
         factory.setCommonErrorHandler(matchEventsErrorHandler);

@@ -2,7 +2,7 @@ package com.live_jgv.archiver.integration;
 
 import com.live_jgv.archiver.application.*;
 import com.live_jgv.archiver.domain.*;
-import com.live_jgv.archiver.entrypoint.ArchiveKafkaListener;
+import com.live_jgv.archiver.infrastructure.kafka.ArchiveKafkaListener;
 import com.live_jgv.archiver.infrastructure.*;
 import com.live_jgv.archiver.infrastructure.jpa.*;
 import org.junit.jupiter.api.*;

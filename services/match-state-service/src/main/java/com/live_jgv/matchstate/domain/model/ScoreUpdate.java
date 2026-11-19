@@ -3,7 +3,7 @@ package com.live_jgv.matchstate.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-/** Provisional output contract; no transport annotations. */
+/** Contrato de salida sin anotaciones del transporte. */
 public record ScoreUpdate(String matchId, int homeScore, int awayScore,
                           String eventId, EventType eventType, Instant updatedAt,
                           VarStatus varStatus, String referenceEventId) {

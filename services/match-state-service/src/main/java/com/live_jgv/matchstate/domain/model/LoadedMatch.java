@@ -2,7 +2,7 @@ package com.live_jgv.matchstate.domain.model;
 
 import java.util.Objects;
 
-/** Storage revision, independent of a Java object's identity. */
+/** Revisión de almacenamiento independiente de la identidad del objeto Java. */
 public record LoadedMatch(MatchState state, long revision) {
     public LoadedMatch {
         Objects.requireNonNull(state);

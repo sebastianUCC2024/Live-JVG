@@ -4,7 +4,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/** Topic UUID prevents reusing custody coordinates after a topic is deleted/recreated. */
+/** El UUID distingue el topic si se elimina y vuelve a crearse. */
 public final class KafkaInputSource implements AutoCloseable {
     private final AdminClient admin;
     private final String namespace;

@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-/** Three retries per cycle, then a poll-safe container pause; never recover by discarding. */
+/** Realiza tres reintentos y pausa el contenedor; nunca descarta el registro. */
 public final class BoundedRetryErrorHandler extends DefaultErrorHandler implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(BoundedRetryErrorHandler.class);
     private final ThreadLocal<MessageListenerContainer> current = new ThreadLocal<>();

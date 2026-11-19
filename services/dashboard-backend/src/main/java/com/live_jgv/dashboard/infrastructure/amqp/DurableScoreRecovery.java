@@ -11,7 +11,7 @@ import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.retry.MessageRecoverer;
 
-/** Acknowledge the input only after confirmed custody in the failure queue. */
+/** Confirma la entrada únicamente después de asegurar su copia en la cola de fallos. */
 public final class DurableScoreRecovery implements MessageRecoverer {
     private final RabbitTemplate template;
     private final String exchange;
@@ -42,7 +42,7 @@ public final class DurableScoreRecovery implements MessageRecoverer {
             }
         } catch (Exception unavailable) {
             if (unavailable instanceof InterruptedException) Thread.currentThread().interrupt();
-            // Fail closed instead of dropping input or entering a poison-message redelivery loop.
+            // Conserva la entrada ante fallos de custodia, sin descartarla ni repetirla indefinidamente.
             try { stopConsumer.run(); }
             finally { throw new ImmediateRequeueAmqpException("DLQ custody unavailable; consumer stopped; input retained"); }
         }

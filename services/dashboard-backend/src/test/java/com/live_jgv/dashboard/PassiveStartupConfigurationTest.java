@@ -1,4 +1,5 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.jdbc.ScoreProjection;
 
 import java.util.Map;
 import javax.sql.DataSource;

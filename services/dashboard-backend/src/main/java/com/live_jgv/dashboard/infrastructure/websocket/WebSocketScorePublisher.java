@@ -1,7 +1,7 @@
 package com.live_jgv.dashboard.infrastructure.websocket;
 
 import com.live_jgv.dashboard.domain.model.MatchSnapshot;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import com.live_jgv.dashboard.infrastructure.web.MatchSnapshotResponse;
 import java.nio.charset.StandardCharsets;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

@@ -1,4 +1,5 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.http.ProducerGateway;
 
 import java.util.Map;
 import java.io.IOException;

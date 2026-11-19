@@ -1,9 +1,0 @@
-{
-  "schema_version": 1,
-  "command_id": "c1",
-  "operation_id": "o1",
-  "match_id": "m1",
-  "simulated_user_id": "u1",
-  "timestamp": "2026-11-16T22:00:00Z",
-  "unexpected": true
-}

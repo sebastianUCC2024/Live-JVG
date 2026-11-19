@@ -2,13 +2,13 @@ package com.live_jgv.matchstate.infrastructure.jdbc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.MatchStateRepository;
-import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
+import com.live_jgv.matchstate.application.port.out.MatchStateRepository;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.*;
 
-/** One PostgreSQL transaction commits revision, accepted event and immutable outbox. */
+/** Una transacción PostgreSQL guarda revisión, evento aceptado y outbox. */
 public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpdateOutbox {
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transactions;
@@ -52,7 +52,7 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
 
     @Override
     public Optional<LoadedMatch> load(String matchId) {
-        // A single statement gives catalog + complete ordered history the same MVCC snapshot.
+        // Consulta catálogo e historial ordenado con el mismo snapshot MVCC.
         return transactions.execute(status -> jdbc.query(connection -> {
             var statement = connection.prepareStatement("""
                 SELECT c.home_team_id,c.away_team_id,c.revision,c.rules_version,
@@ -61,7 +61,7 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
                  WHERE c.match_id=? ORDER BY e.application_seq
                 """);
             statement.setString(1, matchId);
-            statement.setFetchSize(256); // PostgreSQL cursor inside this DB-only transaction.
+            statement.setFetchSize(256); // El cursor PostgreSQL permanece dentro de esta transacción de base de datos.
             return statement;
         }, rs -> {
             if (!rs.next()) return Optional.empty();
@@ -147,7 +147,7 @@ public final class JdbcMatchStateStore implements MatchStateRepository, ScoreUpd
     @Override
     public void markPublished(ScoreUpdate update) {
         Runnable acknowledge = () -> {
-            storedPublication(update); // validate the same logical payload before recording acknowledgement
+            storedPublication(update); // Valida el mismo contenido antes de registrar la confirmación.
             int count = publicationJdbc().update("UPDATE match_state.score_outbox SET published=TRUE WHERE match_id=? AND event_id=? AND NOT published",
                     update.matchId(), update.eventId());
             if (count != 1) throw new IllegalStateException("Publication acknowledgement conflict");

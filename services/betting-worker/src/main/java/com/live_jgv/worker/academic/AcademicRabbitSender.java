@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/** Confirmed mandatory publication; timeout is uncertainty, never success. */
+/** Publica por AMQP con mandatory y confirms; un timeout deja el resultado incierto. */
 public final class AcademicRabbitSender {
     private final RabbitTemplate rabbit;private final String exchange,routing;private final long timeout;
     public AcademicRabbitSender(RabbitTemplate rabbit,String exchange,String routing,long timeout) {

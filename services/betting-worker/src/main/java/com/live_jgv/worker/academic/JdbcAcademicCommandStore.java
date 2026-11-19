@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.*;
 
-/** Per-command academic results, NOT a projection of current authoritative market state. */
+/** Guarda resultados académicos por comando, sin representar autoridad del mercado. */
 public final class JdbcAcademicCommandStore implements AcademicCommandStore {
     private final JdbcTemplate jdbc;private final TransactionTemplate tx;
     public JdbcAcademicCommandStore(JdbcTemplate jdbc,TransactionTemplate tx){this.jdbc=jdbc;this.tx=tx;}

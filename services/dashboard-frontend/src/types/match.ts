@@ -2,7 +2,7 @@ export const eventTypes = ['GOAL', 'VAR_CHECK', 'GOAL_ANNULLED', 'MATCH_CONTINUE
 export type EventType = typeof eventTypes[number]
 export type VarStatus = 'CLEAR' | 'IN_PROGRESS'
 
-/** MatchSnapshotResponse from dashboard-backend, not a shared Rabbit schema. */
+/** Respuesta MatchSnapshotResponse del dashboard, separada del contrato RabbitMQ. */
 export interface MatchSnapshot {
   stream_id: string
   revision: number
@@ -20,7 +20,7 @@ export type SnapshotReply =
   | { available: true; snapshot: MatchSnapshot }
   | { available: false; snapshot: null }
 
-/** Presentation model; live names come from REST, minutes remain demo-only. */
+/** Modelo de presentación: los nombres reales vienen de REST; los minutos son de demostración. */
 export interface MatchView {
   snapshot: MatchSnapshot
   home: { name: string; initials: string; color: string }

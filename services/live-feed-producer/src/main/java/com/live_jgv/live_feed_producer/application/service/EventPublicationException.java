@@ -2,7 +2,7 @@ package com.live_jgv.live_feed_producer.application.service;
 
 import com.live_jgv.live_feed_producer.domain.model.MatchEvent;
 
-/** Retains the exact event for recovery without retaining it in server storage. */
+/** Conserva el evento exacto para recuperarlo sin guardarlo en el servidor. */
 public final class EventPublicationException extends IllegalStateException {
     private final MatchEvent event;
     private final boolean preparationFailure;

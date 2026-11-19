@@ -2,13 +2,14 @@ package com.live_jgv.matchstate.application.service;
 
 import com.live_jgv.matchstate.domain.model.MatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;
-import com.live_jgv.matchstate.domain.port.MatchStateRepository;
-import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
+import com.live_jgv.matchstate.application.port.out.MatchStateRepository;
+import com.live_jgv.matchstate.application.port.in.ProcessMatchEvent;
 import java.util.ConcurrentModificationException;
 import java.util.Objects;
 import java.time.Clock;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 
+/** Aplica las reglas del agregado y guarda el estado junto con el outbox usando control de revisión. */
 public final class MatchStateService implements ProcessMatchEvent {
     private final MatchStateRepository repository;
     private final Clock clock;
@@ -55,7 +56,7 @@ public final class MatchStateService implements ProcessMatchEvent {
         return updated;
     }
 
-    /** New outputs must satisfy the consumer contract; historical aggregate replay is unchanged. */
+    /** Valida el contrato de salida sin cambiar el replay del historial. */
     public static void requirePublishableReference(MatchEvent event) {
         if (event.referenceEventId() != null && event.referenceEventId().isBlank()) {
             throw new com.live_jgv.matchstate.domain.model.InvalidMatchEventException("reference_event_id must be null or nonblank");

@@ -11,7 +11,7 @@ import com.live_jgv.dashboard.domain.model.*;
 import java.io.IOException;
 import java.time.Instant;
 
-/** Dedicated transport mapper; does not alter Spring MVC's ObjectMapper. */
+/** Decodifica el mensaje sin modificar el ObjectMapper de Spring MVC. */
 public final class ScoreUpdateMessageDecoder {
     private final ObjectMapper mapper = JsonMapper.builder()
             .addModule(new JavaTimeModule())

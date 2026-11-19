@@ -13,6 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Clock;
 import java.util.HashMap;
 
+/** Configura el consumidor Kafka y su persistencia con commits RECORD síncronos. */
 @Configuration(proxyBeanMethods=false)
 public class SuspensionConfiguration {
     @Bean @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(LeaseSourceVerifier.class)

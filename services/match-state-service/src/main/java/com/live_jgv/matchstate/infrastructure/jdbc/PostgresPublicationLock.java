@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-/** Session lock, never a transaction spanning RabbitMQ. Requires session pooling. */
+/** Bloqueo de sesión: no mantiene una transacción abierta mientras espera a RabbitMQ. */
 final class PostgresPublicationLock {
     private final DataSource source;
 
@@ -29,7 +29,7 @@ final class PostgresPublicationLock {
             try {
                 locked = lockFunction(connection, "pg_try_advisory_lock", key);
                 if (!locked) throw new IllegalStateException("Outbox publication lane busy; retry required");
-                // Every read/ack uses this very session: no replacement connection after a failure.
+                // Las lecturas y confirmaciones usan la misma sesión bloqueada.
                 var session = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
                 session.setQueryTimeout(5);
                 publication.accept(session);
@@ -43,13 +43,13 @@ final class PostgresPublicationLock {
                             throw new SQLException("Publication lock ownership lost");
                         }
                     } catch (SQLException | RuntimeException failure) {
-                        // Never return a potentially locked physical session to a pool.
+                        // No devuelve al pool una sesión que podría conservar el bloqueo.
                         abort(connection, failure);
                         if (primary != null) primary.addSuppressed(failure);
                         else throw new IllegalStateException("Cannot release publication session", failure);
                     }
                 }
-                // Acquisition may have succeeded on the server even if its reply was lost.
+                // El servidor pudo adquirir el bloqueo aunque se perdiera su respuesta.
                 else if (primary instanceof SQLException) abort(connection, primary);
             }
         } catch (SQLException failure) {

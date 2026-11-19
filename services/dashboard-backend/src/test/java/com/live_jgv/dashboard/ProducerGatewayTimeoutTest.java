@@ -1,4 +1,5 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.http.ProducerGateway;
 
 import com.sun.net.httpserver.HttpServer;
 import java.net.*;

@@ -9,7 +9,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Objects;
 
-/** Real Spring Data/Hibernate adapter: native race-safe inserts, managed receipts and ORM history. */
+/** Guarda evento y comprobante en una transacción JPA; los conflictos no reemplazan el historial. */
 public final class JpaArchiveStore implements ArchiveStore {
     private final ArchivedEventRepository events;
     private final InputReceiptRepository receipts;
@@ -48,8 +48,8 @@ public final class JpaArchiveStore implements ArchiveStore {
             } else throw new IllegalStateException("Invalid event insert count");
         }
         receipt.complete(outcome,matchId,eventId,reason);
-        // Managed entity dirty checking writes only mutable audit fields. Flush inside the same transaction;
-        // constraint/storage errors propagate before Kafka's listener is allowed to return successfully.
+        // El dirty checking actualiza los campos de auditoría dentro de la transacción.
+        // El flush propaga errores antes de permitir confirmar el offset de Kafka.
         receipts.flush();
         return outcome;
     }

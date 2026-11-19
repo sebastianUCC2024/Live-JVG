@@ -3,7 +3,7 @@ package com.live_jgv.matchstate.infrastructure.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.MatchStateServiceApplication;
 import com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import com.live_jgv.matchstate.infrastructure.jdbc.JdbcMatchStateStore;
 import com.live_jgv.matchstate.infrastructure.rabbit.RabbitScoreUpdatePublisher;
 import org.junit.jupiter.api.Test;

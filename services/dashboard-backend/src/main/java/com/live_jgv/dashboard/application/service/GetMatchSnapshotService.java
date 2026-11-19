@@ -1,8 +1,8 @@
 package com.live_jgv.dashboard.application.service;
 
 import com.live_jgv.dashboard.domain.model.MatchSnapshot;
-import com.live_jgv.dashboard.domain.port.in.GetMatchSnapshot;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotRepository;
+import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotRepository;
 import java.util.Objects;
 import java.util.Optional;
 

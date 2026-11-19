@@ -16,6 +16,7 @@ import org.springframework.amqp.ImmediateRequeueAmqpException;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.retry.interceptor.RetryOperationsInterceptor;
 
+/** Configura el consumidor académico: ACK automático, cuatro intentos y reencolado con parada al agotar reintentos. */
 @Configuration(proxyBeanMethods=false)
 @ConditionalOnProperty(name="academic.consumer.enabled",havingValue="true")
 public class AcademicRabbitConfiguration {

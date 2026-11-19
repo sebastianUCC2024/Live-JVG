@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.application.service.MatchStateService;
 import com.live_jgv.matchstate.application.service.ProcessAndPublishMatchEvent;
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.IncomingEventHandler;
-import com.live_jgv.matchstate.entrypoint.kafka.MatchEventMessage;
+import com.live_jgv.matchstate.application.port.in.IncomingEventHandler;
+import com.live_jgv.matchstate.infrastructure.kafka.MatchEventMessage;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/** Custody is transferred atomically to accepted ledger/outbox or durable quarantine. */
+/** Guarda atómicamente el evento aceptado con outbox o lo conserva en cuarentena. */
 public final class DurableEventIngress implements IncomingEventHandler {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DurableEventIngress.class);
     private final JdbcTemplate jdbc;
@@ -34,7 +34,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
         synchronized (custodyLanes.computeIfAbsent(key, ignored -> new Object())) {
             matchToDrain = accept(input);
         }
-        // Never hold the local custody monitor while awaiting RabbitMQ.
+        // Libera el monitor local antes de esperar a RabbitMQ.
         if (matchToDrain != null) publisherLane.recoverPendingMatch(matchToDrain);
     }
 
@@ -47,7 +47,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
             if (!candidate.matchId().equals(utf8(input.key()))) throw new IllegalArgumentException("Key mismatch");
             parsed = candidate;
         } catch (com.fasterxml.jackson.core.JsonProcessingException | IllegalArgumentException | java.time.DateTimeException failure) {
-            // Only transport/validation failures: DB and publication exceptions are outside this catch.
+            // Este bloque captura validación; los fallos de base de datos y publicación se propagan.
         }
         final MatchEvent event = parsed;
         String matchToDrain = tx.execute(status -> {
@@ -65,7 +65,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
                 receipt(input, null, "QUARANTINED", quarantineMalformed(input)); return null;
             }
             registerDemoRound(event);
-            var loaded = store.load(event.matchId()); // Corrupt stored history is never classified as input rejection.
+            var loaded = store.load(event.matchId()); // Un historial corrupto es un fallo de almacenamiento, no un rechazo del mensaje.
             var accepted = loaded.map(l -> l.state().processedEvents().get(event.eventId())).orElse(null);
             var identity = identity(accepted == null ? event : accepted, accepted != null);
             if (!decode((String) identity.get("canonical_payload"), MatchEvent.class).equals(event)) {
@@ -87,7 +87,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
                         deferred ? "DEFERRED" : "REJECTED", caseId, event.matchId(), event.eventId());
                 receipt(input, event, deferred ? "DEFERRED" : "QUARANTINED", caseId); return null;
             }
-            new MatchStateService(store).process(event); // Same transaction includes 7H CAS, ledger and outbox.
+            new MatchStateService(store).process(event); // La misma transacción incluye revisión CAS, historial y outbox.
             jdbc.update("UPDATE match_state.event_identity SET status='APPLIED' WHERE match_id=? AND event_id=?", event.matchId(), event.eventId());
             receipt(input, event, "APPLIED", null); return event.matchId();
         });
@@ -135,7 +135,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
                 if (reference == null) reference = textual(tree.get("annuls_event_id"));
             }
         } catch (com.fasterxml.jackson.core.JsonProcessingException | IllegalArgumentException ignored) {
-            // Malformed JSON has no trustworthy extracted identity; raw bytes remain authoritative.
+            // Un JSON inválido conserva sus bytes; no se confía en su identidad extraída.
         }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO match_state.quarantine_case(case_id,reason_code,review_state,match_id,event_id,reference_event_id) VALUES (?,'MALFORMED','QUARANTINED',?,?,?)", id, match, event, reference);
@@ -157,12 +157,12 @@ public final class DurableEventIngress implements IncomingEventHandler {
                 matchId, eventId, caseId);
     }
 
-    /** Administrative view; immutable originals are linked through input_receipt.case_id. */
+    /** Vista de revisión enlazada con los originales mediante input_receipt.case_id. */
     public List<Map<String, Object>> cases() {
         return jdbc.queryForList("SELECT * FROM match_state.quarantine_case ORDER BY first_seen,case_id");
     }
 
-    /** Explicit approval against a revision, never invoked automatically when a goal arrives. */
+    /** Exige aprobación sobre una revisión; la llegada de un gol no la ejecuta automáticamente. */
     public String replay(ReplayRequest request) {
         String[] matchToDrain = new String[1];
         String result = tx.execute(status -> {

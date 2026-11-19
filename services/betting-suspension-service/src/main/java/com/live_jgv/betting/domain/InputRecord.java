@@ -2,7 +2,7 @@ package com.live_jgv.betting.domain;
 
 import java.util.Objects;
 
-/** Immutable original transport evidence, including Kafka tombstones and invalid UTF-8. */
+/** Conserva los bytes originales de Kafka, incluidos tombstones y UTF-8 inválido. */
 public record InputRecord(String sourceId, String topic, int partition, long offset,
                           long brokerTimestamp, byte[] key, byte[] value, String headers) {
     public InputRecord {

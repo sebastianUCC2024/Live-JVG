@@ -1,8 +1,8 @@
 package com.live_jgv.dashboard.infrastructure.amqp;
 
 import com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException;
-import com.live_jgv.dashboard.domain.port.in.ProcessScoreUpdate;
-import com.live_jgv.dashboard.domain.port.out.DashboardUpdatePublisher;
+import com.live_jgv.dashboard.application.port.in.ProcessScoreUpdate;
+import com.live_jgv.dashboard.application.port.out.DashboardUpdatePublisher;
 import com.live_jgv.dashboard.application.service.ProcessScoreUpdateService;
 import com.live_jgv.dashboard.infrastructure.memory.InMemoryDashboardProjection;
 import java.util.concurrent.atomic.AtomicInteger;

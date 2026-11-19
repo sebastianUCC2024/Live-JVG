@@ -45,7 +45,7 @@ public class DurableStorageConfiguration {
                     .forEach(d -> store.register(MatchState.start(d.matchId(), d.homeTeamId(), d.awayTeamId())));
         }
         if (startup.recovery()) {
-            for (var match : store.matchIds()) store.load(match); // fail on corrupt history, never reset it
+            for (var match : store.matchIds()) store.load(match); // Falla si el historial está corrupto; nunca lo reinicia.
         }
         return store;
     }

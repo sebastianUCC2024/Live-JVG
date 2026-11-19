@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Recibe notification.messaging.queue; guarda alertas y usa ACK manual tras el commit o transferencia confirmada a DLQ. */
 public final class ScoreUpdateListener {
     @FunctionalInterface public interface Sleeper { void sleep(long millis) throws InterruptedException; }
     private static final Logger LOG = LoggerFactory.getLogger(ScoreUpdateListener.class);
@@ -70,8 +71,8 @@ public final class ScoreUpdateListener {
             }
             LOG.warn("Notification input transferred to DLQ; failureType={}", failure.getClass().getSimpleName());
         }
-        // Outside processing retries: an ACK I/O failure must not repeat business work
-        // within this delivery. Broker redelivery is handled by the durable inbox.
+        // Un fallo de ACK no repite el trabajo dentro de la misma entrega.
+        // El inbox persistente gestiona las reentregas del broker.
         channel.basicAck(tag, false);
     }
     private void retain(Message message, Channel channel, long tag) throws IOException {

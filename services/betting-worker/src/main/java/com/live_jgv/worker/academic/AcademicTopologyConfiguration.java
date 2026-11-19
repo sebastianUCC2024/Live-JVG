@@ -7,6 +7,7 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 
+/** Declara betting_commands y su DLX direct; rejected enruta a la DLQ. La entrada usa el exchange predeterminado. */
 @Configuration(proxyBeanMethods=false)
 @ConditionalOnProperty(name="academic.topology.enabled",havingValue="true")
 public class AcademicTopologyConfiguration {

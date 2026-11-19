@@ -44,7 +44,7 @@ class JdbcMatchStateStoreIntegrationTest {
         store.register(MatchState.start(other,"home","away"));
         new MatchStateService(store).process(new MatchEvent("g",match,EventType.GOAL,"home",1,TIME,null));
         new MatchStateService(store).process(new MatchEvent("g",other,EventType.GOAL,"home",1,TIME,null));
-        com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher publisher=update->{
+        com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher publisher=update->{
             if(update.matchId().equals(match)) {
                 entered.countDown();
                 try { assertTrue(release.await(5,TimeUnit.SECONDS)); }

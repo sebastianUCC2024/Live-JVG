@@ -7,7 +7,7 @@ import org.springframework.util.backoff.FixedBackOff;
 import java.util.List;
 import java.util.Map;
 
-/** Four deliveries per processing cycle, then pause for operator review. No discard recovery. */
+/** Tras cuatro intentos pausa el consumidor para revisión; no descarta el registro. */
 public final class SuspensionErrorHandler extends DefaultErrorHandler {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SuspensionErrorHandler.class);
     private final ThreadLocal<MessageListenerContainer> current = new ThreadLocal<>();

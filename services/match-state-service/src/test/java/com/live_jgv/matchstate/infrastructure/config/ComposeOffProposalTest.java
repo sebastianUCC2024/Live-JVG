@@ -60,7 +60,7 @@ class ComposeOffProposalTest {
                     "SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP")) assertEquals("false", env.get(key), name + ":" + key);
             assertEquals("never", env.get("SPRING_SQL_INIT_MODE"));
             if (List.of("producer", "dashboard").contains(name)) {
-                assertEquals("true", map(map(base.get(name)).get("environment")).get("SIMULATOR_WRITE_ENABLED"));
+                assertEquals("${SIMULATOR_WRITE_ENABLED:-true}", map(map(base.get(name)).get("environment")).get("SIMULATOR_WRITE_ENABLED"));
                 assertEquals("false", env.get("SIMULATOR_WRITE_ENABLED"));
             }
             if (name.equals("dashboard")) {

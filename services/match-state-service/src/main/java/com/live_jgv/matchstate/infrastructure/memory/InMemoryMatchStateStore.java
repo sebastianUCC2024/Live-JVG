@@ -3,15 +3,15 @@ package com.live_jgv.matchstate.infrastructure.memory;
 import com.live_jgv.matchstate.domain.model.MatchState;
 import com.live_jgv.matchstate.domain.model.LoadedMatch;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
-import com.live_jgv.matchstate.domain.port.MatchStateRepository;
-import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
+import com.live_jgv.matchstate.application.port.out.MatchStateRepository;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Single-process adapter. State, deduplication and pending messages are NOT durable. */
+/** Adaptador en memoria: estado, deduplicación y pendientes se pierden al reiniciar. */
 public final class InMemoryMatchStateStore implements MatchStateRepository, ScoreUpdateOutbox {
     private record Entry(MatchState state, Map<String, ScoreUpdate> pending) { }
     private final Map<String, Entry> matches = new HashMap<>();
@@ -44,12 +44,12 @@ public final class InMemoryMatchStateStore implements MatchStateRepository, Scor
         if (pending.putIfAbsent(update.eventId(), update) != null) {
             throw new IllegalStateException("Update already pending");
         }
-        // Replace one entry after constructing both objects; readers see state and outbox together.
+        // Reemplaza estado y outbox juntos para mantener una vista consistente.
         matches.put(updated.matchId(), new Entry(updated, java.util.Collections.unmodifiableMap(pending)));
         return true;
     }
 
-    /** Convenience for existing in-memory fixtures. Production uses an explicit LoadedMatch. */
+    /** Ayuda para pruebas en memoria; producción utiliza LoadedMatch explícito. */
     public boolean compareAndSet(MatchState expected, MatchState updated, ScoreUpdate update) {
         return compareAndSet(new LoadedMatch(expected, expected.processedEvents().size()), updated, update);
     }

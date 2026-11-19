@@ -2,7 +2,7 @@ package com.live_jgv.worker.domain;
 
 import java.time.*;
 
-/** Last observed durable version plus short-lived authoritative proof; not a distributed lock. */
+/** Valida la versión persistida y su evidencia vigente; no sustituye un bloqueo distribuido. */
 public final class AcceptancePolicy {
     public record Decision(Operation.State state,String reason,MarketGuard guard) { }
     private final boolean enabled;

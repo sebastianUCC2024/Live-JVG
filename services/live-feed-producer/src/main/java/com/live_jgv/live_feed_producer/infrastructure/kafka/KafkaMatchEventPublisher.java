@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.live_jgv.live_feed_producer.domain.model.MatchEvent;
-import com.live_jgv.live_feed_producer.domain.port.MatchEventPublisher;
+import com.live_jgv.live_feed_producer.application.port.out.MatchEventPublisher;
 import com.live_jgv.live_feed_producer.application.service.OutgoingReferencePolicy;
 import com.live_jgv.live_feed_producer.application.service.EventPreparationException;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-/** Provisional wire format matching the local contract proposal. */
+/** Publica eventos en match_events con matchId como clave; acks=all y las confirmaciones de Kafka no equivalen a una transacción global. */
 @Component
 public final class KafkaMatchEventPublisher implements MatchEventPublisher {
     private static final Logger log = LoggerFactory.getLogger(KafkaMatchEventPublisher.class);
@@ -61,7 +61,7 @@ public final class KafkaMatchEventPublisher implements MatchEventPublisher {
     }
 
     private IllegalStateException sendFailure(MatchEvent event, Throwable failure) {
-        // Avoid logging payloads, settings or potentially sensitive exception messages.
+        // No registra payloads, configuración ni mensajes que puedan contener secretos.
         log.warn("Kafka publication failed; eventId={}, topic={}, failureType={}",
                 event.eventId(), topic, failure.getClass().getSimpleName());
         return new IllegalStateException("Kafka did not acknowledge event publication", failure);

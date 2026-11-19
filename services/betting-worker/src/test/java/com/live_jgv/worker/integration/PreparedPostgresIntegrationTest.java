@@ -37,10 +37,10 @@ class PreparedPostgresIntegrationTest {
         assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM betting_worker.operation",Integer.class));
 
         // Internal domain entry point uses the same durable transaction, inbox and query after restart.
-        var service=new WorkerService(recovered,new JsonCommandDecoder());
+        var service=new WorkerService(recovered,new JsonCommandDecoder(),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation());
         var domain=new SimulatedCommand("domain-c","domain-o","it-match","sim-user",now);
         assertEquals(WorkerStore.Outcome.PROCESSED,service.submit(domain));
-        var restarted=new WorkerService(new JdbcWorkerStore(jdbc,tx,source,policy,Clock.fixed(now,ZoneOffset.UTC)),new JsonCommandDecoder());
+        var restarted=new WorkerService(new JdbcWorkerStore(jdbc,tx,source,policy,Clock.fixed(now,ZoneOffset.UTC)),new JsonCommandDecoder(),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation());
         assertEquals(WorkerStore.Outcome.DUPLICATE,restarted.submit(domain));
         assertEquals(WorkerStore.Outcome.IDENTITY_CONFLICT,restarted.submit(new SimulatedCommand("domain-c","domain-o","it-match","different-user",now)));
         assertEquals(Operation.State.BLOCKED,restarted.find("domain-o").orElseThrow().state());
@@ -49,7 +49,7 @@ class PreparedPostgresIntegrationTest {
 
         var retry=new SimulatedCommand("retry-c","retry-o","it-match","sim-user",now);
         var failing=new WorkerService(new JdbcWorkerStore(jdbc,tx,source,policy,Clock.fixed(now,ZoneOffset.UTC),
-                command->{throw new IllegalStateException("Test authority unavailable");}),new JsonCommandDecoder());
+                command->{throw new IllegalStateException("Test authority unavailable");}),new JsonCommandDecoder(),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation());
         assertThrows(IllegalStateException.class,()->failing.submit(retry));
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM betting_worker.command_inbox WHERE command_id='retry-c'",Integer.class));
         assertTrue(restarted.find("retry-o").isEmpty());

@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Duration;
+/** Configura el exchange fanout live_alerts y activa su publicación solo mediante propiedades. */
 @Configuration(proxyBeanMethods=false)
 @Profile("!memory")
 @ConditionalOnProperty(name="match-state.alerts.publication-enabled",havingValue="true")

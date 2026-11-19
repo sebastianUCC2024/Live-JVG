@@ -1,7 +1,7 @@
 package com.live_jgv.matchstate.application.service;
 
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.MatchStateRepository;
+import com.live_jgv.matchstate.application.port.out.MatchStateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

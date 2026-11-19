@@ -1,4 +1,4 @@
-# Common settings live in application.properties; these namespaces also support memory mode.
+# La configuración común está en application.properties; estas propiedades también admiten modo memory.
 dashboard:
   web:
     allowed-origins: ${DASHBOARD_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:18080,http://127.0.0.1:18080}

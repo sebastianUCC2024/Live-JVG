@@ -8,7 +8,7 @@ import java.time.*;
 import java.sql.Timestamp;
 import java.util.*;
 
-/** No second datasource, REST or autonomous transaction: source locks remain owned by worker commit. */
+/** Mantiene los bloqueos de origen en la misma transacción JDBC del worker. */
 public final class JdbcAtomicAuthorization implements AtomicAuthorizationPort {
     private final JdbcTemplate jdbc;private final String database;private final UUID epoch;
     public JdbcAtomicAuthorization(JdbcTemplate jdbc,String database,String epoch){

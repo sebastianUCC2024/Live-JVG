@@ -3,7 +3,7 @@ package com.live_jgv.matchstate.infrastructure.rabbit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 import com.live_jgv.matchstate.domain.model.StoredScoreUpdate;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/** Publica ScoreUpdate por AMQP en el exchange topic live_updates con routing score.<matchId>; espera confirms y detecta returns. */
 public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
     private static final Logger log = LoggerFactory.getLogger(RabbitScoreUpdatePublisher.class);
     private final RabbitTemplate template;
@@ -65,7 +66,7 @@ public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
         var correlation = new CorrelationData(UUID.randomUUID().toString());
         try {
             template.send(destination, routingKey, new Message(json, properties), correlation);
-            // A bounded wait is deliberate: Kafka must not commit before Rabbit acknowledges.
+            // Espera la confirmación de RabbitMQ antes de permitir confirmar Kafka.
             var confirm = correlation.getFuture().get(confirmTimeoutMillis, TimeUnit.MILLISECONDS);
             if (!confirm.isAck() || correlation.getReturned() != null) {
                 throw new ScoreUpdatePublicationException("RabbitMQ rejected or could not route score update");

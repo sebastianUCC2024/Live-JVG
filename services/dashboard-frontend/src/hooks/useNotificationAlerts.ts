@@ -45,7 +45,7 @@ export function useNotificationAlerts(matchId: string | null, rawOrigin: string 
         if (!active) return
         if (page.has_more && (page.next_cursor === after || session.drain.has(page.next_cursor)))
           throw new NotificationApiError(0, 'El cursor no avanza. Reintenta la consulta de alertas.')
-        // A reset replaces the previous epoch only after a valid initial page arrives.
+        // Reemplaza la época anterior solo después de recibir una página inicial válida.
         if (session.recovering) session.items.clear()
         for (const alert of page.items) {
           const identity = alert.alert_id.toLowerCase()
@@ -65,7 +65,7 @@ export function useNotificationAlerts(matchId: string | null, rawOrigin: string 
           publish('loading', null, true); schedule(ALERT_DRAIN_MS)
         } else {
           session.errorStatus = apiError.status
-          publish('error', apiError.message) // Stop automatic retries; the user can retry explicitly.
+          publish('error', apiError.message) // Detiene los reintentos automáticos y permite reintentar manualmente.
         }
       } finally {
         clearTimeout(timeout)

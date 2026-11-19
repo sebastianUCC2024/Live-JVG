@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.UUID;
 
-/** Opaque, scoped checkpoint, not an authentication token. */
+/** Cursor de consulta con alcance definido; no es un token de autenticación. */
 public record AlertCursor(UUID epoch, String matchId, long sequence) {
     public String encode() {
         String scope = Base64.getUrlEncoder().withoutPadding().encodeToString(matchId.getBytes(StandardCharsets.UTF_8));

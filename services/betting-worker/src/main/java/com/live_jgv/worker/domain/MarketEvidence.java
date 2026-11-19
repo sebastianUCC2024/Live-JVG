@@ -3,7 +3,7 @@ package com.live_jgv.worker.domain;
 import java.time.Instant;
 import java.util.Objects;
 
-/** Evidence may only be supplied by a future approved authority adapter, not command payloads. */
+/** La evidencia proviene del adaptador de autoridad, nunca del comando recibido. */
 public record MarketEvidence(String matchId,String authority,String epoch,long revision,Status status,
                              Instant issuedAt,Instant expiresAt) {
     public enum Status { OPEN, SUSPENDED, UNKNOWN }

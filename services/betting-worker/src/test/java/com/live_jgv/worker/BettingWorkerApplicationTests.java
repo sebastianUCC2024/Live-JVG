@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
 import com.live_jgv.worker.application.SuspensionEvidencePort;
-import com.live_jgv.worker.entrypoint.WorkerRabbitListener;
+import com.live_jgv.worker.infrastructure.amqp.WorkerRabbitListener;
 import com.live_jgv.worker.domain.*;
 import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;

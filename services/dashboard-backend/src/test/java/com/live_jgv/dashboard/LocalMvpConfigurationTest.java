@@ -16,7 +16,7 @@ class LocalMvpConfigurationTest {
         assertEquals(1, ((Map<String,Object>)dashboard.get("deploy")).get("replicas"));
         for(String name:List.of("producer","dashboard")) {
             var env=(Map<String,Object>)services.get(name).get("environment");
-            assertEquals("true",env.get("SIMULATOR_WRITE_ENABLED"));
+            assertEquals("${SIMULATOR_WRITE_ENABLED:-true}",env.get("SIMULATOR_WRITE_ENABLED"));
             assertEquals("8080",env.get("PORT"));
         }
         for(var service:services.values()) {

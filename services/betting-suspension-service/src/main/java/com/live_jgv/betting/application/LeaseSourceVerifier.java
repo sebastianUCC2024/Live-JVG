@@ -1,8 +1,8 @@
 package com.live_jgv.betting.application;
 
-/** Internal trust boundary. An opaque checkpoint alone is never proof of source freshness. */
+/** Verifica la vigencia de la fuente; un checkpoint aislado no demuestra actualidad. */
 @FunctionalInterface
 public interface LeaseSourceVerifier {
-    /** Called under the market lock. Implementations require approval and bounded execution. */
+    /** Se ejecuta con el mercado bloqueado y debe tener una duración acotada. */
     boolean verify(String matchId,long marketVersion,String sourceCheckpoint);
 }

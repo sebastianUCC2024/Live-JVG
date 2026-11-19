@@ -17,11 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.*;
 
+/** Declara exchange topic de scores o fanout live_alerts, colas y bindings; usa DLX direct con routing rejected. */
 @Configuration(proxyBeanMethods=false)
 @EnableRabbit
 @ConditionalOnProperty(name="notification.messaging.enabled", havingValue="true")
 public class RabbitConfiguration {
-    /** Byte budget is separate from the existing explicit-ID allowlist. */
+    /** Valida el tamaño de la routing key además de la lista de partidos permitidos. */
     public static String scoreRoutingKey(String matchId) {
         if (matchId == null || matchId.isBlank()) throw new IllegalArgumentException("Match ID required");
         String key="score."+matchId;
@@ -66,8 +67,8 @@ public class RabbitConfiguration {
     }
     @Bean RabbitAdmin notificationAdmin(ConnectionFactory connectionFactory, ConsumerReadiness consumer) {
         connectionFactory.addConnectionListener(consumer);
-        // Spring propagates listeners to its publisher factory. Publisher-only
-        // connections must not invalidate an otherwise healthy input consumer.
+        // Spring propaga los listeners a la conexión de publicación.
+        // La conexión de publicación no invalida al consumidor activo.
         var publisher=connectionFactory.getPublisherConnectionFactory();
         if (publisher!=null && publisher!=connectionFactory) publisher.removeConnectionListener(consumer);
         return new RabbitAdmin(connectionFactory);

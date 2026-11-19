@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 
-/** Earliest unpublished version per match; a timeout rolls back the published marker. */
+/** Publica la primera versión pendiente por partido; un timeout revierte la marca. */
 public final class OutboxDispatcher {
     private final JdbcTemplate jdbc;private final TransactionTemplate tx;private final SuspensionPublisher publisher;
     public OutboxDispatcher(JdbcTemplate jdbc,TransactionTemplate tx,SuspensionPublisher publisher) { this.jdbc=jdbc;this.tx=tx;this.publisher=publisher; }

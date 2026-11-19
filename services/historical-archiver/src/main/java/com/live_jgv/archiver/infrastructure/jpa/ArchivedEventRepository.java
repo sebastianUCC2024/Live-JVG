@@ -20,7 +20,7 @@ public interface ArchivedEventRepository extends JpaRepository<ArchivedEventEnti
     long countByMatchId(String matchId);
     @Query("select e from ArchivedEventEntity e where e.matchId=:match order by e.sequence asc")
     List<ArchivedEventEntity> history(@Param("match") String match, Pageable page);
-    // JPA setFirstResult is int; preserve the existing JDBC API's long offsets as well.
+    // Conserva offsets long de la API aunque JPA utilice int.
     @Query(value="SELECT * FROM archiver.archived_event WHERE match_id=:match ORDER BY seq ASC LIMIT :size OFFSET :offset",nativeQuery=true)
     List<ArchivedEventEntity> historyAtOffset(@Param("match") String match,@Param("offset") long offset,@Param("size") int size);
 }

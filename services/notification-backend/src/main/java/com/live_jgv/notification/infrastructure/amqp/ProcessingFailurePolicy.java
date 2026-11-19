@@ -6,7 +6,7 @@ import org.springframework.dao.*;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.TransactionSystemException;
 
-/** Explicit classification; unknown failures receive bounded retries, never silent discard. */
+/** Clasifica fallos y limita reintentos, sin descartar errores desconocidos. */
 public final class ProcessingFailurePolicy {
     public enum Category { TRANSIENT, PERMANENT, UNKNOWN }
     public Category classify(Throwable failure) {

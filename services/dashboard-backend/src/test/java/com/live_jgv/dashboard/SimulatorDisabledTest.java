@@ -1,6 +1,9 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.jdbc.ScoreProjection;
+import com.live_jgv.dashboard.infrastructure.http.ProducerGateway;
+import com.live_jgv.dashboard.infrastructure.web.DashboardController;
 
-import com.live_jgv.dashboard.domain.port.in.GetMatchSnapshot;
+import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

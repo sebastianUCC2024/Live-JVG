@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Immutable aggregate. Only accepted events contribute to state and history. */
+/** Deriva el marcador de goles aceptados; valida anulaciones, duplicados y cierre en minuto 15 con VAR resuelto. */
 public final class MatchState {
     private final String matchId;
     private final String homeTeamId;
@@ -42,6 +42,7 @@ public final class MatchState {
         return new MatchState(matchId, homeTeamId, awayTeamId, Map.of(), Set.of(), VarStatus.CLEAR, false);
     }
 
+    /** Valida el evento antes de cambiar el estado; una reentrega idéntica no duplica su efecto. */
     public MatchState apply(MatchEvent event) {
         return apply(event, true);
     }
@@ -69,7 +70,7 @@ public final class MatchState {
         var annulled = copy ? new HashSet<>(annulledGoalIds) : annulledGoalIds;
         var status = varStatus;
         switch (event.eventType()) {
-            case GOAL -> { /* Score is derived from the accepted goal ledger. */ }
+            case GOAL -> { /* El marcador se calcula desde el historial de goles aceptados. */ }
             case VAR_CHECK -> {
                 if (event.referenceEventId() != null) {
                     activeGoal(event.referenceEventId());
@@ -96,7 +97,7 @@ public final class MatchState {
         return new MatchState(matchId, homeTeamId, awayTeamId, events, annulled, status, event.eventType() == EventType.MATCH_FINISHED, copy);
     }
 
-    /** One mutable, private replay buffer; every event uses the same domain validations. */
+    /** Reconstruye el historial aplicando las mismas validaciones de dominio. */
     public static Rebuilder rebuilder(String matchId, String homeTeamId, String awayTeamId) {
         var initial = start(matchId, homeTeamId, awayTeamId);
         return new Rebuilder(new MatchState(initial.matchId, initial.homeTeamId, initial.awayTeamId,

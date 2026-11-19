@@ -1,6 +1,6 @@
 package com.live_jgv.dashboard.infrastructure.websocket;
 
-import com.live_jgv.dashboard.domain.port.in.GetMatchSnapshot;
+import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
 import com.live_jgv.dashboard.infrastructure.web.MatchSnapshotResponse;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
@@ -14,7 +14,7 @@ public class SnapshotSubscriptionController {
         this.query = query;
     }
 
-    /** Direct response to the requesting session, not a broadcast to other viewers. */
+    /** Responde solo a la sesión solicitante, sin difundir la recuperación. */
     @SubscribeMapping("/matches/{matchId}/snapshot")
     public SnapshotReply snapshot(@DestinationVariable String matchId) {
         return query.find(matchId).map(value -> new SnapshotReply(true, MatchSnapshotResponse.from(value)))

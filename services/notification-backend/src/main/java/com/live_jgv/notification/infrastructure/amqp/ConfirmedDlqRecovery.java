@@ -7,6 +7,7 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
+/** Copia el mensaje a la DLQ mediante AMQP y confirms antes de liberar la entrega original. */
 public final class ConfirmedDlqRecovery {
     private final RabbitTemplate template;
     private final String exchange;

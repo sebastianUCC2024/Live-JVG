@@ -2,9 +2,9 @@ package com.live_jgv.dashboard.infrastructure.amqp;
 
 import com.live_jgv.dashboard.application.service.ProcessScoreUpdateService;
 import com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException;
-import com.live_jgv.dashboard.domain.port.in.ProcessScoreUpdate;
-import com.live_jgv.dashboard.domain.port.in.GetMatchSnapshot;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.in.ProcessScoreUpdate;
+import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import com.live_jgv.dashboard.application.service.GetMatchSnapshotService;
 import com.live_jgv.dashboard.infrastructure.memory.InMemoryDashboardProjection;
 import java.util.Map;
@@ -94,7 +94,7 @@ public class DashboardRabbitConfiguration {
         factory.setDefaultRequeueRejected(false);
         factory.setAdviceChain(dashboardRetryAdvice);
         factory.setErrorHandler(failure -> {
-            // Do not log ListenerExecutionFailedException: it can contain the raw body.
+            // No registra la excepción completa: puede contener el cuerpo del mensaje.
             log.warn("Dashboard listener rejected a message; failureType={}", failure.getClass().getName());
             throw new AmqpRejectAndDontRequeueException("Dashboard listener rejected message");
         });

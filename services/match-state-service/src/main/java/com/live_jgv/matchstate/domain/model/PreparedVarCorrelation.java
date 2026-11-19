@@ -3,9 +3,7 @@ package com.live_jgv.matchstate.domain.model;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Candidate V2 projection for local fixtures only. Not registered with ingress or persistence.
- * GOAL_ANNULLED deliberately has no mapping until its two references are approved.
- */
+/** Correlación VAR V2 para pruebas locales; no activa cambios en el protocolo V1. */
 public final class PreparedVarCorrelation {
     private final VarReviews reviews;
     private final Map<String, MatchEvent> events;
@@ -31,7 +29,7 @@ public final class PreparedVarCorrelation {
         }
         var next = reviews;
         switch (event.eventType()) {
-            case GOAL -> { /* No score calculation or market authorization in this projection. */ }
+            case GOAL -> { /* No calcula el marcador ni autoriza operaciones del mercado. */ }
             case VAR_CHECK -> {
                 if (event.referenceEventId() != null) {
                     var goal = events.get(event.referenceEventId());
@@ -42,7 +40,7 @@ public final class PreparedVarCorrelation {
                 next = reviews.open(event.eventId());
             }
             case MATCH_CONTINUES -> {
-                // No inference from time or from the number of open reviews.
+                // No deduce correlaciones por tiempo ni por cantidad de revisiones abiertas.
                 next = reviews.close(event.referenceEventId());
             }
             case MATCH_FINISHED -> { }

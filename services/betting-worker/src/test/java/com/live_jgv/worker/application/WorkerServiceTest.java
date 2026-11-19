@@ -14,7 +14,7 @@ class WorkerServiceTest {
     @Test void domainCommandUsesExistingStoreWithoutDecodingExternalInput(){
         var store=mock(WorkerStore.class);var decoder=mock(CommandDecoder.class);
         when(store.handle(any(),any())).thenReturn(WorkerStore.Outcome.PROCESSED);
-        assertEquals(WorkerStore.Outcome.PROCESSED,new WorkerService(store,decoder).submit(command));
+        assertEquals(WorkerStore.Outcome.PROCESSED,new WorkerService(store,decoder,new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).submit(command));
         var message=ArgumentCaptor.forClass(TransportMessage.class);var decoded=ArgumentCaptor.forClass(DecodedCommand.class);
         verify(store).handle(message.capture(),decoded.capture());verifyNoInteractions(decoder);
         assertEquals(command,decoded.getValue().command());assertNull(message.getValue().messageId());
@@ -24,13 +24,13 @@ class WorkerServiceTest {
     }
     @Test void domainPreparationIsDeterministicAndEscapesIdentityWithoutChangingIt(){
         var special=new SimulatedCommand("c\"\\\n","o","m","sim-user",command.timestamp());
-        var a=DomainCommandPreparation.prepare(special);var b=DomainCommandPreparation.prepare(special);
+        var a=new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation().prepare(special);var b=new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation().prepare(special);
         assertEquals(a.decoded(),b.decoded());assertEquals(special,new JsonCommandDecoder().decode(a.message()).command());
-        var conflict=DomainCommandPreparation.prepare(new SimulatedCommand(special.commandId(),"o","m","other-user",special.timestamp()));
+        var conflict=new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation().prepare(new SimulatedCommand(special.commandId(),"o","m","other-user",special.timestamp()));
         assertNotEquals(a.decoded().canonicalPayload(),conflict.decoded().canonicalPayload());
     }
     @Test void invalidDomainInputCannotReachStorage(){
-        var store=mock(WorkerStore.class);var service=new WorkerService(store,mock(CommandDecoder.class));
+        var store=mock(WorkerStore.class);var service=new WorkerService(store,mock(CommandDecoder.class),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation());
         assertThrows(NullPointerException.class,()->service.submit(null));
         assertThrows(IllegalArgumentException.class,()->service.submit(new SimulatedCommand(" ","o","m","u",command.timestamp())));
         verifyNoInteractions(store);
@@ -38,7 +38,7 @@ class WorkerServiceTest {
     @Test void domainPersistenceFailureIsPropagatedAndSameCommandCanBeRetried(){
         var store=mock(WorkerStore.class);var decoder=mock(CommandDecoder.class);
         when(store.handle(any(),any())).thenThrow(new DataAccessResourceFailureException("down")).thenReturn(WorkerStore.Outcome.PROCESSED);
-        var service=new WorkerService(store,decoder);
+        var service=new WorkerService(store,decoder,new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation());
         assertThrows(DataAccessResourceFailureException.class,()->service.submit(command));
         assertEquals(WorkerStore.Outcome.PROCESSED,service.submit(command));
         var requests=ArgumentCaptor.forClass(DecodedCommand.class);verify(store,times(2)).handle(any(),requests.capture());
@@ -47,13 +47,13 @@ class WorkerServiceTest {
     @Test void malformedInputGoesToDurableDisposition(){
         var store=mock(WorkerStore.class);var decoder=mock(CommandDecoder.class);var raw=new TransportMessage("s",null,"x","k",null,"{}");
         var invalid=DecodedCommand.invalid("MALFORMED_JSON");when(decoder.decode(raw)).thenReturn(invalid);when(store.handle(raw,invalid)).thenReturn(WorkerStore.Outcome.QUARANTINED);
-        assertEquals(WorkerStore.Outcome.QUARANTINED,new WorkerService(store,decoder).receive(raw));
+        assertEquals(WorkerStore.Outcome.QUARANTINED,new WorkerService(store,decoder,new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).receive(raw));
     }
     @Test void persistenceFailurePropagatesToPreventAutoAck(){
         var store=mock(WorkerStore.class);when(store.handle(any(),any())).thenThrow(new DataAccessResourceFailureException("down"));
-        assertThrows(DataAccessResourceFailureException.class,()->new WorkerService(store,mock(CommandDecoder.class)).reject(new TransportMessage("s",null,"x","k",null,"{}"),"INVALID"));
+        assertThrows(DataAccessResourceFailureException.class,()->new WorkerService(store,mock(CommandDecoder.class),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).reject(new TransportMessage("s",null,"x","k",null,"{}"),"INVALID"));
     }
     @Test void blankQueryCannotTouchStorage(){
-        var store=mock(WorkerStore.class);assertThrows(IllegalArgumentException.class,()->new WorkerService(store,mock(CommandDecoder.class)).find(" "));verifyNoInteractions(store);
+        var store=mock(WorkerStore.class);assertThrows(IllegalArgumentException.class,()->new WorkerService(store,mock(CommandDecoder.class),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).find(" "));verifyNoInteractions(store);
     }
 }

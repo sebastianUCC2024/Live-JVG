@@ -3,7 +3,7 @@ package com.live_jgv.notification.domain;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Immutable inbound identity. Distinct from the existing REST projection. */
+/** Identidad de entrada inmutable, separada de la respuesta REST. */
 public record LiveAlertV1(String contractVersion, UUID alertId, String matchId,
         String sourceEventId, ScoreUpdate.EventType eventType, String message,
         Instant timestamp, String referenceEventId, ScoreUpdate snapshot) {

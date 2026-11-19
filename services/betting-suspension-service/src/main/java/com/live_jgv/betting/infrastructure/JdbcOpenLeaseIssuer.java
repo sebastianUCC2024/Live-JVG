@@ -5,7 +5,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.live_jgv.betting.application.LeaseSourceVerifier;
 import java.util.*;
 
-/** Internal only. Caller approval/caught-up checkpoint verification is required; no scheduler or HTTP adapter. */
+/** Uso interno: exige validar autorización y vigencia de la fuente. */
 public final class JdbcOpenLeaseIssuer {
     public record Request(String matchId,long expectedVersion,long ttlMillis,String checkpoint,String actor,String reason) {
         public Request {

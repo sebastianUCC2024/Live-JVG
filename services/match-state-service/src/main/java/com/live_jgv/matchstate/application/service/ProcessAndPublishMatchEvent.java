@@ -2,12 +2,12 @@ package com.live_jgv.matchstate.application.service;
 
 import com.live_jgv.matchstate.domain.model.MatchEvent;
 import com.live_jgv.matchstate.domain.model.MatchState;
-import com.live_jgv.matchstate.domain.port.ProcessMatchEvent;
-import com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.in.ProcessMatchEvent;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import java.util.Objects;
 
-/** Coordinates processing and delivery; business rules remain in MatchState. */
+/** Coordina procesamiento y entrega; las reglas del partido permanecen en MatchState. */
 public final class ProcessAndPublishMatchEvent implements ProcessMatchEvent {
     private final ProcessMatchEvent processor;
     private final ScoreUpdateOutbox outbox;
@@ -50,7 +50,7 @@ public final class ProcessAndPublishMatchEvent implements ProcessMatchEvent {
         });
     }
 
-    /** Startup recovery uses the same publication lane, without applying history again. */
+    /** Recupera pendientes con el mismo bloqueo, sin aplicar de nuevo los eventos. */
     public void recoverPendingMatch(String matchId) {
         synchronized (lanes.computeIfAbsent(matchId, ignored -> new Object())) {
             flush(matchId);

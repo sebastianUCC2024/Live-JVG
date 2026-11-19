@@ -7,6 +7,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+/** Publica el outbox por AMQP en el exchange y routing key configurados; confirma la entrega al broker. */
 public final class RabbitSuspensionPublisher implements SuspensionPublisher {
     private final RabbitTemplate rabbit;private final String exchange;private final String routingKey;private final long timeoutMs;
     public RabbitSuspensionPublisher(RabbitTemplate rabbit,String exchange,String routingKey,long timeoutMs) {

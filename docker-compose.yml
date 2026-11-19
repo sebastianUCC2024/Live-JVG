@@ -1,7 +1,8 @@
+# Configuración única: valores locales por defecto y conexión externa mediante variables.
+# Los puertos publicados usan loopback; en EC2 se accede mediante el proxy HTTPS existente.
 name: live-jvg-dev1-isolated
-# Explicit opt-in for this loopback-only local MVP, never a public deployment policy.
 x-simulator: &simulator
-  SIMULATOR_WRITE_ENABLED: "true"
+  SIMULATOR_WRITE_ENABLED: 'true'
 x-rabbit: &rabbit
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: 5672
@@ -12,33 +13,55 @@ x-match: &match
   HOME_TEAM_ID: home
   AWAY_TEAM_ID: away
 services:
+  # PostgreSQL: almacena datos locales; en modo external solo comprueba la disponibilidad de RDS.
   postgres:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 768M
     image: postgres:17
     environment:
-      POSTGRES_DB: live_jvg
-      POSTGRES_USER: live_jvg
+      POSTGRES_DB: ${JVG_DB_NAME:-live_jvg}
+      POSTGRES_USER: ${JVG_DB_USER:-live_jvg}
       POSTGRES_PASSWORD: ${MVP_DB_PASSWORD:?Run scripts/start-mvp.sh}
-    ports: ["127.0.0.1:55434:5432"]
-    volumes: ["postgres_data:/var/lib/postgresql/data"]
+      JVG_DB_MODE: ${JVG_DB_MODE:-local}
+      PGHOST: ${JVG_DB_HOST:-127.0.0.1}
+      PGPORT: ${JVG_DB_PORT:-5432}
+      PGDATABASE: ${JVG_DB_NAME:-live_jvg}
+      PGUSER: ${JVG_DB_USER:-live_jvg}
+      PGPASSWORD: ${MVP_DB_PASSWORD}
+      PGSSLMODE: ${JVG_PGSSLMODE:-prefer}
+    ports: [127.0.0.1:55434:5432]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U live_jvg -d live_jvg"]
-      interval: 3s
-      timeout: 3s
-      retries: 30
+      test:
+      - CMD-SHELL
+      - pg_isready -h "$${PGHOST}" -p "$${PGPORT}" -U "$${PGUSER}" -d "$${PGDATABASE}"
+      interval: ${JVG_DB_HEALTH_INTERVAL:-3s}
+      timeout: ${JVG_DB_HEALTH_TIMEOUT:-3s}
+      retries: ${JVG_DB_HEALTH_RETRIES:-30}
+    command:
+    - sh
+    - -ec
+    - case "$${JVG_DB_MODE}" in local) exec docker-entrypoint.sh postgres ;; external) exec sleep infinity ;; *) echo "JVG_DB_MODE invalido" >&2; exit 64 ;; esac
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Kafka: conserva y distribuye eventos deportivos; los microservicios se conectan a kafka:9092.
   kafka:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 1536M
     image: apache/kafka:3.9.1
     environment:
-      KAFKA_HEAP_OPTS: "-Xms256m -Xmx768m"
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx768m
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:19092
@@ -51,240 +74,413 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE:-false}
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-    ports: ["127.0.0.1:19092:19092"]
-    volumes: ["kafka_data:/var/lib/kafka/data"]
+    ports: [127.0.0.1:19092:19092]
+    volumes: [kafka_data:/var/lib/kafka/data]
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      test: [CMD-SHELL, /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1]
       interval: 5s
       timeout: 10s
       retries: 30
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Crea el topic match_events después del healthcheck de Kafka.
   kafka-init:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
     image: apache/kafka:3.9.1
     depends_on:
-      kafka: {condition: service_healthy}
+      kafka:
+        condition: service_healthy
     entrypoint: [/opt/kafka/bin/kafka-topics.sh]
-    command: [--bootstrap-server, "kafka:9092", --create, --if-not-exists, --topic, match_events, --partitions, "1", --replication-factor, "1"]
+    command: [--bootstrap-server, kafka:9092, --create, --if-not-exists, --topic, match_events, --partitions, '1', --replication-factor, '1']
+  # RabbitMQ: distribuye actualizaciones y comandos mediante exchanges y colas AMQP.
   rabbitmq:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 768M
     image: rabbitmq:4-management
     environment:
       RABBITMQ_DEFAULT_USER: mvp
       RABBITMQ_DEFAULT_PASS: ${MVP_RABBIT_PASSWORD:?Run scripts/start-mvp.sh}
-    ports: ["127.0.0.1:5673:5672", "127.0.0.1:15673:15672"]
-    volumes: ["rabbit_data:/var/lib/rabbitmq"]
+    ports: [127.0.0.1:5673:5672, 127.0.0.1:15673:15672]
+    volumes: [rabbit_data:/var/lib/rabbitmq]
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
       test: [CMD, rabbitmq-diagnostics, -q, ping]
       interval: 5s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Publica eventos deportivos en Kafka; la simulación automática se activa mediante variables.
   producer:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 384M
     build:
       context: .
-      args: {SERVICE_MODULE: live-feed-producer, JAR_FILE: services/live-feed-producer/target/live-feed-producer-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: live-feed-producer
+        JAR_FILE: services/live-feed-producer/target/live-feed-producer-0.0.1-SNAPSHOT.jar
     environment:
       <<: [*match, *simulator]
-      PORT: "8080"
+      PORT: '8080'
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    ports: ["127.0.0.1:18081:8080"]
+      SIMULATOR_WRITE_ENABLED: ${SIMULATOR_WRITE_ENABLED:-true}
+      SIMULATOR_AUTO_ENABLED: ${SIMULATOR_AUTO_ENABLED:-false}
+      SIMULATOR_AUTO_INTERVAL_MS: ${SIMULATOR_AUTO_INTERVAL_MS:-1000}
+    ports: [127.0.0.1:18081:8080]
     depends_on:
-      kafka-init: {condition: service_completed_successfully}
+      kafka-init:
+        condition: service_completed_successfully
     mem_limit: 384m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Recibe marcadores por AMQP y los ofrece por REST y WebSocket; utiliza una sola réplica STOMP.
   dashboard:
     deploy:
       replicas: 1
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
-    # MVP: STOMP simple broker is local to this one JVM. Do not scale horizontally.
     container_name: live-jvg-dev1-isolated-dashboard
     build:
       context: .
-      args: {SERVICE_MODULE: dashboard-backend, JAR_FILE: services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: dashboard-backend
+        JAR_FILE: services/dashboard-backend/target/dashboard-backend-0.0.1-SNAPSHOT.jar
     environment:
       <<: [*match, *rabbit, *simulator]
-      PORT: "8080"
-      DASHBOARD_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
-      DB_USERNAME: live_jvg
+      PORT: '8080'
+      DASHBOARD_DB_URL: ${DASHBOARD_DB_URL:-jdbc:postgresql://${JVG_DB_HOST:-postgres}:${JVG_DB_PORT:-5432}/${JVG_DB_NAME:-live_jvg}${JVG_DB_OPTIONS:-}}
+      DB_USERNAME: ${DB_USERNAME:-${JVG_DB_USER:-live_jvg}}
       DB_PASSWORD: ${MVP_DB_PASSWORD}
       PRODUCER_URL: http://producer:8080
       DASHBOARD_QUEUE: mvp-dashboard-scores
-    ports: ["127.0.0.1:18080:8080"]
+      SIMULATOR_WRITE_ENABLED: ${SIMULATOR_WRITE_ENABLED:-true}
+      DASHBOARD_ALLOWED_ORIGINS: ${DASHBOARD_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:18080,http://127.0.0.1:18080,http://localhost:18083,http://127.0.0.1:18083}
+      SIMULATOR_RESET_KEY: ${SIMULATOR_RESET_KEY:-}
+    ports: [127.0.0.1:18080:8080]
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      test: [CMD-SHELL, curl -fsS http://localhost:8080/actuator/health >/dev/null]
       interval: 4s
       timeout: 5s
       retries: 40
     mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Aplica las reglas VAR, guarda el marcador y publica actualizaciones mediante un outbox.
   match-state:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
     build:
       context: .
-      args: {SERVICE_MODULE: match-state-service, JAR_FILE: services/match-state-service/target/match-state-service-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: match-state-service
+        JAR_FILE: services/match-state-service/target/match-state-service-0.0.1-SNAPSHOT.jar
     environment:
-      MATCH_STATE_ALERTS_ENABLED: "false"
-      MATCH_STATE_ALERTS_PUBLICATION_ENABLED: "false"
+      MATCH_STATE_ALERTS_ENABLED: ${MATCH_STATE_ALERTS_ENABLED:-false}
+      MATCH_STATE_ALERTS_PUBLICATION_ENABLED: ${MATCH_STATE_ALERTS_PUBLICATION_ENABLED:-false}
       <<: [*match, *rabbit]
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MATCH_STATE_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
-      MATCH_STATE_DB_USERNAME: live_jvg
+      MATCH_STATE_DB_URL: ${MATCH_STATE_DB_URL:-jdbc:postgresql://${JVG_DB_HOST:-postgres}:${JVG_DB_PORT:-5432}/${JVG_DB_NAME:-live_jvg}${JVG_DB_OPTIONS:-}}
+      MATCH_STATE_DB_USERNAME: ${MATCH_STATE_DB_USERNAME:-${JVG_DB_USER:-live_jvg}}
       MATCH_STATE_DB_PASSWORD: ${MVP_DB_PASSWORD}
       KAFKA_SOURCE_ID: live-jvg-mvp
+      MATCHSTATE_MATCHES_0_MATCHID: ${MVP_MATCH_ID:-mvp-match-001}
+      MATCHSTATE_MATCHES_0_HOMETEAMID: home
+      MATCHSTATE_MATCHES_0_AWAYTEAMID: away
+      MATCHSTATE_MATCHES_1_MATCHID: demo-col-v4-001
+      MATCHSTATE_MATCHES_1_HOMETEAMID: nacional
+      MATCHSTATE_MATCHES_1_AWAYTEAMID: millonarios
+      MATCHSTATE_MATCHES_2_MATCHID: demo-col-v4-002
+      MATCHSTATE_MATCHES_2_HOMETEAMID: america
+      MATCHSTATE_MATCHES_2_AWAYTEAMID: cali
+      MATCHSTATE_MATCHES_3_MATCHID: demo-col-v4-003
+      MATCHSTATE_MATCHES_3_HOMETEAMID: junior
+      MATCHSTATE_MATCHES_3_AWAYTEAMID: medellin
+      MATCHSTATE_MATCHES_4_MATCHID: demo-col-v4-004
+      MATCHSTATE_MATCHES_4_HOMETEAMID: santafe
+      MATCHSTATE_MATCHES_4_AWAYTEAMID: tolima
+      MATCHSTATE_MATCHES_5_MATCHID: demo-col-v4-005
+      MATCHSTATE_MATCHES_5_HOMETEAMID: oncecaldas
+      MATCHSTATE_MATCHES_5_AWAYTEAMID: pereira
+      MATCHSTATE_MATCHES_6_MATCHID: demo-col-v4-006
+      MATCHSTATE_MATCHES_6_HOMETEAMID: bucaramanga
+      MATCHSTATE_MATCHES_6_AWAYTEAMID: fortaleza
     depends_on:
-      kafka-init: {condition: service_completed_successfully}
-      postgres: {condition: service_healthy}
-      dashboard: {condition: service_healthy}
+      kafka-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
     mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Conserva el historial de Kafka en PostgreSQL; el consumo requiere activación explícita.
   archiver:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {SERVICE_MODULE: historical-archiver, JAR_FILE: services/historical-archiver/target/historical-archiver-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: historical-archiver
+        JAR_FILE: services/historical-archiver/target/historical-archiver-0.0.1-SNAPSHOT.jar
     environment:
       <<: *rabbit
-      ARCHIVER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
-      ARCHIVER_DB_USERNAME: live_jvg
+      ARCHIVER_DB_URL: ${ARCHIVER_DB_URL:-jdbc:postgresql://${JVG_DB_HOST:-postgres}:${JVG_DB_PORT:-5432}/${JVG_DB_NAME:-live_jvg}${JVG_DB_OPTIONS:-}}
+      ARCHIVER_DB_USERNAME: ${ARCHIVER_DB_USERNAME:-${JVG_DB_USER:-live_jvg}}
       ARCHIVER_DB_PASSWORD: ${MVP_DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
-      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
-      ARCHIVER_CONSUMER_ENABLED: "false"
+      SPRING_FLYWAY_ENABLED: ${ARCHIVER_MIGRATIONS_ENABLED:-false}
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: ${ARCHIVER_KAFKA_AUTO_STARTUP:-false}
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: ${ARCHIVER_AMQP_AUTO_STARTUP:-false}
+      ARCHIVER_CONSUMER_ENABLED: ${ARCHIVER_CONSUMER_ENABLED:-false}
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "curl -fsS http://localhost:8082/actuator/health/liveness >/dev/null"]
+      test: [CMD-SHELL, curl -fsS http://localhost:8082/actuator/health/liveness >/dev/null]
       interval: 10s
       timeout: 5s
       retries: 30
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      kafka-init: {condition: service_completed_successfully}
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Proyecta las suspensiones del mercado; no habilita apuestas por iniciar el contenedor.
   suspension:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {SERVICE_MODULE: betting-suspension-service, JAR_FILE: services/betting-suspension-service/target/betting-suspension-service-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: betting-suspension-service
+        JAR_FILE: services/betting-suspension-service/target/betting-suspension-service-0.0.1-SNAPSHOT.jar
     environment:
-      ACADEMIC_COMMANDS_ENABLED: "false"
-      ACADEMIC_PUBLICATION_ENABLED: "false"
+      ACADEMIC_COMMANDS_ENABLED: ${ACADEMIC_COMMANDS_ENABLED:-false}
+      ACADEMIC_PUBLICATION_ENABLED: ${ACADEMIC_PUBLICATION_ENABLED:-false}
       <<: *rabbit
-      BETTING_CONTROL_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
-      BETTING_CONTROL_DB_USERNAME: live_jvg
+      BETTING_CONTROL_DB_URL: ${BETTING_CONTROL_DB_URL:-jdbc:postgresql://${JVG_DB_HOST:-postgres}:${JVG_DB_PORT:-5432}/${JVG_DB_NAME:-live_jvg}${JVG_DB_OPTIONS:-}}
+      BETTING_CONTROL_DB_USERNAME: ${BETTING_CONTROL_DB_USERNAME:-${JVG_DB_USER:-live_jvg}}
       BETTING_CONTROL_DB_PASSWORD: ${MVP_DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
-      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
-      BETTING_CONTROL_CONSUMER_ENABLED: "false"
-      BETTING_CONTROL_PUBLICATION_ENABLED: "false"
+      SPRING_FLYWAY_ENABLED: ${BETTING_CONTROL_MIGRATIONS_ENABLED:-false}
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: ${BETTING_CONTROL_KAFKA_AUTO_STARTUP:-false}
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: ${BETTING_CONTROL_AMQP_AUTO_STARTUP:-false}
+      BETTING_CONTROL_CONSUMER_ENABLED: ${BETTING_CONTROL_CONSUMER_ENABLED:-false}
+      BETTING_CONTROL_PUBLICATION_ENABLED: ${BETTING_CONTROL_PUBLICATION_ENABLED:-false}
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "curl -fsS http://localhost:8083/actuator/health/liveness >/dev/null"]
+      test: [CMD-SHELL, curl -fsS http://localhost:8083/actuator/health/liveness >/dev/null]
       interval: 10s
       timeout: 5s
       retries: 30
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      kafka-init: {condition: service_completed_successfully}
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Procesa comandos AMQP; las dos réplicas comparten trabajo cuando se habilita el consumidor.
   worker:
     deploy:
       replicas: 2
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {SERVICE_MODULE: betting-worker, JAR_FILE: services/betting-worker/target/betting-worker-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: betting-worker
+        JAR_FILE: services/betting-worker/target/betting-worker-0.0.1-SNAPSHOT.jar
     environment:
-      ACADEMIC_CONSUMER_ENABLED: "false"
-      ACADEMIC_TOPOLOGY_ENABLED: "false"
+      ACADEMIC_CONSUMER_ENABLED: ${ACADEMIC_CONSUMER_ENABLED:-false}
+      ACADEMIC_TOPOLOGY_ENABLED: ${ACADEMIC_TOPOLOGY_ENABLED:-false}
       <<: *rabbit
-      BETTING_WORKER_DB_URL: jdbc:postgresql://postgres:5432/live_jvg
-      BETTING_WORKER_DB_USERNAME: live_jvg
+      BETTING_WORKER_DB_URL: ${BETTING_WORKER_DB_URL:-jdbc:postgresql://${JVG_DB_HOST:-postgres}:${JVG_DB_PORT:-5432}/${JVG_DB_NAME:-live_jvg}${JVG_DB_OPTIONS:-}}
+      BETTING_WORKER_DB_USERNAME: ${BETTING_WORKER_DB_USERNAME:-${JVG_DB_USER:-live_jvg}}
       BETTING_WORKER_DB_PASSWORD: ${MVP_DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_FLYWAY_ENABLED: "false"
-      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
-      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
-      BETTING_WORKER_CONSUMER_ENABLED: "false"
-      BETTING_WORKER_ACCEPTANCE_ENABLED: "false"
+      SPRING_FLYWAY_ENABLED: ${BETTING_WORKER_MIGRATIONS_ENABLED:-false}
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: ${BETTING_WORKER_KAFKA_AUTO_STARTUP:-false}
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: ${BETTING_WORKER_AMQP_AUTO_STARTUP:-false}
+      BETTING_WORKER_CONSUMER_ENABLED: ${BETTING_WORKER_CONSUMER_ENABLED:-false}
+      BETTING_WORKER_ACCEPTANCE_ENABLED: ${BETTING_WORKER_ACCEPTANCE_ENABLED:-false}
       BETTING_WORKER_AUTHORIZATION_MODE: disabled
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "curl -fsS http://localhost:8084/actuator/health/liveness >/dev/null"]
+      test: [CMD-SHELL, curl -fsS http://localhost:8084/actuator/health/liveness >/dev/null]
       interval: 10s
       timeout: 5s
       retries: 30
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      kafka-init: {condition: service_completed_successfully}
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  # Guarda alertas y permite consultarlas por REST; sus listeners requieren activación.
   notification:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
     profiles: [integration-prepared]
     build:
       context: .
-      args: {SERVICE_MODULE: notification-backend, JAR_FILE: services/notification-backend/target/notification-backend-0.0.1-SNAPSHOT.jar}
+      args:
+        SERVICE_MODULE: notification-backend
+        JAR_FILE: services/notification-backend/target/notification-backend-0.0.1-SNAPSHOT.jar
     environment:
-      NOTIFICATION_LIVE_ALERTS_ENABLED: "false"
-      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
-      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      NOTIFICATION_LIVE_ALERTS_ENABLED: ${NOTIFICATION_LIVE_ALERTS_ENABLED:-false}
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: ${NOTIFICATION_KAFKA_AUTO_STARTUP:-false}
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: ${NOTIFICATION_AMQP_AUTO_STARTUP:-false}
       NOTIFICATION_BIND_ADDRESS: 0.0.0.0
-      NOTIFICATION_STORAGE_ENABLED: "false"
-      NOTIFICATION_MESSAGING_ENABLED: "false"
+      NOTIFICATION_STORAGE_ENABLED: ${NOTIFICATION_STORAGE_ENABLED:-false}
+      NOTIFICATION_MESSAGING_ENABLED: ${NOTIFICATION_MESSAGING_ENABLED:-false}
+      NOTIFICATION_DB_URL: ${NOTIFICATION_DB_URL:-jdbc:postgresql://${JVG_DB_HOST:-postgres}:${JVG_DB_PORT:-5432}/${JVG_DB_NAME:-live_jvg}${JVG_DB_OPTIONS:-}}
+      NOTIFICATION_DB_USERNAME: ${NOTIFICATION_DB_USERNAME:-${JVG_DB_USER:-live_jvg}}
+      NOTIFICATION_DB_PASSWORD: ${MVP_DB_PASSWORD}
+      NOTIFICATION_RABBIT_HOST: rabbitmq
+      NOTIFICATION_RABBIT_PORT: '5672'
+      NOTIFICATION_RABBIT_USERNAME: mvp
+      NOTIFICATION_RABBIT_PASSWORD: ${MVP_RABBIT_PASSWORD}
+      NOTIFICATION_MATCH_IDS: ${NOTIFICATION_MATCH_IDS:-demo-col-v4-001,demo-col-v4-002,demo-col-v4-003,demo-col-v4-004,demo-col-v4-005,demo-col-v4-006}
+      NOTIFICATION_ALLOWED_ORIGINS: ${NOTIFICATION_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:18083,http://127.0.0.1:18083}
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
     healthcheck:
-      test: [CMD-SHELL, "curl -fsS http://localhost:8082/actuator/health/liveness >/dev/null"]
+      test: [CMD-SHELL, curl -fsS http://localhost:8082/actuator/health/liveness >/dev/null]
       interval: 10s
       timeout: 5s
       retries: 30
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      kafka-init: {condition: service_completed_successfully}
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    ports:
+    - 127.0.0.1:18082:8082
+  # Interfaz React opcional (perfil web); las direcciones públicas se definen durante el build.
+  frontend:
+    profiles:
+    - web
+    build:
+      context: services/dashboard-frontend
+      args:
+        VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:18080/ws}
+        VITE_NOTIFICATION_ORIGIN: ${VITE_NOTIFICATION_ORIGIN:-http://localhost:18082}
+    ports:
+    - 127.0.0.1:18083:8080
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    restart: unless-stopped
+    # Las dependencias esperan disponibilidad; esto no certifica el flujo completo.
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -q -O /dev/null http://127.0.0.1:8080/
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+# Volúmenes persistentes: conservan datos de PostgreSQL, Kafka y RabbitMQ por proyecto.
 volumes:
   postgres_data:
   kafka_data:
   rabbit_data:
+# Red bridge: resuelve los nombres de servicio sin cambiar la red existente.
+networks:
+  default:
+    driver: bridge

@@ -1,7 +1,7 @@
 package com.live_jgv.matchstate.application.service;
 
 import com.live_jgv.matchstate.domain.model.*;
-import com.live_jgv.matchstate.domain.port.ScoreUpdatePublisher;
+import com.live_jgv.matchstate.application.port.out.ScoreUpdatePublisher;
 import com.live_jgv.matchstate.infrastructure.memory.InMemoryMatchStateStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,7 +93,7 @@ class ProcessAndPublishMatchEventTest {
         var memory=new InMemoryMatchStateStore(List.of(MatchState.start("m1","home","away")));
         var processor=new MatchStateService(memory);
         for(int i=0;i<350;i++) processor.process(new MatchEvent("e"+i,"m1",EventType.MATCH_CONTINUES,null,1,Instant.EPOCH,null));
-        var batched=new com.live_jgv.matchstate.domain.port.ScoreUpdateOutbox() {
+        var batched=new com.live_jgv.matchstate.application.port.out.ScoreUpdateOutbox() {
             public List<ScoreUpdate> pendingForMatch(String match){return memory.pendingForMatch(match).stream().limit(128).toList();}
             public void markPublished(ScoreUpdate update){memory.markPublished(update);}
         };
