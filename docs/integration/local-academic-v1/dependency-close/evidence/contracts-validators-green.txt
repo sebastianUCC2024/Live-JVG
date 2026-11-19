@@ -1,5 +1,0 @@
-betting-command.v1.schema.proposed.json: 4 fixtures checked
-live-alert.v1.schema.proposed.json: 4 fixtures checked
-match-event.v1.schema.proposed.json: 6 fixtures checked
-score-update.v1.schema.proposed.json: 6 fixtures checked
-Workflow YAML parsed; seven Java services and existing jobs preserved

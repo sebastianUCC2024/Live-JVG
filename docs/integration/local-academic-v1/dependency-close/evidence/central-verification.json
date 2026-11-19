@@ -1,7 +1,0 @@
-{
-  "url": "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-starter-parent/4.1.2/spring-boot-starter-parent-4.1.2.pom",
-  "http_status": 200,
-  "sha256": "b7310a4672ba54ba552cc74e6f62137890f361c93be04aa56def10a27552f9f5",
-  "declared_parent": "4.1.2",
-  "pom_changed": false
-}

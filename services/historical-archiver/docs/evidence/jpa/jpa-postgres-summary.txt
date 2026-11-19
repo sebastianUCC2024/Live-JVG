@@ -1,4 +1,0 @@
-22:53:05.803 [main] INFO org.hibernate.Version -- HHH000412: Hibernate ORM core version 6.6.33.Final
-[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.792 s -- in com.live_jgv.archiver.integration.JpaPostgresIntegrationTest
-[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0
-[INFO] BUILD SUCCESS
