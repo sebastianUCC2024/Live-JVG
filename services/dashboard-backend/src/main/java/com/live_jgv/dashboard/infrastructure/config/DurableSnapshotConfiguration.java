@@ -1,6 +1,7 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.config;
+import com.live_jgv.dashboard.application.port.out.DashboardQueries;
 
-import com.live_jgv.dashboard.domain.port.in.GetMatchSnapshot;
+import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
 import org.springframework.context.annotation.*;
 
 /** Both REST snapshot recovery and STOMP recovery read the committed inbox. */
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.*;
 @Profile("!memory")
 public class DurableSnapshotConfiguration {
     @Bean
-    GetMatchSnapshot durableMatchSnapshot(ScoreProjection projection) {
+    GetMatchSnapshot durableMatchSnapshot(DashboardQueries projection) {
         return projection::snapshot;
     }
 }

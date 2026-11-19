@@ -2,8 +2,8 @@ package com.live_jgv.dashboard.application.service;
 
 import com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException;
 import com.live_jgv.dashboard.domain.model.ScoreUpdate;
-import com.live_jgv.dashboard.domain.port.in.ProcessScoreUpdate;
-import com.live_jgv.dashboard.domain.port.out.DashboardUpdatePublisher;
+import com.live_jgv.dashboard.application.port.in.ProcessScoreUpdate;
+import com.live_jgv.dashboard.application.port.out.DashboardUpdatePublisher;
 import java.util.Objects;
 
 public final class ProcessScoreUpdateService implements ProcessScoreUpdate {

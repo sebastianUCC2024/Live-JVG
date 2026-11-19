@@ -34,7 +34,7 @@ tratar los DTO locales como aprobación automática del equipo.
 ## 2. C01 — Evento deportivo
 
 Fuente: [MatchEvent del productor](../../live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/domain/model/MatchEvent.java),
-[entrada de Match State](../../match-state-service/src/main/java/com/live_jgv/matchstate/entrypoint/kafka/MatchEventMessage.java)
+[entrada de Match State](../../match-state-service/src/main/java/com/live_jgv/matchstate/infrastructure/kafka/MatchEventMessage.java)
 y [decoder del archivador](../../historical-archiver/src/main/java/com/live_jgv/archiver/infrastructure/JsonEventDecoder.java).
 
 | Campo | Tipo observado | Obligatoriedad / validación |

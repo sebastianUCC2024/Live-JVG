@@ -31,12 +31,15 @@ class Dev1LiveWireCompatibilityTest {
         for (var dir : List.of(producer.resolve("domain"), state.resolve("domain"))) {
             try (var paths = Files.walk(dir)) { paths.filter(p -> p.toString().endsWith(".java")).forEach(p -> files.add(p.toString())); }
         }
+        for (var dir : List.of(producer.resolve("application/port"), state.resolve("application/port"))) {
+            try (var paths = Files.walk(dir)) { paths.filter(p -> p.toString().endsWith(".java")).forEach(p -> files.add(p.toString())); }
+        }
         files.add(producer.resolve("application/service/OutgoingReferencePolicy.java").toString());
         files.add(producer.resolve("application/service/EventPreparationException.java").toString());
         files.add(producer.resolve("infrastructure/kafka/KafkaMatchEventPublisher.java").toString());
         files.add(state.resolve("application/service/MatchStateService.java").toString());
         files.add(state.resolve("infrastructure/memory/InMemoryMatchStateStore.java").toString());
-        files.add(state.resolve("entrypoint/kafka/MatchEventMessage.java").toString());
+        files.add(state.resolve("infrastructure/kafka/MatchEventMessage.java").toString());
         Path output = Files.createDirectories(Path.of("target", "phase9-contract-classes"));
         var arguments = new ArrayList<>(List.of("--release", "17", "-classpath",
                 System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")), "-d", output.toString()));
@@ -75,14 +78,14 @@ class Dev1LiveWireCompatibilityTest {
                 .getConstructor(KafkaTemplate.class, ObjectMapper.class, String.class).newInstance(template, mapper, "match_events");
         Object match = state("domain.model.MatchState").getMethod("start", String.class, String.class, String.class).invoke(null, "m", "h", "a");
         Object store = state("infrastructure.memory.InMemoryMatchStateStore").getConstructor(List.class).newInstance(List.of(match));
-        Object processor = state("application.service.MatchStateService").getConstructor(state("domain.port.MatchStateRepository")).newInstance(store);
+        Object processor = state("application.service.MatchStateService").getConstructor(state("application.port.out.MatchStateRepository")).newInstance(store);
         String[] types = {"GOAL", "VAR_CHECK", "GOAL_ANNULLED", "MATCH_CONTINUES"};
         int[] scores = {1, 1, 0, 0};
         for (int i = 0; i < types.length; i++) {
             String reference = i == 1 || i == 2 ? "e0" : null;
             Object event = event("e" + i, types[i], reference);
             ((CompletableFuture<?>) adapter.getClass().getMethod("publish", producer("domain.model.MatchEvent")).invoke(adapter, event)).join();
-            Object wire = mapper.readValue(payloads.get(i), state("entrypoint.kafka.MatchEventMessage"));
+            Object wire = mapper.readValue(payloads.get(i), state("infrastructure.kafka.MatchEventMessage"));
             Object domainEvent = wire.getClass().getMethod("toDomain").invoke(wire);
             processor.getClass().getMethod("process", state("domain.model.MatchEvent")).invoke(processor, domainEvent);
             var pending = (List<?>) store.getClass().getMethod("pendingForMatch", String.class).invoke(store, "m");

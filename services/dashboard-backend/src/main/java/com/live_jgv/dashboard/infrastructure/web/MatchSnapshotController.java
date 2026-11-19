@@ -1,6 +1,6 @@
 package com.live_jgv.dashboard.infrastructure.web;
 
-import com.live_jgv.dashboard.domain.port.in.GetMatchSnapshot;
+import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

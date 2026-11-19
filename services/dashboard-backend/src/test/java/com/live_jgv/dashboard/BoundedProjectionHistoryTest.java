@@ -1,7 +1,8 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.jdbc.ScoreProjection;
 
 import com.fasterxml.jackson.databind.*;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import java.sql.ResultSet;
 import java.util.*;
 import org.junit.jupiter.api.Test;

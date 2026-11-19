@@ -1,8 +1,8 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.jdbc;
 
 import com.fasterxml.jackson.databind.*;
 import com.live_jgv.dashboard.domain.model.MatchSnapshot;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import com.live_jgv.dashboard.infrastructure.amqp.ScoreUpdateMessageDecoder;
 import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +18,18 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.core.Message;
 import java.util.*;
 
+/**
+ * Durable score projection and query adapter for the existing dashboard inbox schema.
+ * The durableScores listener validates score JSON, locks the match row and atomically records
+ * inbox identity and score changes. Equal duplicate payloads are retained once; conflicting
+ * event identity or authoritative sequence fails before replacing accepted state.
+ * Browser publication follows database work and can be recovered from committed inbox snapshots.
+ * RabbitMQ acknowledgment and retry remain configured by MessagingConfiguration.
+ */
 @org.springframework.context.annotation.Profile("!memory")
 @Repository
 @DependsOnDatabaseInitialization
-public class ScoreProjection {
+public class ScoreProjection implements com.live_jgv.dashboard.application.port.out.DashboardQueries {
     private final boolean sequenceRequired;
     private final MatchSnapshotPublisher publisher;
     private final ScoreUpdateMessageDecoder decoder = new ScoreUpdateMessageDecoder();
@@ -74,7 +82,7 @@ public class ScoreProjection {
         String match=json.get("match_id").asText(),event=json.get("event_id").asText(),payload=json.toString();
         tx.executeWithoutResult(status->{
 
-            // AUTO_CATALOG_V2: registrar únicamente partidos V2 conocidos.
+            // Register only recognized presentation matches, including their round-scoped identities.
             String[][] catalog = {
                 {"demo-col-v4-001","nacional","millonarios","Atlético Nacional","Millonarios"},
                 {"demo-col-v4-002","america","cali","América de Cali","Deportivo Cali"},

@@ -1,6 +1,7 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.jdbc.ScoreProjection;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException;
 import org.junit.jupiter.api.*;import org.springframework.jdbc.core.*;
 import org.springframework.transaction.*;import org.springframework.transaction.support.*;

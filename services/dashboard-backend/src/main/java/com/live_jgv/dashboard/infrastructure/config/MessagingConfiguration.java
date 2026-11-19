@@ -1,4 +1,4 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.config;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.amqp.core.*;
@@ -15,6 +15,14 @@ import com.live_jgv.dashboard.infrastructure.amqp.DurableScoreRecovery;
 import com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException;
 import java.util.Map;
 import java.time.Duration;
+/**
+ * Durable RabbitMQ score topology, separate from the memory-profile listener configuration.
+ * Binds the configured live.exchange topic exchange to live.queue for the selected match
+ * and six round-scoped presentation patterns. Each queue owns a direct DLX and durable DLQ
+ * with routing key rejected. Recovery explicitly confirms transfer before releasing custody.
+ * AUTO acknowledgments follow successful listener return; bounded retries retain input on
+ * failed recovery. Prefetch one and a single consumer bound local in-flight processing.
+ */
 @org.springframework.context.annotation.Profile("!memory")
 @Configuration(proxyBeanMethods=false)
 @EnableRabbit

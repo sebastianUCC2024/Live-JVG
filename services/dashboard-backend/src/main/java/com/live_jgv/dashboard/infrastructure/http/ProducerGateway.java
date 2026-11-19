@@ -1,4 +1,4 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.http;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClient;
@@ -16,9 +16,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Collections;
+/**
+ * HTTP implementation of simulation publication with bounded connection and read timeouts.
+ * Preserves the upstream event identity and exposes uncertain publication through the existing
+ * HTTP error contract, allowing callers to recover instead of inventing a new event on retry.
+ */
 @org.springframework.context.annotation.Profile("!memory")
 @Component
-public class ProducerGateway{
+public class ProducerGateway implements com.live_jgv.dashboard.application.port.out.SimulationPublisher{
  private final RestClient client;
  private static final java.util.List<String> RECOVERY_EVENT_FIELDS=java.util.List.of("event_id","match_id","event_type","team_id","minute","timestamp","reference_event_id");
  private final ObjectMapper recoveryMapper=new ObjectMapper()

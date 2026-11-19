@@ -3,7 +3,7 @@ package com.live_jgv.dashboard.infrastructure.websocket;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.live_jgv.dashboard.domain.model.*;
-import com.live_jgv.dashboard.domain.port.in.ProcessScoreUpdate;
+import com.live_jgv.dashboard.application.port.in.ProcessScoreUpdate;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.*;

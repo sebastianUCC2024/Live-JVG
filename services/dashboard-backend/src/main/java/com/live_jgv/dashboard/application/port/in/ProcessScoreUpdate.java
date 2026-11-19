@@ -1,4 +1,4 @@
-package com.live_jgv.dashboard.domain.port.in;
+package com.live_jgv.dashboard.application.port.in;
 
 import com.live_jgv.dashboard.domain.model.ScoreUpdate;
 

@@ -1,14 +1,17 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.web;
+import com.live_jgv.dashboard.application.port.out.DashboardQueries;
+import com.live_jgv.dashboard.application.port.out.SimulationPublisher;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
+/** REST adapter for durable catalog queries and the explicitly enabled simulation write flow. */
 @org.springframework.context.annotation.Profile("!memory")
 @RestController
 @RequestMapping("/api")
 public class DashboardController{
- private final ScoreProjection scores;private final ProducerGateway producer;private final boolean writeEnabled;
- public DashboardController(ScoreProjection scores,ProducerGateway producer,
+ private final DashboardQueries scores;private final SimulationPublisher producer;private final boolean writeEnabled;
+ public DashboardController(DashboardQueries scores,SimulationPublisher producer,
      @Value("${simulator.write-enabled:false}")boolean writeEnabled){this.scores=scores;this.producer=producer;this.writeEnabled=writeEnabled;}
  @GetMapping("/simulator/config") public Map<String,Boolean> simulatorConfig(){return Map.of("write_enabled",writeEnabled);}
  @GetMapping("/matches/{id}/events/{eventId}") public Map<String,Boolean> operation(@PathVariable String id,@PathVariable String eventId){return Map.of("processed",scores.operationProcessed(id,eventId));}

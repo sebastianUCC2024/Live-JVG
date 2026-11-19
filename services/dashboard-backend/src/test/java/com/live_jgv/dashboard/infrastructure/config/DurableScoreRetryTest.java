@@ -1,4 +1,5 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.config;
+import com.live_jgv.dashboard.infrastructure.jdbc.ScoreProjection;
 
 import com.live_jgv.dashboard.infrastructure.amqp.*;
 import com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException;
@@ -30,7 +31,7 @@ class DurableScoreRetryTest {
     @Test void actualDurableReceiverRejectsMalformedInputBeforeDatabaseWrites() {
         var jdbc = mock(org.springframework.jdbc.core.JdbcTemplate.class);
         when(jdbc.queryForMap(anyString(), eq("m"))).thenReturn(java.util.Map.of("home_team_id", "h", "away_team_id", "a"));
-        var publisher = mock(com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher.class);
+        var publisher = mock(com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher.class);
         var projection = spy(new ScoreProjection(jdbc, mock(org.springframework.transaction.PlatformTransactionManager.class),
                 new com.fasterxml.jackson.databind.ObjectMapper(), publisher, "m", "h", "a", "Home", "Away"));
         clearInvocations(jdbc);

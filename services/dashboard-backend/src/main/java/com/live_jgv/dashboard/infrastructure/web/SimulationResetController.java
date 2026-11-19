@@ -1,4 +1,5 @@
-package com.live_jgv.dashboard;
+package com.live_jgv.dashboard.infrastructure.web;
+import com.live_jgv.dashboard.application.port.out.SimulationPublisher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -14,10 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/simulator")
 public class SimulationResetController {
-    private final ProducerGateway producer;
+    private final SimulationPublisher producer;
     private final String resetKey;
 
-    public SimulationResetController(ProducerGateway producer,
+    public SimulationResetController(SimulationPublisher producer,
             @Value("${simulator.reset-key:}") String resetKey) {
         this.producer = producer;
         this.resetKey = resetKey;

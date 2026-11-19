@@ -2,7 +2,7 @@ package com.live_jgv.dashboard.infrastructure.websocket;
 
 import com.live_jgv.dashboard.application.service.ProcessScoreUpdateService;
 import com.live_jgv.dashboard.domain.model.*;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import com.live_jgv.dashboard.infrastructure.amqp.*;
 import com.live_jgv.dashboard.infrastructure.memory.InMemoryDashboardProjection;
 import com.live_jgv.dashboard.infrastructure.web.MatchSnapshotResponse;

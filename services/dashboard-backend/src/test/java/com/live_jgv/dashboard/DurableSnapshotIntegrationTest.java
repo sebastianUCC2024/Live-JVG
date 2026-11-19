@@ -1,7 +1,8 @@
 package com.live_jgv.dashboard;
+import com.live_jgv.dashboard.infrastructure.jdbc.ScoreProjection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.live_jgv.dashboard.domain.port.out.MatchSnapshotPublisher;
+import com.live_jgv.dashboard.application.port.out.MatchSnapshotPublisher;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.beans.factory.annotation.Autowired;
