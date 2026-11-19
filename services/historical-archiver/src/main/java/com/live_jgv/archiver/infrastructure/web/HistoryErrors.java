@@ -1,4 +1,4 @@
-package com.live_jgv.archiver.entrypoint;
+package com.live_jgv.archiver.infrastructure.web;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.*;

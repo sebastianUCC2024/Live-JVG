@@ -9,7 +9,13 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Objects;
 
-/** Real Spring Data/Hibernate adapter: native race-safe inserts, managed receipts and ORM history. */
+/**
+ * Maps raw input and validated domain events to JPA receipts and archived-event entities.
+ * One write transaction claims the source position, locks its receipt and records the outcome.
+ * Repeated positions must retain identical bytes; conflicting content fails instead of replacing
+ * accepted history. Read transactions use repeatable-read snapshots for coherent pagination.
+ * Native inserts arbitrate races while domain models remain independent of Hibernate.
+ */
 public final class JpaArchiveStore implements ArchiveStore {
     private final ArchivedEventRepository events;
     private final InputReceiptRepository receipts;

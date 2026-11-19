@@ -1,4 +1,4 @@
-package com.live_jgv.archiver.entrypoint;
+package com.live_jgv.archiver.infrastructure.web;
 
 import com.live_jgv.archiver.application.*;
 import com.live_jgv.archiver.domain.HistoryPage;
