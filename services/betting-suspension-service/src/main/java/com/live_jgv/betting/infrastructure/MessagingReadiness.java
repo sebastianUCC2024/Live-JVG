@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.stereotype.Component;
 
-/** Local listener state only. Does not connect, resume consumers or certify source lag. */
+/** Consulta el estado local del listener, sin conectarlo ni medir su retraso. */
 @Component("messagingReadiness")
 public final class MessagingReadiness implements HealthIndicator {
     private final KafkaListenerEndpointRegistry registry;private final boolean enabled;

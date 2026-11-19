@@ -5,15 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import com.live_jgv.matchstate.domain.model.StoredScoreUpdate;
 
-/**
- * Pending publication boundary, kept separate from broker transport.
- * Marking follows a confirmed send; a crash between send and marking can redeliver an update.
- * Consumers must therefore retain their own duplicate detection.
- */
+/** Gestiona publicaciones pendientes; un fallo entre envío y marcado puede generar duplicados. */
 public interface ScoreUpdateOutbox {
-    /** Durable implementations must retain ownership until the callback completes. */
+    /** Mantiene el bloqueo de publicación hasta finalizar la operación. */
     default void withPublicationLock(String matchId, Runnable publication) { publication.run(); }
-    /** Next pending batch in acceptance order; repeat until empty under the publication lock. */
+    /** Consulta el siguiente lote en orden de aceptación, bajo el bloqueo de publicación. */
     List<ScoreUpdate> pendingForMatch(String matchId);
     void markPublished(ScoreUpdate update);
     default Optional<StoredScoreUpdate> storedPublication(ScoreUpdate update) {

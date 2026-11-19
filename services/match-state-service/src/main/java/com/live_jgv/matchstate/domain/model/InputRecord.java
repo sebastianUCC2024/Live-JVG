@@ -2,7 +2,7 @@ package com.live_jgv.matchstate.domain.model;
 
 import java.util.Objects;
 
-/** Transport-neutral original bytes and occurrence coordinates, not a sporting event. */
+/** Bytes y coordenadas originales del transporte; no representa un evento deportivo. */
 public record InputRecord(String source, String topic, int partition, long offset,
                           long timestamp, byte[] key, byte[] value, String headers) {
     public InputRecord {

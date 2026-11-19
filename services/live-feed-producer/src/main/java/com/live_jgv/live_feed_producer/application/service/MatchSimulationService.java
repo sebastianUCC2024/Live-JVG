@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-/** Validates simulation requests before asynchronous publication through the output port. */
+/** Valida la simulación antes de publicar mediante el puerto de salida. */
 public class MatchSimulationService {
 
     private final MatchEventPublisher publisher;
@@ -23,7 +23,7 @@ public class MatchSimulationService {
         this.matches = validateCatalog(catalog.getMatches());
     }
 
-    // Backwards compatibility with existing tests and integrations.
+    // Conserva compatibilidad con pruebas e integraciones existentes.
     public MatchSimulationService(
             MatchEventPublisher publisher,
             String matchId,

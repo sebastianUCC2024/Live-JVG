@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+/** Envía comandos académicos pendientes y los marca después de confirmar su publicación. */
 public final class AcademicOutboxDispatcher {
     private final JdbcTemplate jdbc;private final TransactionTemplate tx;private final AcademicRabbitSender sender;private final String queue;
     public AcademicOutboxDispatcher(JdbcTemplate jdbc,TransactionTemplate tx,AcademicRabbitSender sender,String queue){this.jdbc=jdbc;this.tx=tx;this.sender=sender;this.queue=queue;}

@@ -3,7 +3,7 @@ package com.live_jgv.worker.academic;
 import com.live_jgv.worker.domain.TransportMessage;
 import java.util.Objects;
 
-/** Has no dependency on operations, MarketEvidence, atomic grants or lease issuance. */
+/** Procesa comandos académicos sin conceder autoridad sobre el mercado. */
 public final class AcademicCommandHandler {
     private final AcademicCommandStore store;
     private final AcademicCommandCodec codec;

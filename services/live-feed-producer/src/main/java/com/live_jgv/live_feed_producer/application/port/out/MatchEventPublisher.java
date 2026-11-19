@@ -3,9 +3,9 @@ package com.live_jgv.live_feed_producer.application.port.out;
 import com.live_jgv.live_feed_producer.domain.model.MatchEvent;
 import java.util.concurrent.CompletableFuture;
 
-/** Output port for publishing a validated sporting event. */
+/** Puerto de salida para publicar eventos deportivos validados. */
 @FunctionalInterface
 public interface MatchEventPublisher {
-    /** Completes after transport acknowledgement; failures complete exceptionally. */
+    /** Finaliza tras la confirmación del transporte; propaga los fallos. */
     CompletableFuture<Void> publish(MatchEvent event);
 }

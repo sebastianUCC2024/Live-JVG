@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 expected='-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError'
-# Never evaluate or split user-controlled JVM options. Fail closed on overrides.
+# Rechaza opciones JVM distintas de las previstas; no evalúa texto del usuario.
 if [ "${JAVA_OPTS-$expected}" != "$expected" ] ||
    [ -n "${JAVA_TOOL_OPTIONS-}" ] || [ -n "${JDK_JAVA_OPTIONS-}" ] || [ -n "${_JAVA_OPTIONS-}" ]; then
     echo 'Unapproved JVM options refused' >&2

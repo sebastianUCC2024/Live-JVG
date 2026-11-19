@@ -11,14 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
 
-/**
- * Invokes SuspensionService for {@code match_events} in group {@code betting-suspension-service}.
- * Original bytes and Kafka coordinates form the durable input identity; this adapter does not
- * infer authority to reopen a market. Container RECORD acknowledgments synchronously commit
- * only after normal return with auto-commit disabled. Failures propagate to SuspensionErrorHandler.
- * One consumer lane preserves partition order; distinct groups process the same sporting history.
- * Startup is explicitly gated by storage readiness rather than component creation.
- */
+/** Recibe match_events en betting-suspension-service; RECORD confirma offsets tras procesar, sin auto-commit. */
 @Component
 public class SuspensionKafkaListener {
     private static final Logger log = LoggerFactory.getLogger(SuspensionKafkaListener.class);

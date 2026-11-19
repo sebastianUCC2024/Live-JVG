@@ -2,7 +2,7 @@ package com.live_jgv.matchstate.domain.model;
 
 import java.util.Objects;
 
-/** Immutable wire image and destination captured in the acceptance transaction. */
+/** Conserva el mensaje y su destino dentro de la transacción de aceptación. */
 public record StoredScoreUpdate(ScoreUpdate update, String payload, String exchange, String routingKey, Long applicationSeq) {
     public StoredScoreUpdate(ScoreUpdate update,String payload,String exchange,String routingKey) { this(update,payload,exchange,routingKey,null); }
     public StoredScoreUpdate {

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-/** Preserves Spring MVC status codes and avoids exposing invalid input values. */
+/** Conserva los estados HTTP y evita exponer datos internos en los errores. */
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(com.live_jgv.dashboard.infrastructure.http.ProducerGateway.PublicationFailure.class)

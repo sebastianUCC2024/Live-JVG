@@ -52,7 +52,7 @@ public final class JdbcWorkerStore implements WorkerStore {
             var policyGuard=guard;
             if(session.authoritative()&&evidence.available()&&!guard.frozen()) {
                 var prior=guard.evidence();
-                // DB-locked lease renewal may keep the market revision; old read-only evidence may not.
+                // La renovación bloqueada en base de datos puede conservar la revisión; una lectura antigua no.
                 if(!prior.available()||(prior.authority().equals(evidence.authority())&&prior.epoch().equals(evidence.epoch())&&evidence.revision()>=prior.revision()))
                     policyGuard=MarketGuard.unknown(c.matchId());
             }

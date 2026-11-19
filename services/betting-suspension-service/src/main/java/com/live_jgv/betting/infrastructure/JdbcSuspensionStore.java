@@ -127,7 +127,7 @@ public final class JdbcSuspensionStore implements SuspensionStore {
     private MarketState closeReview(ReviewClosure command,ReviewClosure.ReferenceMode mode) {
         return Objects.requireNonNull(tx.execute(status->{
             var current=locked(command.matchId());
-            // Preserve the existing V1 audit image exactly; V2 identities include their interpretation.
+            // Conserva la identidad V1; V2 incorpora la interpretación de sus referencias.
             var image=new TreeMap<String,Object>();image.put("reference_mode",mode.name());image.put("closure",command);
             String canonical=mode==ReviewClosure.ReferenceMode.V1_GOAL?json(command):json(image);
             var prior=jdbc.queryForList("SELECT canonical_request FROM betting_control.closure_command WHERE match_id=? AND command_id=?",command.matchId(),command.commandId());

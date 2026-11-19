@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
-/** REST adapter for durable catalog queries and the explicitly enabled simulation write flow. */
+/** Expone el catálogo por REST y permite simulación solo si está habilitada. */
 @org.springframework.context.annotation.Profile("!memory")
 @RestController
 @RequestMapping("/api")

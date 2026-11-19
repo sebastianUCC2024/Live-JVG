@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.Set;
 
-/** Runs before EntityManagerFactory creation: Flyway remains the only schema owner. */
+/** Valida antes de crear EntityManagerFactory; Flyway conserva el control del esquema. */
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
 public final class ArchiveJpaSafety implements HibernatePropertiesCustomizer {

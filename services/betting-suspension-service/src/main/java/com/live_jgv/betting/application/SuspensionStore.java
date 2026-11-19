@@ -6,8 +6,8 @@ public interface SuspensionStore {
     enum Outcome { APPLIED, DUPLICATE, QUARANTINED, IDENTITY_CONFLICT }
     Outcome handle(InputRecord record, DecodedInput input);
     MarketState status(String matchId);
-    /** Trusted internal interface; no wire contract currently authorizes a caller. */
+    /** Contrato interno de confianza; no habilita llamadas externas. */
     MarketState closeReview(ReviewClosure closure);
-    /** Prepared internal V2 adapter. It is not connected to an external listener. */
+    /** Adaptador V2 preparado, sin conexión con listeners externos. */
     MarketState closeReviewV2(ReviewClosure closure);
 }

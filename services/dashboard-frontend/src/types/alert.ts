@@ -1,6 +1,6 @@
 import { eventTypes, type EventType, type VarStatus } from './match'
 
-/** notification-backend AlertResponse: service-local DTO, not the shared empty schema. */
+/** Respuesta AlertResponse local de notification-backend. */
 export interface LiveAlert {
   contract_version: '1.0'
   alert_id: string
@@ -27,7 +27,7 @@ function instant(value: unknown): boolean {
   const year = Number(yearText), month = Number(monthText), day = Number(dayText)
   const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
   const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-  // Date.parse normalizes impossible calendar dates; validate before rendering them.
+  // Valida la fecha antes de mostrarla porque Date.parse normaliza fechas imposibles.
   return month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1]
 }
 const score = (value: unknown) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 2147483647

@@ -2,7 +2,7 @@ package com.live_jgv.dashboard.domain.model;
 
 import java.time.Instant;
 
-/** Internal immutable snapshot; transport mapping belongs to future adapters. */
+/** Marcador inmutable; la conversión de transporte pertenece a los adaptadores. */
 public record ScoreUpdate(
         String matchId, int homeScore, int awayScore, String eventId,
         EventType eventType, Instant updatedAt, VarStatus varStatus, String referenceEventId) {

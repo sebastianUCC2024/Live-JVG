@@ -1,6 +1,6 @@
 export function resolveWebSocketUrl(explicit: string | undefined, origin: string | undefined,
   page: { protocol: string; hostname: string }): string {
-  if (explicit) return explicit // Preserve the existing explicit override.
+  if (explicit) return explicit // Conserva la dirección configurada explícitamente.
   if (origin) {
     const url = new URL(origin)
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password
@@ -9,7 +9,7 @@ export function resolveWebSocketUrl(explicit: string | undefined, origin: string
     url.pathname = '/ws'
     return url.toString()
   }
-  return `${page.protocol === 'https:' ? 'wss' : 'ws'}://${page.hostname}:8081/ws` // Legacy memory default.
+  return `${page.protocol === 'https:' ? 'wss' : 'ws'}://${page.hostname}:8081/ws` // Valor predeterminado del modo memory.
 }
 export const defaultWebSocketUrl = resolveWebSocketUrl(import.meta.env.VITE_WS_URL,
   import.meta.env.VITE_DASHBOARD_ORIGIN, window.location)

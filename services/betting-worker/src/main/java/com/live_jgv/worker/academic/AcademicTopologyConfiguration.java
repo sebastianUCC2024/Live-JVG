@@ -7,12 +7,7 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 
-/**
- * Opt-in academic work queue, normally {@code betting_commands}, reached through RabbitMQ's
- * default exchange with the queue name as routing key. Rejected deliveries use the configured
- * {@code <queue>.dlx} direct exchange, {@code rejected} key and durable {@code <queue>.dlq}.
- * Competing workers share this queue; this is work distribution rather than Kafka log replay.
- */
+/** Declara betting_commands y su DLX direct; rejected enruta a la DLQ. La entrada usa el exchange predeterminado. */
 @Configuration(proxyBeanMethods=false)
 @ConditionalOnProperty(name="academic.topology.enabled",havingValue="true")
 public class AcademicTopologyConfiguration {

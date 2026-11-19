@@ -10,13 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/**
- * Persists notification inbox identity and derived alert content in one independent transaction.
- * REQUIRES_NEW ensures acceptance commits before the listener acknowledges its delivery,
- * even if a caller has an outer transaction. Domain values are encoded at this boundary;
- * duplicate and conflicting identities are classified without replacing accepted content.
- * Database failures propagate so the listener can retry or retain message custody.
- */
+/** Guarda inbox y alerta con REQUIRES_NEW; el commit ocurre antes del ACK del listener. */
 public final class JdbcNotificationStore implements NotificationStore {
     private static final String SOURCE = "match-state-service";
     private final JdbcTemplate jdbc;
@@ -24,7 +18,7 @@ public final class JdbcNotificationStore implements NotificationStore {
     private final ScoreUpdateCodec codec;
     public JdbcNotificationStore(JdbcTemplate jdbc, PlatformTransactionManager manager, ScoreUpdateCodec codec) {
         this.jdbc = jdbc; this.tx = new TransactionTemplate(manager); this.codec = codec;
-        // Never join a caller transaction that could commit after the listener ACK.
+        // Usa una transacción propia para confirmar datos antes del ACK.
         this.tx.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
     @Override public Result acceptLiveAlert(LiveAlertV1 wire) {
@@ -59,8 +53,8 @@ public final class JdbcNotificationStore implements NotificationStore {
             if (alert.isEmpty()) return Result.SUPPRESSED;
             var value = alert.orElseThrow();
             if (!value.source().equals(update)) throw new IllegalArgumentException("Alert source mismatch");
-            // This row lock is held until COMMIT. Unlike BIGSERIAL, it cannot advance past
-            // a still-uncommitted earlier alert and make a polling cursor miss that alert.
+            // Mantiene el bloqueo hasta COMMIT para ordenar las alertas confirmadas.
+            // Evita que el cursor salte una alerta que todavía no se ha confirmado.
             Long sequence = jdbc.queryForObject("UPDATE notification.cursor_state SET last_sequence=last_sequence+1 WHERE singleton=TRUE RETURNING last_sequence", Long.class);
             if (sequence == null) throw new IllegalStateException("Missing notification cursor state");
             jdbc.update("""

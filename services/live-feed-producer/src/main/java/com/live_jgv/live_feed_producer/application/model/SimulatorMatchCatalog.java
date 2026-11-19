@@ -3,7 +3,7 @@ package com.live_jgv.live_feed_producer.application.model;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Match definitions supplied by composition; contains no framework binding annotations. */
+/** Catálogo de partidos independiente de la configuración Spring. */
 public class SimulatorMatchCatalog {
 
     private List<Match> matches = new ArrayList<>();

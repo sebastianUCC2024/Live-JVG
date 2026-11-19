@@ -14,7 +14,7 @@ public class SnapshotSubscriptionController {
         this.query = query;
     }
 
-    /** Direct response to the requesting session, not a broadcast to other viewers. */
+    /** Responde solo a la sesión solicitante, sin difundir la recuperación. */
     @SubscribeMapping("/matches/{matchId}/snapshot")
     public SnapshotReply snapshot(@DestinationVariable String matchId) {
         return query.find(matchId).map(value -> new SnapshotReply(true, MatchSnapshotResponse.from(value)))

@@ -2,7 +2,7 @@ package com.live_jgv.worker.application;
 
 import com.live_jgv.worker.domain.MarketEvidence;
 
-/** Future adapter must authenticate authority, bound time and provide monotonic epoch/revision evidence. */
+/** El adaptador debe verificar autoridad, vigencia y revisiones monotónicas. */
 @FunctionalInterface
 public interface SuspensionEvidencePort {
     MarketEvidence fetch(String matchId);

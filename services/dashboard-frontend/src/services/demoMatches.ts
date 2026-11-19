@@ -1,6 +1,6 @@
 import type { DemoMatch, MatchLoader } from '../types/match'
 
-/** Entirely fictional fixtures. No HTTP or WebSocket requests are made. */
+/** Datos ficticios de demostración; no realizan conexiones HTTP ni WebSocket. */
 export const demoMatches: DemoMatch[] = [
   {
     snapshot: { stream_id: 'demo-session', revision: 12, match_id: 'demo-001', home_score: 2, away_score: 1,

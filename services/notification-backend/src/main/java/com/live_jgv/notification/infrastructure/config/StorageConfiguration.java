@@ -36,8 +36,8 @@ public class StorageConfiguration {
         @Bean PlatformTransactionManager notificationTransactionManager(DataSource source) { return new JdbcTransactionManager(source); }
         @Bean NotificationStore notificationStore(DataSource source, PlatformTransactionManager manager, ScoreUpdateCodec codec) {
             var jdbc=new JdbcTemplate(source);
-            // Read-only readiness checks. No DDL: schema must already exist through
-            // a separately approved Flyway run before enabling storage/consumption.
+            // Comprueba el esquema existente sin ejecutar DDL.
+            // El esquema debe prepararse antes de habilitar almacenamiento y consumo.
             if (!Integer.valueOf(1).equals(jdbc.queryForObject("SELECT COUNT(*) FROM notification.cursor_state WHERE singleton=TRUE",Integer.class)))
                 throw new IllegalStateException("Notification cursor state is missing");
             jdbc.queryForList("SELECT a.sequence,i.payload FROM notification.alerts a JOIN notification.inbox i ON (a.source,a.match_id,a.event_id)=(i.source,i.match_id,i.event_id) WHERE FALSE");

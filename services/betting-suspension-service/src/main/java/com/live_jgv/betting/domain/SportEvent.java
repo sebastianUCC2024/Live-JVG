@@ -3,7 +3,7 @@ package com.live_jgv.betting.domain;
 import java.time.Instant;
 import java.util.Objects;
 
-/** Local representation of the observed wire format, not an approved shared contract. */
+/** Representación local del evento recibido; no define un contrato compartido. */
 public record SportEvent(String eventId, String matchId, EventType eventType, String teamId,
                          int minute, Instant timestamp, String referenceEventId) {
     public enum EventType { GOAL, VAR_CHECK, GOAL_ANNULLED, MATCH_CONTINUES }

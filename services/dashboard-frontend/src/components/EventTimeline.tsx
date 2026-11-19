@@ -13,7 +13,7 @@ const labels: Record<EventType, string> = { GOAL: 'Gol', VAR_CHECK: 'Revisión V
 const descriptions: Record<EventType, string> = { GOAL: 'Marcador actualizado', VAR_CHECK: 'La jugada entra en revisión', GOAL_ANNULLED: 'Corrección del marcador', MATCH_CONTINUES: 'Actualización del estado del partido', MATCH_FINISHED: 'Resultado definitivo' }
 const time = new Intl.DateTimeFormat('es-CO', { timeStyle: 'medium', timeZone: 'America/Bogota' })
 
-/** Displays the received order and scores; never creates or reorders sporting events. */
+/** Muestra el orden y marcador recibidos sin inventar ni reordenar eventos. */
 export function EventTimeline({ events, simulated = false }: { events: readonly TimelineEvent[]; simulated?: boolean }) {
   return <ol className="event-list timeline" aria-label={simulated ? 'Última actualización simulada' : 'Línea de tiempo del partido'}>
     {events.map(event => <li key={event.event_id} className={`timeline-event event-${event.event_type.toLowerCase()}`}>

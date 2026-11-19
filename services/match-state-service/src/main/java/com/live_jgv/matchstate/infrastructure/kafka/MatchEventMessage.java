@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
-/** Wire DTO keeps mandatory minute nullable until explicit validation. */
+/** Mantiene minute nullable hasta validar explícitamente el mensaje. */
 public record MatchEventMessage(String eventId, String matchId, EventType eventType, String teamId, Integer minute, String timestamp, String referenceEventId) {
     @JsonCreator
     public static MatchEventMessage fromJson(@JsonProperty("event_id") String eventId, @JsonProperty("match_id") String matchId,

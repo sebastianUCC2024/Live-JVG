@@ -9,13 +9,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Objects;
 
-/**
- * Maps raw input and validated domain events to JPA receipts and archived-event entities.
- * One write transaction claims the source position, locks its receipt and records the outcome.
- * Repeated positions must retain identical bytes; conflicting content fails instead of replacing
- * accepted history. Read transactions use repeatable-read snapshots for coherent pagination.
- * Native inserts arbitrate races while domain models remain independent of Hibernate.
- */
+/** Guarda evento y comprobante en una transacción JPA; los conflictos no reemplazan el historial. */
 public final class JpaArchiveStore implements ArchiveStore {
     private final ArchivedEventRepository events;
     private final InputReceiptRepository receipts;
@@ -54,8 +48,8 @@ public final class JpaArchiveStore implements ArchiveStore {
             } else throw new IllegalStateException("Invalid event insert count");
         }
         receipt.complete(outcome,matchId,eventId,reason);
-        // Managed entity dirty checking writes only mutable audit fields. Flush inside the same transaction;
-        // constraint/storage errors propagate before Kafka's listener is allowed to return successfully.
+        // El dirty checking actualiza los campos de auditoría dentro de la transacción.
+        // El flush propaga errores antes de permitir confirmar el offset de Kafka.
         receipts.flush();
         return outcome;
     }

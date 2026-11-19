@@ -42,6 +42,7 @@ import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import java.time.Duration;
 
+/** Configura la mensajería y sus políticas de confirmación, reintento y recuperación. */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(MatchCatalogProperties.class)
 public class MessagingConfiguration {
@@ -108,10 +109,10 @@ public class MessagingConfiguration {
         var factory = new ConcurrentKafkaListenerContainerFactory<byte[], byte[]>();
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties()));
         factory.setConcurrency(1);
-        // Durable mode starts explicitly after migration, validation and outbox recovery.
+        // Inicia el consumo después de validar almacenamiento y recuperar el outbox.
         factory.setAutoStartup(environment.acceptsProfiles(Profiles.of("memory")) && properties.getListener().isAutoStartup());
-        // Auto-commit is disabled in application.properties. Successful listener return allows
-        // a synchronous offset commit; exceptions retain input for bounded retry and pause.
+        // Configura RECORD y commits síncronos; auto-commit está desactivado.
+        // Los fallos conservan el registro para reintentar y pausar el consumidor.
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
         factory.getContainerProperties().setSyncCommits(true);
         factory.setCommonErrorHandler(matchEventsErrorHandler);

@@ -35,7 +35,7 @@ public final class JdbcArchiveStore implements ArchiveStore {
                     || !Arrays.equals((byte[]) prior.get("original_payload"), r.value())
                     || !r.headers().equals(prior.get("original_headers"))
                     || ((Number) prior.get("broker_timestamp")).longValue() != r.brokerTimestamp()) {
-                // A log was recreated with an old source_id. Never overwrite its original evidence.
+                // No sobrescribe evidencia si se reutiliza la identidad de un log anterior.
                 throw new IllegalStateException("Source position reused with different content; change source identity after review");
             }
             return ArchiveOutcome.valueOf((String) prior.get("outcome"));
@@ -71,7 +71,7 @@ public final class JdbcArchiveStore implements ArchiveStore {
     private static Object[] position(InputRecord r) { return new Object[]{r.sourceId(), r.topic(), r.partition(), r.offset()}; }
 
     @Override public HistoryPage find(String match, int page, int size) {
-        // Count and rows share a repeatable-read snapshot, even during concurrent ingestion.
+        // El total y las filas comparten un snapshot repeatable-read.
         var read = new TransactionTemplate(transactions.getTransactionManager());
         read.setReadOnly(true);
         read.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);

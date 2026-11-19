@@ -3,7 +3,7 @@ package com.live_jgv.matchstate.infrastructure.config;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 
-/** Independent startup gates; all defaults retain the active startup behavior. */
+/** Permite controlar por separado las etapas de arranque. */
 public record StartupPolicy(boolean catalog, boolean recovery, boolean publication) {
     public static StartupPolicy from(Environment env) {
         var policy = new StartupPolicy(

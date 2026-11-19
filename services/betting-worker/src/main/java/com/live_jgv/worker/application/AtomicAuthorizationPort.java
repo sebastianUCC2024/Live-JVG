@@ -2,7 +2,7 @@ package com.live_jgv.worker.application;
 
 import com.live_jgv.worker.domain.*;
 
-/** A session must keep the source row locked in the operation's existing JDBC transaction. */
+/** Mantiene la fila de origen bloqueada dentro de la transacción del worker. */
 public interface AtomicAuthorizationPort {
     record Grant(boolean allowed,String reason) { }
     interface Session {

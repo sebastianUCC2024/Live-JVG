@@ -18,14 +18,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.core.Message;
 import java.util.*;
 
-/**
- * Durable score projection and query adapter for the existing dashboard inbox schema.
- * The durableScores listener validates score JSON, locks the match row and atomically records
- * inbox identity and score changes. Equal duplicate payloads are retained once; conflicting
- * event identity or authoritative sequence fails before replacing accepted state.
- * Browser publication follows database work and can be recovered from committed inbox snapshots.
- * RabbitMQ acknowledgment and retry remain configured by MessagingConfiguration.
- */
+/** Persiste marcadores recibidos por AMQP; deduplica en el inbox y publica a WebSocket después del commit. */
 @org.springframework.context.annotation.Profile("!memory")
 @Repository
 @DependsOnDatabaseInitialization
@@ -82,7 +75,7 @@ public class ScoreProjection implements com.live_jgv.dashboard.application.port.
         String match=json.get("match_id").asText(),event=json.get("event_id").asText(),payload=json.toString();
         tx.executeWithoutResult(status->{
 
-            // Register only recognized presentation matches, including their round-scoped identities.
+            // Registra únicamente partidos de presentación conocidos y sus rondas.
             String[][] catalog = {
                 {"demo-col-v4-001","nacional","millonarios","Atlético Nacional","Millonarios"},
                 {"demo-col-v4-002","america","cali","América de Cali","Deportivo Cali"},
@@ -117,13 +110,13 @@ public class ScoreProjection implements com.live_jgv.dashboard.application.port.
             } else jdbc.update("INSERT INTO dashboard.inbox(match_id,event_id,payload) VALUES (?,?,?)",match,event,payload);
             jdbc.update("UPDATE dashboard.matches SET home_score=?,away_score=?,var_status=?,last_event_id=?,updated_at=? WHERE match_id=?",json.get("home_score").asInt(),json.get("away_score").asInt(),json.get("var_status").asText(),event,json.get("updated_at").asText(),match);
         });
-        // Publish only committed state. A redelivery publishes the latest snapshot,
-        // never the older duplicate payload. Clients deduplicate its durable revision.
+        // Publica únicamente estado confirmado; la reentrega utiliza el último snapshot.
+        // Los clientes deduplican el snapshot mediante su revisión persistida.
         snapshot(match).ifPresent(publisher::publish);
     }
     private Long requiredSequence(Message message) {
         Object raw=message.getMessageProperties().getHeaders().get("application_seq");
-        // AMQP integral header, never timestamp, float, string, or inferred arrival order.
+        // Exige una cabecera AMQP entera; no deduce secuencias por tiempo ni llegada.
         if(!(raw instanceof Long || raw instanceof Integer) || ((Number)raw).longValue()<1)
             throw new com.live_jgv.dashboard.domain.model.InvalidScoreUpdateException("Authoritative application_seq header required");
         return ((Number)raw).longValue();
@@ -143,13 +136,13 @@ public class ScoreProjection implements com.live_jgv.dashboard.application.port.
         },match);
     }
     public List<Map<String,Object>> matches(){return jdbc.queryForList("SELECT * FROM dashboard.matches ORDER BY match_id");}
-    /** Confirmation by identity does not depend on the UI's last-30-events window. */
+    /** Consulta la identidad sin depender de la ventana de eventos de la interfaz. */
     public boolean operationProcessed(String matchId,String eventId){
         return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM dashboard.inbox WHERE match_id=? AND event_id=?)",Boolean.class,matchId,eventId));
     }
     public Map<String,Object> view(String id){
-        // One PostgreSQL statement uses one MVCC snapshot, including at READ COMMITTED.
-        // A REQUIRED/read-only annotation alone would not make two statements consistent.
+        // Una sentencia consulta todos los datos con el mismo snapshot MVCC.
+        // Dos consultas no serían consistentes solo por usar una transacción read-only.
         return jdbc.query("""
                 SELECT row_to_json(m)::text AS match_data,
                        COALESCE((SELECT json_agg(i.payload ORDER BY i.seq)::text

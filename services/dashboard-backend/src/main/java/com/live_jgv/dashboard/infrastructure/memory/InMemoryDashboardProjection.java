@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Single-instance, volatile projection. Accepts new events in arrival order. */
+/** Proyección en memoria de una instancia; procesa eventos según su llegada. */
 public final class InMemoryDashboardProjection implements DashboardUpdatePublisher, MatchSnapshotRepository {
     private final Map<EventKey, EventContent> processed = new HashMap<>();
     private final Map<String, MatchSnapshot> latest = new HashMap<>();
@@ -49,8 +49,8 @@ public final class InMemoryDashboardProjection implements DashboardUpdatePublish
             throw new IllegalStateException("Projection capacity reached");
         }
         var snapshot = new MatchSnapshot(streamId, revision + 1, update);
-        // Commit deduplication only after the output adapter accepts the publication.
-        // A failure can therefore be retried by the Rabbit listener without being swallowed.
+        // Registra la deduplicación después de aceptar la publicación.
+        // El listener puede reintentar si falla el adaptador de salida.
         publisher.publish(snapshot);
         processed.put(key, content);
         latest.put(update.matchId(), snapshot);
@@ -68,8 +68,8 @@ public final class InMemoryDashboardProjection implements DashboardUpdatePublish
 
     private record EventKey(String matchId, String eventId) { }
 
-    // DEV 1 generates updated_at at processing time; replay can change it.
-    // A timestamp-only duplicate must not replace or regress the latest snapshot.
+    // El replay puede cambiar updated_at porque se genera durante el procesamiento.
+    // Un duplicado con otro timestamp no reemplaza el último marcador.
     private record EventContent(int homeScore, int awayScore, EventType eventType,
             VarStatus varStatus, String referenceEventId) { }
 }

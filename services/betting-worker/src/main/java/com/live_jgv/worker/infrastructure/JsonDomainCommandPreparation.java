@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.TreeMap;
 
-/** Internal receipt image matching the existing private adapter, not an approved wire contract. */
+/** Serializa el comprobante interno sin modificar su identidad persistida. */
 public final class JsonDomainCommandPreparation implements CommandPreparation {
     private static final ObjectMapper MAPPER=new ObjectMapper();
     @Override public Input prepare(SimulatedCommand command){

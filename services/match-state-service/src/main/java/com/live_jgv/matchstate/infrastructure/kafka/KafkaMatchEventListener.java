@@ -16,16 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 
-/**
- * Adapts raw records from {@code match_events} for the {@code match-state-service} group.
- * Durable mode invokes IncomingEventHandler with source/topic/partition/offset and original bytes;
- * memory mode decodes the JSON contract and invokes ProcessMatchEvent directly.
- * Byte-array deserialization preserves malformed input for durable classification.
- * The container uses synchronous RECORD commits with auto-commit disabled: returning normally
- * permits committing the record, while failures reach the bounded retry/pause handler.
- * Match-key partitioning provides per-partition ordering; inbox identity and aggregate event IDs
- * handle redelivery, without an atomic Kafka/PostgreSQL/RabbitMQ transaction.
- */
+/** Recibe match_events en match-state-service; confirma offsets RECORD tras procesar, sin auto-commit. */
 public final class KafkaMatchEventListener {
     private static final Logger log = LoggerFactory.getLogger(KafkaMatchEventListener.class);
     private final ObjectMapper mapper;
@@ -69,7 +60,7 @@ public final class KafkaMatchEventListener {
         }
     }
 
-    /** In-process adapter entry retained for memory/component fixtures, without durable custody. */
+    /** Entrada en memoria para pruebas de componentes, sin custodia persistente. */
     public void onMessage(ConsumerRecord<String, String> record) {
         final MatchEvent event;
         try {

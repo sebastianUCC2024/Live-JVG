@@ -7,7 +7,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionListener;
 import org.springframework.amqp.rabbit.listener.*;
 import org.springframework.context.ApplicationListener;
 
-/** A running container alone does not prove RabbitMQ accepted basic.consume. */
+/** El contenedor activo no demuestra que RabbitMQ haya aceptado basic.consume. */
 public final class ConsumerReadiness implements ApplicationListener<AmqpEvent>, ConnectionListener {
     private final String queue;
     private final AtomicBoolean accepted=new AtomicBoolean();

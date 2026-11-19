@@ -11,14 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
 
-/**
- * Invokes ArchiveService for {@code match_events} in group {@code historical-archiver}.
- * Preserves raw key, payload and headers with source/partition/offset for durable receipts.
- * The container disables auto-commit and synchronously commits each successful record;
- * exceptions propagate to ArchiverErrorHandler, so failed storage is not acknowledged here.
- * Startup remains disabled until the existing readiness workflow enables this listener.
- * This independent consumer group archives history without consuming another service's offsets.
- */
+/** Recibe match_events en historical-archiver; persiste el historial y confirma offsets RECORD sin auto-commit. */
 @Component
 public class ArchiveKafkaListener {
     private static final Logger log = LoggerFactory.getLogger(ArchiveKafkaListener.class);

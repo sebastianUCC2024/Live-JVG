@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.TreeMap;
 
-/** V1 academic action only. A simulated result is never evidence or authority to bet. */
+/** Acción académica V1: el resultado simulado no autoriza apuestas. */
 public record AcademicCommand(int schemaVersion,String commandId,String matchId,String sourceEventId,
                               CommandType commandType,Instant timestamp) {
     public enum CommandType { SUSPEND_BETS, RESUME_BETS }

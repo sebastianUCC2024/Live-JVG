@@ -21,7 +21,7 @@ public final class AlertController {
                 page.items().stream().map(AlertResponse::from).toList(),page.nextCursor(),page.hasMore()));
     }
     public record AlertPageResponse(List<AlertResponse> items,@JsonProperty("next_cursor") String nextCursor,@JsonProperty("has_more") boolean hasMore) { }
-    /** Local REST DTO only; shared contracts/events/live-alert.schema.json remains unchanged. */
+    /** Respuesta REST local; conserva el JSON Schema compartido. */
     public record AlertResponse(@JsonProperty("contract_version") String contractVersion,
             @JsonProperty("alert_id") String alertId,@JsonProperty("match_id") String matchId,
             @JsonProperty("alert_type") ScoreUpdate.EventType alertType,@JsonProperty("source_event_id") String sourceEventId,

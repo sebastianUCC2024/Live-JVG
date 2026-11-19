@@ -5,7 +5,7 @@ import org.springframework.messaging.simp.stomp.*;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
-/** Browsers may subscribe to one match destination, but cannot inject scores. */
+/** Permite suscripciones del navegador, pero impide inyectar marcadores. */
 public final class StompInboundInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {

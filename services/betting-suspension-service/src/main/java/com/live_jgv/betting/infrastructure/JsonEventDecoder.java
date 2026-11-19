@@ -36,15 +36,15 @@ public final class JsonEventDecoder implements EventDecoder {
                     minute.intValue(), Instant.parse(text(tree, "timestamp", true)), reference);
             if (record.key() == null || !event.matchId().equals(utf8(record.key())))
                 return DecodedInput.invalid(DecodedInput.Reason.KEY_MISMATCH);
-            // Canonicalize only known flat fields; missing optional fields and explicit null are equivalent.
-            // Timestamp spelling is preserved, so conflicting wire values are never silently merged.
+            // Normaliza campos conocidos; un campo opcional ausente equivale a null.
+            // Conserva el timestamp recibido para detectar contenidos conflictivos.
             var canonical = new TreeMap<String, JsonNode>();
             for (String field : FIELDS) canonical.put(field, tree.path(field).isMissingNode() ? mapper.nullNode() : tree.get(field));
             canonical.put("reference_event_id", reference == null ? mapper.nullNode() : mapper.getNodeFactory().textNode(reference));
             return DecodedInput.valid(event, mapper.writeValueAsString(canonical));
         } catch (Exception failure) { return DecodedInput.invalid(DecodedInput.Reason.INVALID_EVENT); }
     }
-    // Keep FIELDS unchanged: normalized canonical JSON must match persisted V1 identities.
+    // Conserva FIELDS para no cambiar las identidades V1 persistidas.
     private static boolean allowed(String name) { return FIELDS.contains(name) || name.equals("annuls_event_id"); }
     private static String resolveReference(JsonNode tree) {
         String legacy = text(tree, "reference_event_id", false);

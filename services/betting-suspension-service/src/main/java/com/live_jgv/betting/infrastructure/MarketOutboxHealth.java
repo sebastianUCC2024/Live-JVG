@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-/** Read-only backlog visibility. Backlog is not automatically a failure or proof of broker availability. */
+/** Consulta los pendientes; su cantidad no demuestra disponibilidad del broker. */
 @Component("marketOutbox")
 public final class MarketOutboxHealth implements HealthIndicator {
     private final JdbcTemplate jdbc;private final boolean publicationEnabled;

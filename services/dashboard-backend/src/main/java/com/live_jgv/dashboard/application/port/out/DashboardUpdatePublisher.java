@@ -2,7 +2,7 @@ package com.live_jgv.dashboard.application.port.out;
 
 import com.live_jgv.dashboard.domain.model.ScoreUpdate;
 
-/** Delivery failures propagate to the caller; no delivery guarantee is implied. */
+/** Propaga los fallos de entrega al llamador, sin prometer entrega garantizada. */
 @FunctionalInterface
 public interface DashboardUpdatePublisher {
     void publish(ScoreUpdate update);

@@ -94,7 +94,7 @@ public class DashboardRabbitConfiguration {
         factory.setDefaultRequeueRejected(false);
         factory.setAdviceChain(dashboardRetryAdvice);
         factory.setErrorHandler(failure -> {
-            // Do not log ListenerExecutionFailedException: it can contain the raw body.
+            // No registra la excepción completa: puede contener el cuerpo del mensaje.
             log.warn("Dashboard listener rejected a message; failureType={}", failure.getClass().getName());
             throw new AmqpRejectAndDontRequeueException("Dashboard listener rejected message");
         });

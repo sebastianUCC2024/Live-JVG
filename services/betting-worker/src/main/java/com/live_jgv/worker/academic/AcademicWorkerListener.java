@@ -6,7 +6,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import java.util.*;
 
-/** AUTO ACK only after the handler's transaction (and rejection custody) has completed. */
+/** Confirma la cola betting_commands tras procesar el comando y asegurar los rechazos en la DLQ. */
 public final class AcademicWorkerListener {
     private final String instanceId=UUID.randomUUID().toString();
     private final AcademicCommandHandler handler;private final AcademicCommandStore store;

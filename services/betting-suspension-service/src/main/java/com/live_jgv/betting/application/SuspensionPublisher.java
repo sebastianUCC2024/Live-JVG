@@ -1,6 +1,6 @@
 package com.live_jgv.betting.application;
 
-/** Return only after confirmed mandatory routing; callers must retain uncertain publications. */
+/** Retorna tras confirmar el enrutamiento; una publicación incierta permanece pendiente. */
 public interface SuspensionPublisher {
     void publish(String messageId,String payload);
 }

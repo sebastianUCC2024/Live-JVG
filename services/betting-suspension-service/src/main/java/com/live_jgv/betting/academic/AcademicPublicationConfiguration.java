@@ -10,6 +10,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/** Configura la publicación académica hacia la cola indicada mediante el exchange predeterminado. */
 @Configuration(proxyBeanMethods=false)
 @ConditionalOnProperty(name="academic.publication.enabled",havingValue="true")
 @EnableScheduling

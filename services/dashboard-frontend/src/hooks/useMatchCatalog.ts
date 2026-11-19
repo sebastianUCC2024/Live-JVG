@@ -1,12 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 import { createDashboardApi, type CatalogMatch } from '../services/dashboardApi'
 
-/**
- * Loads the existing presentation-round catalog and owns request cancellation.
- * Only ready matches with the established demo round identity participate in automatic
- * selection. This preserves the current presentation behavior, including an empty
- * catalog for generic match IDs. REST recovery and STOMP remain independent of this request.
- */
+/** Carga las rondas de presentación y cancela consultas obsoletas; conserva el filtro actual de IDs. */
 export function useMatchCatalog(
   url: string,
   manual: boolean,

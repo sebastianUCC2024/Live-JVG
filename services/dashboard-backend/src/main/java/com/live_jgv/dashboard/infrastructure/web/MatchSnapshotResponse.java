@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.live_jgv.dashboard.domain.model.*;
 
-/** Browser-facing DTO, distinct from the shared Rabbit contract. */
+/** Respuesta del navegador, separada del contrato RabbitMQ. */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record MatchSnapshotResponse(String streamId, long revision, String matchId,
         int homeScore, int awayScore, String eventId, EventType eventType, String updatedAt,

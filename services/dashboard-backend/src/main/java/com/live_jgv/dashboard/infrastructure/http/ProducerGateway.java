@@ -16,11 +16,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Collections;
-/**
- * HTTP implementation of simulation publication with bounded connection and read timeouts.
- * Preserves the upstream event identity and exposes uncertain publication through the existing
- * HTTP error contract, allowing callers to recover instead of inventing a new event on retry.
- */
+/** Publica eventos por HTTP con timeouts; conserva la identidad para recuperar envíos inciertos. */
 @org.springframework.context.annotation.Profile("!memory")
 @Component
 public class ProducerGateway implements com.live_jgv.dashboard.application.port.out.SimulationPublisher{
@@ -61,7 +57,7 @@ public class ProducerGateway implements com.live_jgv.dashboard.application.port.
   }
   catch(org.springframework.web.client.RestClientException e){throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo confirmar el envío al productor. No reintentes con otro ID.");}
  }
- /** Local HTTP error DTO; never forward arbitrary upstream exception bodies. */
+ /** Respuesta HTTP local: no expone cuerpos arbitrarios de errores remotos. */
  public static final class PublicationFailure extends ResponseStatusException {
   private final Map<String,Object> body;
   private PublicationFailure(HttpStatusCode status,Map<String,Object> body){

@@ -10,7 +10,7 @@ public final class ArchiveService {
         this.store = Objects.requireNonNull(store); this.decoder = Objects.requireNonNull(decoder);
     }
     public ArchiveOutcome archive(InputRecord record) {
-        // Deliberately propagate storage failures: Kafka must not acknowledge them.
+        // Propaga los fallos de persistencia para impedir confirmar el offset de Kafka.
         return store.save(record, decoder.decode(record));
     }
     public HistoryPage history(String match, int page, int size) {

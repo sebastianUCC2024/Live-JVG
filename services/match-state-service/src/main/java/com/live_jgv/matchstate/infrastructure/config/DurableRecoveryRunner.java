@@ -12,7 +12,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import java.time.Duration;
 
-/** Startup stays unready and Kafka stays stopped until all durable pending outputs drain. */
+/** Mantiene Kafka detenido hasta recuperar las publicaciones pendientes. */
 public final class DurableRecoveryRunner implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(DurableRecoveryRunner.class);
     private final JdbcMatchStateStore store;
@@ -44,7 +44,7 @@ public final class DurableRecoveryRunner implements ApplicationRunner {
                 log.info("Durable outbox recovered; Kafka startup enabled={}", startListener);
                 return;
             } catch (RuntimeException failure) {
-                // Do not print connection settings, credentials or payloads.
+                // Omite credenciales, configuración de conexión y payloads en los logs.
                 log.warn("Durable startup recovery pending; failureType={}", failure.getClass().getName());
                 Thread.sleep(retryMillis);
             }

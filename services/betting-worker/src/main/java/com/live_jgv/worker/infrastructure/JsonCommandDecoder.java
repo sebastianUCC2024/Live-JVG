@@ -10,7 +10,7 @@ import java.nio.charset.*;
 import java.time.Instant;
 import java.util.*;
 
-/** Private proposal, not the empty shared betting-command schema. No authority evidence comes from commands. */
+/** Decodifica el contrato privado; el comando no aporta evidencia de autoridad. */
 public final class JsonCommandDecoder implements CommandDecoder {
     private static final Set<String> FIELDS=Set.of("schema_version","command_id","operation_id","match_id","simulated_user_id","timestamp");
     private final ObjectMapper mapper=JsonMapper.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)

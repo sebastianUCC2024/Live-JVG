@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.live_jgv.matchstate.domain.model.ScoreUpdate;
 import com.live_jgv.matchstate.domain.model.LoadedMatch;
 
-/** Storage boundary; match setup must exist before processing sporting events. */
+/** Puerto de persistencia; el partido debe existir antes de aceptar eventos. */
 public interface MatchStateRepository {
     Optional<LoadedMatch> load(String matchId);
 
@@ -13,11 +13,6 @@ public interface MatchStateRepository {
         return load(matchId).map(LoadedMatch::state);
     }
 
-    /**
-     * Atomically replace the loaded snapshot only if storage still represents it.
-     * Return false on conflict. Throw on storage failure; never partially persist.
-     * Compare the loaded storage revision, never Java object identity.
-     * Persist state, accepted history and pending output together.
-     */
+    /** Guarda estado, historial y outbox de forma atómica si coincide la revisión; un conflicto permite reintentar. */
     boolean compareAndSet(LoadedMatch expected, MatchState updated, ScoreUpdate update);
 }

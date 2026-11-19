@@ -4,7 +4,7 @@ import com.live_jgv.dashboard.application.port.out.DashboardQueries;
 import com.live_jgv.dashboard.application.port.in.GetMatchSnapshot;
 import org.springframework.context.annotation.*;
 
-/** Both REST snapshot recovery and STOMP recovery read the committed inbox. */
+/** REST y STOMP recuperan el estado desde el inbox confirmado. */
 @Configuration(proxyBeanMethods = false)
 @Profile("!memory")
 public class DurableSnapshotConfiguration {

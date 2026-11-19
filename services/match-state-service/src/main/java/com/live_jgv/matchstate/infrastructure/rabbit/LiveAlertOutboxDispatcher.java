@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+/** Publica alertas pendientes por AMQP en live_alerts (fanout); conserva pendientes si falla la confirmación. */
 public final class LiveAlertOutboxDispatcher {
     private final JdbcTemplate jdbc; private final TransactionTemplate tx; private final RabbitTemplate rabbit; private final long timeout;
     public LiveAlertOutboxDispatcher(JdbcTemplate jdbc,TransactionTemplate tx,RabbitTemplate rabbit,Duration timeout) {

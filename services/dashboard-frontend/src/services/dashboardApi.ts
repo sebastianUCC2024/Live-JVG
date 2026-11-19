@@ -1,6 +1,6 @@
 import { isMatchSnapshot, type MatchSnapshot, type EventType, type VarStatus } from '../types/match'
 
-/** PostgreSQL catalog row returned by DashboardController / ScoreProjection. */
+/** Fila del catálogo persistente devuelta por DashboardController y ScoreProjection. */
 export interface CatalogMatch {
   match_id: string
   home_team_id: string
@@ -13,7 +13,7 @@ export interface CatalogMatch {
   last_event_id: string | null
   updated_at: string | null
 }
-/** Rabbit payload stored in inbox: no stream identity or per-event revision. */
+/** Mensaje RabbitMQ guardado en inbox, sin identidad de stream ni revisión por evento. */
 export interface ScoreEvent {
   match_id: string
   event_id: string
@@ -50,7 +50,7 @@ function isCatalogMatch(value: unknown): value is CatalogMatch {
 }
 function parseEvent(value: unknown, matchId: string): ScoreEvent {
   if (!object(value) || value.match_id !== matchId) throw new Error('Evento REST inválido.')
-  // Reuse the browser payload validator without exposing invented fields in REST DTOs.
+  // Reutiliza el validador sin añadir campos al contrato REST.
   const normalized = { ...value, reference_event_id: value.reference_event_id ?? null }
   if (!isMatchSnapshot({ ...normalized, stream_id: 'validation', revision: 1 })) throw new Error('Evento REST inválido.')
   return normalized as unknown as ScoreEvent
@@ -97,8 +97,8 @@ export function createDashboardApi(webSocketUrl: string) {
 }
 
 export async function loadMatchRecovery(api: ReturnType<typeof createDashboardApi>, id: string, signal: AbortSignal): Promise<MatchRecovery> {
-  // Detail is read first; a later snapshot anchors its newest event to a durable revision.
-  // Retry once if a publication commits between these two independent GETs.
+  // Consulta el detalle antes del snapshot para asociarlo con una revisión persistente.
+  // Reintenta una vez si se confirma una publicación entre ambas consultas.
   for (let attempt = 0; attempt < 2; attempt++) {
     const detail = await api.detail(id, signal)
     const snapshot = await api.snapshot(id, signal)

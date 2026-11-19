@@ -3,7 +3,7 @@ package com.live_jgv.betting.domain;
 import java.time.Instant;
 import java.util.*;
 
-/** Fail-closed aggregate: sporting continuation alone is not proof of review closure. */
+/** Mantiene el mercado suspendido hasta demostrar el cierre de las revisiones VAR. */
 public record MarketState(String matchId, Status status, long version, String lastEventId,
                           Instant updatedAt, boolean inconsistent, Map<String,PendingReview> pendingReviews) {
     public enum Status { OPEN, SUSPENDED, UNKNOWN }
@@ -28,7 +28,7 @@ public record MarketState(String matchId, Status status, long version, String la
         long revision=Math.addExact(version,1);
         switch (event.eventType()) {
             case GOAL -> {
-                // Conservative internal hold, identified by the GOAL itself; not a synthetic VAR event.
+                // El gol suspende el mercado con su propia identidad, sin inventar un evento VAR.
                 pending.put(event.eventId(),new PendingReview(event.eventId(),event.eventId(),revision,event.eventType()));
                 next=Status.SUSPENDED;
             }
@@ -38,10 +38,10 @@ public record MarketState(String matchId, Status status, long version, String la
             }
             case GOAL_ANNULLED -> {
                 next=Status.SUSPENDED;
-                // A late or uncorrelated decision cannot reopen the market through another review.
+                // Una decisión tardía o sin correlación no puede reabrir el mercado.
                 if (pending.values().stream().noneMatch(review -> Objects.equals(review.referenceEventId(),event.referenceEventId()))) uncertain=true;
             }
-            case MATCH_CONTINUES -> { /* No authority to open, close or correlate a review. */ }
+            case MATCH_CONTINUES -> { /* Este evento no autoriza cambios en las revisiones. */ }
         }
         return new MarketState(matchId,next,revision,event.eventId(),now,uncertain,pending);
     }

@@ -4,11 +4,11 @@ import com.live_jgv.worker.domain.DecodedCommand;
 import com.live_jgv.worker.domain.SimulatedCommand;
 import com.live_jgv.worker.domain.TransportMessage;
 
-/** Output boundary for preserving the canonical receipt of an internal domain command. */
+/** Puerto de salida para conservar la representación canónica del comando interno. */
 @FunctionalInterface
 public interface CommandPreparation {
     Input prepare(SimulatedCommand command);
 
-    /** Canonical bytes and their decoded identity must represent the same command. */
+    /** Los bytes y la identidad decodificada deben representar el mismo comando. */
     record Input(TransportMessage message, DecodedCommand decoded) { }
 }

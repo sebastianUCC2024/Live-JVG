@@ -16,14 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Delivers pending ScoreUpdate output to the durable {@code live_updates} topic exchange,
- * normally using {@code score.<matchId>}. Persistent JSON messages retain event identity.
- * Correlated publisher confirms and mandatory returns detect negative or unroutable delivery;
- * timeout or uncertainty fails the call so the outbox remains pending. Confirmation proves
- * broker acceptance, not downstream processing. A later retry may deliver a duplicate.
- * Stored publications preserve the original wire image during recovery.
- */
+/** Publica ScoreUpdate por AMQP en el exchange topic live_updates con routing score.<matchId>; espera confirms y detecta returns. */
 public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
     private static final Logger log = LoggerFactory.getLogger(RabbitScoreUpdatePublisher.class);
     private final RabbitTemplate template;
@@ -73,7 +66,7 @@ public final class RabbitScoreUpdatePublisher implements ScoreUpdatePublisher {
         var correlation = new CorrelationData(UUID.randomUUID().toString());
         try {
             template.send(destination, routingKey, new Message(json, properties), correlation);
-            // A bounded wait is deliberate: Kafka must not commit before Rabbit acknowledges.
+            // Espera la confirmación de RabbitMQ antes de permitir confirmar Kafka.
             var confirm = correlation.getFuture().get(confirmTimeoutMillis, TimeUnit.MILLISECONDS);
             if (!confirm.isAck() || correlation.getReturned() != null) {
                 throw new ScoreUpdatePublicationException("RabbitMQ rejected or could not route score update");

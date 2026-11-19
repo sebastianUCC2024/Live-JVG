@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Read boundary for the existing durable REST catalog, history and recovery views. */
+/** Puerto de consulta del catálogo, historial y estado recuperable. */
 public interface DashboardQueries {
     List<Map<String, Object>> matches();
     Map<String, Object> view(String matchId);

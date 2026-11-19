@@ -14,12 +14,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Optional scheduled driver for the presentation simulator, inactive until a round is started.
- * A failed publication retains the event ID and timestamp for the next scheduled attempt;
- * progress advances only after the publication future completes successfully.
- * The fixed schedule and per-round match identities preserve the existing simulation sequence.
- */
+/** Genera eventos de la ronda activa; conserva ID y timestamp cuando debe reintentar el envío. */
 @Component
 public class AutomaticMatchSimulator {
     private static final Logger log = LoggerFactory.getLogger(AutomaticMatchSimulator.class);
@@ -94,8 +89,8 @@ public class AutomaticMatchSimulator {
         String reference = null;
 
 
-        // Spread scoring and reviews through the match while still publishing
-        // a snapshot on every scheduled tick.
+        // Distribuye goles y revisiones durante el partido.
+        // Publica un snapshot en cada ciclo programado.
         int pattern = Math.floorMod(index, 6);
         int phase = current - pattern;
         int finalTick = FINAL_MINUTE * TICKS_PER_MINUTE;

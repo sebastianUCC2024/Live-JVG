@@ -9,7 +9,7 @@ public final class WorkerService {
     public WorkerService(WorkerStore store,CommandDecoder decoder,CommandPreparation preparation){
         this.store=store;this.decoder=decoder;this.preparation=java.util.Objects.requireNonNull(preparation);
     }
-    /** Internal application entry point; does not publish or enable the provisional Rabbit adapter. */
+    /** Procesa el comando interno sin publicar ni activar el consumidor RabbitMQ. */
     public WorkerStore.Outcome submit(SimulatedCommand command){
         var input=preparation.prepare(command);
         return store.handle(input.message(),input.decoded());

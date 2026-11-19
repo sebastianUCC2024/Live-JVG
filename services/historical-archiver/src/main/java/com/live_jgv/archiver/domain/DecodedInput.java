@@ -1,6 +1,6 @@
 package com.live_jgv.archiver.domain;
 
-/** An invalid record is data to quarantine, not an exception to discard. */
+/** Los registros inválidos se conservan en cuarentena para revisión. */
 public record DecodedInput(SportEvent event, String canonicalPayload, Reason reason) {
     public enum Reason { MALFORMED_JSON, INVALID_EVENT, KEY_MISMATCH }
     public DecodedInput {

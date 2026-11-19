@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.Immutable;
 import java.time.Instant;
 
-/** Existing Flyway table. Domain records stay independent from JPA. No ORM update/delete path. */
+/** Mapea la tabla existente sin acoplar el dominio a JPA ni habilitar borrados. */
 @Entity
 @Table(name="archived_event", schema="archiver")
 @Immutable
@@ -18,7 +18,7 @@ public class ArchivedEventEntity {
     @Column(name="minute", nullable=false) private int minute;
     @Column(name="event_timestamp", nullable=false, columnDefinition="text") private String eventTimestamp;
     @Column(name="reference_event_id", columnDefinition="text") private String referenceEventId;
-    // bytea, deliberately NOT @Lob (PostgreSQL OID/large objects would change privileges and storage).
+    // Usa bytea; @Lob cambiaría almacenamiento y permisos en PostgreSQL.
     @Column(name="original_payload", nullable=false, columnDefinition="bytea") private byte[] originalPayload;
     @Column(name="canonical_payload", nullable=false, columnDefinition="text") private String canonicalPayload;
     @Column(name="received_at", nullable=false, insertable=false, updatable=false) private Instant receivedAt;

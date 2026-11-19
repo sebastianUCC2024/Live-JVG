@@ -2,7 +2,7 @@ package com.live_jgv.dashboard.domain.model;
 
 import java.util.Objects;
 
-/** Revision is local to streamId, not a sequence provided by DEV 1. */
+/** La revisión pertenece a streamId; no es la secuencia del productor. */
 public record MatchSnapshot(String streamId, long revision, ScoreUpdate update) {
     public MatchSnapshot {
         if (streamId == null || streamId.isBlank() || revision < 1) {

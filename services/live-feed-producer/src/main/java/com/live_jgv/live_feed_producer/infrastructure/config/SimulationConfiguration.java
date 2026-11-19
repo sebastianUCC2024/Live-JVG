@@ -6,7 +6,7 @@ import com.live_jgv.live_feed_producer.config.SimulatorMatchCatalog;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Composes the simulation use case without making application code depend on Spring. */
+/** Configura el caso de uso sin introducir Spring en aplicación. */
 @Configuration(proxyBeanMethods = false)
 public class SimulationConfiguration {
     @Bean
