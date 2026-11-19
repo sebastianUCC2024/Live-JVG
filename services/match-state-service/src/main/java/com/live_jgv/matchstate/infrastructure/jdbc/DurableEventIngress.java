@@ -64,6 +64,7 @@ public final class DurableEventIngress implements IncomingEventHandler {
             if (event == null) {
                 receipt(input, null, "QUARANTINED", quarantineMalformed(input)); return null;
             }
+            registerDemoRound(event);
             var loaded = store.load(event.matchId()); // Corrupt stored history is never classified as input rejection.
             var accepted = loaded.map(l -> l.state().processedEvents().get(event.eventId())).orElse(null);
             var identity = identity(accepted == null ? event : accepted, accepted != null);
@@ -92,6 +93,18 @@ public final class DurableEventIngress implements IncomingEventHandler {
         });
         log.info("Input custody committed; topic={}, partition={}, offset={}, outcome={}", input.topic(), input.partition(), input.offset(), matchToDrain == null ? "PARKED" : "APPLIED");
         return matchToDrain;
+    }
+
+    private void registerDemoRound(MatchEvent event) {
+        String id = event.matchId();
+        if (event.minute() != 0 || event.eventType() != com.live_jgv.matchstate.domain.model.EventType.MATCH_CONTINUES
+                || !id.matches("demo-col-v4-00[1-6][.][a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}")) return;
+        String template = id.substring(0, id.lastIndexOf('.'));
+        jdbc.update("""
+                INSERT INTO match_state.match_catalog(match_id,home_team_id,away_team_id)
+                SELECT ?, home_team_id, away_team_id FROM match_state.match_catalog WHERE match_id=?
+                ON CONFLICT DO NOTHING
+                """, id, template);
     }
 
     private Map<String, Object> identity(MatchEvent event, boolean applied) {

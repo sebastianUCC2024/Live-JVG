@@ -95,6 +95,9 @@ public class MatchSimulationService {
         OutgoingReferencePolicy.validate(reference);
 
         var definition = matches.get(match);
+        if (definition == null && match.matches("[A-Za-z0-9_.-]+[.][a-f0-9-]{36}")) {
+            definition = matches.get(match.substring(0, match.lastIndexOf('.')));
+        }
 
         if (definition == null) {
             throw new IllegalArgumentException(

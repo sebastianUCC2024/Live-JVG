@@ -36,6 +36,15 @@ public class ProducerGateway{
   try{int millis=Math.toIntExact(timeout.toMillis());if(millis<1)throw new IllegalArgumentException("Timeout must be positive");return millis;}
   catch(ArithmeticException e){throw new IllegalArgumentException("Timeout exceeds supported millisecond range",e);}
  }
+ public java.util.List<String> startRound(java.util.UUID id) {
+  try {
+   var ids = client.post().uri("/internal/simulation/rounds/{id}", id).retrieve().body(String[].class);
+   if (ids == null || ids.length == 0) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY);
+   return java.util.List.of(ids);
+  } catch (org.springframework.web.client.RestClientException failure) {
+   throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "No se pudo iniciar la ronda.", failure);
+  }
+ }
  public Map<?,?> publish(String match,Map<String,Object> event){
   try{return client.post().uri("/api/matches/{id}/events",match).contentType(MediaType.APPLICATION_JSON).body(event).retrieve().body(Map.class);}
   catch(org.springframework.web.client.RestClientResponseException e){

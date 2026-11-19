@@ -4,5 +4,5 @@ public enum EventType {
     GOAL,
     VAR_CHECK,
     GOAL_ANNULLED,
-    MATCH_CONTINUES
+    MATCH_CONTINUES, MATCH_FINISHED
 }

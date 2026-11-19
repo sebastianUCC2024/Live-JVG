@@ -15,6 +15,24 @@ class MatchStateTest {
     private MatchEvent goal(String id, String team) { return event(id, EventType.GOAL, team, null); }
     private MatchEvent annul(String id, String goal) { return event(id, EventType.GOAL_ANNULLED, null, goal); }
 
+    @Test
+    void replaysFinalResultAfterVarAndRejectsLateGoals() {
+        var home = new MatchEvent("g1", "match-1", EventType.GOAL, "home", 3, TIME, null);
+        var away = new MatchEvent("g2", "match-1", EventType.GOAL, "away", 4, TIME, null);
+        var review = new MatchEvent("v1", "match-1", EventType.VAR_CHECK, null, 5, TIME, "g2");
+        var correction = new MatchEvent("a1", "match-1", EventType.GOAL_ANNULLED, null, 5, TIME, "g2");
+        var finish = new MatchEvent("f1", "match-1", EventType.MATCH_FINISHED, null, 15, TIME, null);
+        var reviewing = initial().apply(home).apply(away).apply(review);
+        assertThrows(InvalidMatchEventException.class, () -> reviewing.apply(finish));
+
+        var replay = MatchState.rebuilder("match-1", "home", "away");
+        java.util.List.of(home, away, review, correction, finish).forEach(replay::accept);
+        var finished = replay.finish();
+        assertEquals(new Score(1, 0), finished.score());
+        assertSame(finished, finished.apply(finish));
+        assertThrows(InvalidMatchEventException.class, () -> finished.apply(goal("late", "away")));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"home", "away"})
     void registersAndAnnulsExactlyOneGoalForEitherTeam(String team) {

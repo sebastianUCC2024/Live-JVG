@@ -17,10 +17,14 @@ public class AutomaticMatchSimulator {
     private final boolean enabled;
     private final List<SimulatorMatchCatalog.Match> matches;
     private final Progress[] progress;
-    private int nextMatchIndex = 0;
+    private UUID roundId;
+    private static final int TICKS_PER_MINUTE = 4;
+    private static final int FINAL_MINUTE = 15;
 
     private static class Progress {
         int step = 0;
+        UUID eventId;
+        Instant timestamp;
         String lastGoalId;
     }
 
@@ -31,80 +35,101 @@ public class AutomaticMatchSimulator {
 
         this.simulator = simulator;
         this.enabled = enabled;
-        this.matches = List.copyOf(catalog.getMatches());
+        this.matches = catalog.getMatches().stream().filter(match -> match.matchId().matches("demo-col-v4-00[1-6]")).toList();
         this.progress = new Progress[matches.size()];
 
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Progress();
         }
 
-        if (matches.isEmpty()) {
-            throw new IllegalArgumentException("At least one match is required");
+    }
+
+    @Scheduled(fixedRate = 15_000)
+    public synchronized void generateEvent() {
+        if (!enabled || roundId == null) return;
+
+        for (int index = 0; index < matches.size(); index++) {
+            generateForMatch(index);
         }
     }
 
-    @Scheduled(fixedDelayString = "${simulator.auto-interval-ms:15000}")
-    public synchronized void generateEvent() {
-        if (!enabled) return;
+    public synchronized List<String> restart(UUID requestedRound) {
+        if (!enabled || matches.isEmpty()) throw new IllegalStateException("La simulación automática está deshabilitada");
+        if (!requestedRound.equals(roundId)) {
+            roundId = requestedRound;
+            for (int index = 0; index < progress.length; index++) progress[index] = new Progress();
+        }
+        return matches.stream().map(match -> roundMatchId(match, roundId)).toList();
+    }
 
-        int index = nextMatchIndex;
+    private static String roundMatchId(SimulatorMatchCatalog.Match match, UUID round) {
+        return match.matchId() + "." + round;
+    }
+
+    private void generateForMatch(int index) {
         var match = matches.get(index);
         var state = progress[index];
-
-        if (state.step >= 80) {
-            nextMatchIndex = (index + 1) % matches.size();
-            return;
-        }
-
         int current = state.step;
-        String id = UUID.randomUUID().toString();
+        if (current > FINAL_MINUTE * TICKS_PER_MINUTE) return;
+
+        if (state.eventId == null) {
+            state.eventId = UUID.randomUUID();
+            state.timestamp = Instant.now();
+        }
+        String id = state.eventId.toString();
 
         EventType type;
         String team = null;
         String reference = null;
 
 
-        // Different match patterns, deterministic and repeatable.
-        // Every VAR_CHECK is followed by a resolution event.
+        // Spread scoring and reviews through the match while still publishing
+        // a snapshot on every scheduled tick.
         int pattern = Math.floorMod(index, 6);
-        int phase = current % 6;
-
-        switch (phase) {
-            case 0 -> {
-                type = EventType.GOAL;
-                team = (pattern % 3 == 0)
-                    ? match.awayTeamId() : match.homeTeamId();
-            }
-            case 1 -> {
-                type = EventType.GOAL;
-                team = (pattern % 2 == 0)
-                    ? match.homeTeamId() : match.awayTeamId();
-            }
-            case 2 -> {
-                type = EventType.VAR_CHECK;
-                reference = state.lastGoalId;
-            }
-            case 3 -> {
-                if (pattern % 3 == 0) {
-                    type = EventType.GOAL_ANNULLED;
-                    reference = state.lastGoalId;
-                } else {
-                    type = EventType.MATCH_CONTINUES;
+        int phase = current - pattern;
+        int finalTick = FINAL_MINUTE * TICKS_PER_MINUTE;
+        boolean awayAdvantage = pattern == 1 || pattern == 4;
+        if (current == finalTick) {
+            type = EventType.MATCH_FINISHED;
+        } else {
+            switch (phase) {
+                case 5, 36 -> {
+                    type = EventType.GOAL;
+                    team = awayAdvantage ? match.awayTeamId() : match.homeTeamId();
                 }
+                case 13, 45 -> {
+                    type = EventType.GOAL;
+                    team = awayAdvantage ? match.homeTeamId() : match.awayTeamId();
+                }
+                case 17, 49 -> {
+                    type = EventType.VAR_CHECK;
+                    reference = state.lastGoalId;
+                }
+                case 18, 50 -> {
+                    if ((pattern % 2 == 0) == (phase == 18)) {
+                        type = EventType.GOAL_ANNULLED;
+                        reference = state.lastGoalId;
+                    } else {
+                        type = EventType.MATCH_CONTINUES;
+                    }
+                }
+                case 25 -> {
+                    type = pattern == 3 || pattern == 5 ? EventType.GOAL : EventType.MATCH_CONTINUES;
+                    if (type == EventType.GOAL) team = match.homeTeamId();
+                }
+                case 53 -> {
+                    type = pattern == 2 || pattern == 4 || pattern == 5 ? EventType.GOAL : EventType.MATCH_CONTINUES;
+                    if (type == EventType.GOAL) team = match.awayTeamId();
+                }
+                default -> type = EventType.MATCH_CONTINUES;
             }
-            case 4 -> {
-                type = EventType.GOAL;
-                team = (pattern % 2 == 0)
-                    ? match.awayTeamId() : match.homeTeamId();
-            }
-            default -> type = EventType.MATCH_CONTINUES;
         }
 
         try {
             simulator.publish(
-                match.matchId(), id, type, team,
-                Math.min(130, 10 + current),
-                Instant.now(), reference
+                roundMatchId(match, roundId), id, type, team,
+                current / TICKS_PER_MINUTE,
+                state.timestamp, reference
             ).join();
 
             if (type == EventType.GOAL) {
@@ -112,15 +137,15 @@ public class AutomaticMatchSimulator {
             }
 
             state.step++;
+            state.eventId = null;
 
             System.out.println("AUTO EVENT: match="
-                + match.matchId() + ", event=" + type);
+                + roundMatchId(match, roundId) + ", event=" + type);
 
         } catch (Exception e) {
             System.err.println("AUTO EVENT FAILED: match="
                 + match.matchId() + ", error=" + e.getMessage());
         }
 
-        nextMatchIndex = (index + 1) % matches.size();
     }
 }

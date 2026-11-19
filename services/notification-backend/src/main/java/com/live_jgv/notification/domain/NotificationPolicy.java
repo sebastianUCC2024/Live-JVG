@@ -9,7 +9,7 @@ public final class NotificationPolicy {
             case GOAL -> "Gol";
             case VAR_CHECK -> "Revisión VAR";
             case GOAL_ANNULLED -> "Gol anulado";
-            case MATCH_CONTINUES -> null;
+            case MATCH_CONTINUES, MATCH_FINISHED -> null;
         };
         if (title == null) return Optional.empty();
         String message = update.eventType() == ScoreUpdate.EventType.VAR_CHECK

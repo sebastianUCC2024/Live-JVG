@@ -22,6 +22,14 @@ public class MessagingConfiguration{
  @Bean TopicExchange updates(@Value("${live.exchange}")String name){return new TopicExchange(name,true,false);}
  @Bean Queue scores(@Value("${live.queue}")String name){return new Queue(name,true);}
  @Bean Binding scoreBinding(Queue scores,TopicExchange updates,@Value("${live.match-id}")String match){return BindingBuilder.bind(scores).to(updates).with("score."+match);}
+ @Bean Declarables demoRoundScoreBindings(Queue scores, TopicExchange updates) {
+  var bindings = new java.util.ArrayList<Declarable>();
+  for (int match = 1; match <= 6; match++) {
+   String routingKey = "score.demo-col-v4-00" + match + ".*";
+   bindings.add(BindingBuilder.bind(scores).to(updates).with(routingKey));
+  }
+  return new Declarables(bindings);
+ }
  @Bean Declarables durableFailureTopology(@Value("${live.queue}") String queue) {
   String dlx=queue+".dlx", dlq=queue+".dlq";
   return new Declarables(new DirectExchange(dlx,true,false),QueueBuilder.durable(dlq).build(),
