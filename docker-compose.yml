@@ -12,6 +12,7 @@ x-match: &match
   HOME_TEAM_ID: home
   AWAY_TEAM_ID: away
 services:
+  # Local database shared through service-owned schemas. Loopback port 55434 avoids the host default; postgres_data retains local state. Readiness gates database clients.
   postgres:
     deploy:
       resources:
@@ -30,6 +31,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 30
+  # Sporting-event log in single-node KRaft mode. Containers use kafka:9092; host tools use loopback 19092. kafka_data retains records and consumer offsets, without replicated durability.
   kafka:
     deploy:
       resources:
@@ -61,6 +63,7 @@ services:
       interval: 5s
       timeout: 10s
       retries: 30
+  # Creates match_events only after broker readiness. Dependent consumers wait for successful completion; topic auto-creation remains disabled.
   kafka-init:
     deploy:
       resources:
@@ -72,6 +75,7 @@ services:
       kafka: {condition: service_healthy}
     entrypoint: [/opt/kafka/bin/kafka-topics.sh]
     command: [--bootstrap-server, "kafka:9092", --create, --if-not-exists, --topic, match_events, --partitions, "1", --replication-factor, "1"]
+  # Distributes derived scores and work commands independently of Kafka history. Loopback 5673 is AMQP and 15673 is management; rabbit_data retains broker state.
   rabbitmq:
     deploy:
       resources:
@@ -89,6 +93,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+  # REST simulation publishes match-keyed events to Kafka after topic initialization. Local write opt-in is explicit; this service does not write match-state tables.
   producer:
     deploy:
       resources:
@@ -106,6 +111,7 @@ services:
     depends_on:
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 384m
+  # Projects RabbitMQ scores into REST and WebSocket views. Loopback exposure is local-only; durable recovery uses its own PostgreSQL schema.
   dashboard:
     deploy:
       replicas: 1
@@ -136,6 +142,7 @@ services:
       timeout: 5s
       retries: 40
     mem_limit: 512m
+  # Consumes Kafka, persists match state and outbox in PostgreSQL, then publishes derived scores to RabbitMQ. Dependencies gate startup on database and broker readiness.
   match-state:
     deploy:
       resources:
@@ -159,6 +166,7 @@ services:
       postgres: {condition: service_healthy}
       dashboard: {condition: service_healthy}
     mem_limit: 512m
+  # Prepared historical archive adapter; integration-prepared includes the container while migration and consumption remain explicitly disabled below.
   archiver:
     deploy:
       resources:
@@ -189,6 +197,7 @@ services:
       rabbitmq: {condition: service_healthy}
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
+  # Prepared market projection from Kafka. Publication and consumers stay disabled until separately enabled; shares database infrastructure without sharing worker responsibilities.
   suspension:
     deploy:
       resources:
@@ -222,6 +231,7 @@ services:
       rabbitmq: {condition: service_healthy}
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
+  # Prepared RabbitMQ command processor. Acceptance and authorization remain disabled; liveness alone does not certify market authority or integration readiness.
   worker:
     deploy:
       replicas: 2
@@ -257,6 +267,7 @@ services:
       rabbitmq: {condition: service_healthy}
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
+  # Prepared notification inbox and REST service. Storage and RabbitMQ listeners remain disabled; enabling the profile alone does not activate processing.
   notification:
     deploy:
       resources:
@@ -284,6 +295,8 @@ services:
       rabbitmq: {condition: service_healthy}
       kafka-init: {condition: service_completed_successfully}
     mem_limit: 512m
+# Compose scopes these named volumes and its implicit default network by project name.
+# No external network or production volume is referenced by this local stack.
 volumes:
   postgres_data:
   kafka_data:

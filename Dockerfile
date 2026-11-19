@@ -11,11 +11,13 @@ RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp -f services/${SERVICE_MODULE
     && cp services/${SERVICE_MODULE}/target/*-SNAPSHOT.jar /build/application.jar
 
 FROM eclipse-temurin:17-jre-alpine AS runtime-base
+# Fixed unprivileged identity and read-only application artifacts reduce runtime write access.
 RUN apk add --no-cache curl \
     && addgroup -g 10001 app && adduser -D -u 10001 -G app app
 WORKDIR /app
 COPY --chmod=0555 scripts/docker/java-entrypoint.sh /app/java-entrypoint.sh
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+# The entrypoint enforces its own JVM policy; JAVA_OPTS is retained for image compatibility.
 USER 10001:10001
 ENTRYPOINT ["/app/java-entrypoint.sh"]
 

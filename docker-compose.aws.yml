@@ -1,5 +1,10 @@
+# Production compatibility overlay: merge only in the established AWS deployment workflow.
+# The PostgreSQL service below is a readiness probe for remote RDS, not a local database.
+# Local validation must use docker-compose.yml alone to avoid contacting production RDS.
+# Existing endpoints, volumes, ports and feature flags are retained for compatibility.
 services:
   postgres:
+    # Keep the service dependency name while replacing the local server with an RDS probe.
     image: postgres:17
     environment:
       PGHOST: live-jvg-postgres.c03ye40kiikw.us-east-1.rds.amazonaws.com
@@ -20,11 +25,13 @@ services:
       retries: 15
 
   dashboard:
+    # REST and WebSocket projections share RDS; the public origin controls browser access.
     environment:
       DASHBOARD_DB_URL: jdbc:postgresql://live-jvg-postgres.c03ye40kiikw.us-east-1.rds.amazonaws.com:5432/live_jvg?sslmode=require
       DASHBOARD_ALLOWED_ORIGINS: https://livejvg.duckdns.org
 
   match-state:
+    # Durable scoring and live-alert outbox use the existing match-state schema in RDS.
     environment:
       MATCH_STATE_DB_URL: jdbc:postgresql://live-jvg-postgres.c03ye40kiikw.us-east-1.rds.amazonaws.com:5432/live_jvg?sslmode=require
       MATCH_STATE_ALERTS_ENABLED: "true"
@@ -65,6 +72,7 @@ services:
 
 
   producer:
+    # Enables the existing presentation simulator; this overlay must not be used in tests.
     environment:
       SIMULATOR_AUTO_ENABLED: "true"
       SIMULATOR_AUTO_INTERVAL_MS: "1000"
