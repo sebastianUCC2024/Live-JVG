@@ -16,6 +16,14 @@ import org.springframework.amqp.ImmediateRequeueAmqpException;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.retry.interceptor.RetryOperationsInterceptor;
 
+/**
+ * Composes the opt-in academic command consumer with acceptance and authorization disabled.
+ * AUTO acknowledgment follows handler completion, including confirmed rejection custody.
+ * Four attempts use exponential backoff from 100 to 400 ms; exhaustion stops the listener
+ * and requeues the delivery. A database readiness query precedes explicit listener startup.
+ * One consumer and prefetch one bound each replica's in-flight work without implying ordering
+ * across competing worker replicas.
+ */
 @Configuration(proxyBeanMethods=false)
 @ConditionalOnProperty(name="academic.consumer.enabled",havingValue="true")
 public class AcademicRabbitConfiguration {

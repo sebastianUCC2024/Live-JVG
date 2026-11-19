@@ -7,13 +7,22 @@ import com.live_jgv.live_feed_producer.domain.model.EventType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Optional scheduled driver for the presentation simulator, inactive until a round is started.
+ * A failed publication retains the event ID and timestamp for the next scheduled attempt;
+ * progress advances only after the publication future completes successfully.
+ * The fixed schedule and per-round match identities preserve the existing simulation sequence.
+ */
 @Component
 public class AutomaticMatchSimulator {
+    private static final Logger log = LoggerFactory.getLogger(AutomaticMatchSimulator.class);
 
     private final MatchSimulationService simulator;
     private final boolean enabled;
@@ -141,12 +150,11 @@ public class AutomaticMatchSimulator {
             state.step++;
             state.eventId = null;
 
-            System.out.println("AUTO EVENT: match="
-                + roundMatchId(match, roundId) + ", event=" + type);
+            log.info("Automatic event published; matchId={}, eventType={}", roundMatchId(match, roundId), type);
 
         } catch (Exception e) {
-            System.err.println("AUTO EVENT FAILED: match="
-                + match.matchId() + ", error=" + e.getMessage());
+            log.warn("Automatic event publication failed; matchId={}, failureType={}",
+                    match.matchId(), e.getClass().getSimpleName());
         }
 
     }

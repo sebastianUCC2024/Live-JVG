@@ -50,7 +50,7 @@ Referencias de código y configuración:
 - [POM del productor](../../live-feed-producer/pom.xml) y [POM del consumidor](../pom.xml).
 - [Configuración del productor](../../live-feed-producer/src/main/resources/application.properties) y [configuración del consumidor](../src/main/resources/application.properties).
 - [Adaptador Kafka productor](../../live-feed-producer/src/main/java/com/live_jgv/live_feed_producer/infrastructure/kafka/KafkaMatchEventPublisher.java).
-- [Listener Kafka](../src/main/java/com/live_jgv/matchstate/entrypoint/kafka/KafkaMatchEventListener.java) y [configuración de mensajería](../src/main/java/com/live_jgv/matchstate/infrastructure/config/MessagingConfiguration.java).
+- [Listener Kafka](../src/main/java/com/live_jgv/matchstate/infrastructure/kafka/KafkaMatchEventListener.java) y [configuración de mensajería](../src/main/java/com/live_jgv/matchstate/infrastructure/config/MessagingConfiguration.java).
 - [Almacenamiento en memoria](../src/main/java/com/live_jgv/matchstate/infrastructure/memory/InMemoryMatchStateStore.java) y [publicador RabbitMQ](../src/main/java/com/live_jgv/matchstate/infrastructure/rabbit/RabbitScoreUpdatePublisher.java).
 
 ## 5. Tecnologías confirmadas
