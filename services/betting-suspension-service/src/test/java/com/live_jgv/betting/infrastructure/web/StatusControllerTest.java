@@ -1,4 +1,4 @@
-package com.live_jgv.betting.entrypoint;
+package com.live_jgv.betting.infrastructure.web;
 
 import com.live_jgv.betting.application.*;
 import com.live_jgv.betting.domain.*;

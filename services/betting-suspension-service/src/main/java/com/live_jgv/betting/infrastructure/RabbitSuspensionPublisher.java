@@ -7,6 +7,12 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Sends the persisted suspension outbox image to its explicitly configured exchange/routing key.
+ * Persistent UTF-8 JSON and message identity support downstream inbox deduplication.
+ * Correlated confirms and mandatory returns guard broker custody; uncertainty throws so the
+ * outbox remains pending. This does not guarantee single delivery or authorize market reopening.
+ */
 public final class RabbitSuspensionPublisher implements SuspensionPublisher {
     private final RabbitTemplate rabbit;private final String exchange;private final String routingKey;private final long timeoutMs;
     public RabbitSuspensionPublisher(RabbitTemplate rabbit,String exchange,String routingKey,long timeoutMs) {

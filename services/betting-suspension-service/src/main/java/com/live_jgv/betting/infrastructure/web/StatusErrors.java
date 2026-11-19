@@ -1,4 +1,4 @@
-package com.live_jgv.betting.entrypoint;
+package com.live_jgv.betting.infrastructure.web;
 
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
