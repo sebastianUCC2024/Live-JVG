@@ -1,4 +1,4 @@
-package com.live_jgv.worker.entrypoint;
+package com.live_jgv.worker.infrastructure.amqp;
 
 import com.live_jgv.worker.application.WorkerService;
 import com.live_jgv.worker.domain.*;
@@ -7,7 +7,12 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import java.util.*;
 
-/** Registered only when the private proposal, destination and consumer are explicitly enabled. */
+/**
+ * Executes WorkerService for the configured private command queue after explicit startup gates.
+ * Preserves transport identity and headers; foreign exchanges become durable rejected input.
+ * Acknowledgment, retry and connection policy belong to the worker container configuration.
+ * This command channel is separate from Kafka's sporting history and grants no market authority.
+ */
 public class WorkerRabbitListener {
     private final WorkerService service;private final String source;private final String expectedExchange;
     private final ObjectMapper mapper=new ObjectMapper();

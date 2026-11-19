@@ -25,19 +25,19 @@ class JdbcWorkerStoreTest {
             clearInvocations(jdbc,tx);
             when(source.fetch("m")).thenReturn(status==MarketEvidence.Status.UNKNOWN?MarketEvidence.unavailable("m"):
                     new MarketEvidence("m","a","e",1,status,now.minusSeconds(1),now.plusSeconds(3)));
-            assertEquals(WorkerStore.Outcome.PROCESSED,new WorkerService(store,new JsonCommandDecoder()).submit(command));
+            assertEquals(WorkerStore.Outcome.PROCESSED,new WorkerService(store,new JsonCommandDecoder(),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).submit(command));
             verify(jdbc).update(contains("UPDATE betting_worker.operation SET"),eq("BLOCKED"),anyString(),eq(1L),anyString(),eq("o"),eq(0L));
             verify(tx).commit(any());
         }
     }
     @Test void expiredDomainCommandIsPersistedRejected(){
         var expired=new SimulatedCommand("c","o","m","sim-user",now.minusSeconds(301));
-        new WorkerService(store,new JsonCommandDecoder()).submit(expired);
+        new WorkerService(store,new JsonCommandDecoder(),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).submit(expired);
         verify(jdbc).update(contains("UPDATE betting_worker.operation SET"),eq("REJECTED"),eq("COMMAND_TIMESTAMP_OUT_OF_RANGE"),eq(1L),anyString(),eq("o"),eq(0L));
     }
     @Test void evidenceForAnotherMatchProducesFailedOperation(){
         when(source.fetch("m")).thenReturn(MarketEvidence.unavailable("another-match"));
-        new WorkerService(store,new JsonCommandDecoder()).submit(command);
+        new WorkerService(store,new JsonCommandDecoder(),new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation()).submit(command);
         verify(jdbc).update(contains("UPDATE betting_worker.operation SET"),eq("FAILED"),eq("EVIDENCE_SCOPE_FAILURE"),eq(1L),anyString(),eq("o"),eq(0L));
     }
     private JdbcTemplate jdbc;private PlatformTransactionManager tx;private SuspensionEvidencePort source;private JdbcWorkerStore store;

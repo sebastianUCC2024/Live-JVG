@@ -1,4 +1,4 @@
-package com.live_jgv.worker.entrypoint;
+package com.live_jgv.worker.infrastructure.web;
 
 import com.live_jgv.worker.application.WorkerService;
 import com.live_jgv.worker.domain.Operation;

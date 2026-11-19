@@ -1,4 +1,4 @@
-package com.live_jgv.worker.entrypoint;
+package com.live_jgv.worker.infrastructure.web;
 
 import com.live_jgv.worker.application.*;
 import com.live_jgv.worker.domain.*;
@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(OperationController.class)
-@Import(WorkerService.class)
+@Import({WorkerService.class, com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation.class})
 class OperationControllerTest {
     @Autowired MockMvc mvc;@MockitoBean WorkerStore store;@MockitoBean CommandDecoder decoder;
     @Test void returnsDurableIdentityStateReasonAndVersionWithoutUserOrEvidence()throws Exception{

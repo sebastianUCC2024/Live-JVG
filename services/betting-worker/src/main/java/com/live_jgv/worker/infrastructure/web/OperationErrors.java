@@ -1,4 +1,4 @@
-package com.live_jgv.worker.entrypoint;
+package com.live_jgv.worker.infrastructure.web;
 
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;

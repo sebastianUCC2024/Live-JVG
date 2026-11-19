@@ -1,7 +1,7 @@
 package com.live_jgv.worker.infrastructure;
 
 import com.live_jgv.worker.application.WorkerService;
-import com.live_jgv.worker.entrypoint.WorkerRabbitListener;
+import com.live_jgv.worker.infrastructure.amqp.WorkerRabbitListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.*;

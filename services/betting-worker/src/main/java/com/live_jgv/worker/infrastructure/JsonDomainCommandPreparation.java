@@ -1,4 +1,6 @@
-package com.live_jgv.worker.application;
+package com.live_jgv.worker.infrastructure;
+
+import com.live_jgv.worker.application.CommandPreparation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,11 +10,9 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 /** Internal receipt image matching the existing private adapter, not an approved wire contract. */
-final class DomainCommandPreparation {
+public final class JsonDomainCommandPreparation implements CommandPreparation {
     private static final ObjectMapper MAPPER=new ObjectMapper();
-    record Input(TransportMessage message,DecodedCommand decoded) { }
-    private DomainCommandPreparation(){ }
-    static Input prepare(SimulatedCommand command){
+    @Override public Input prepare(SimulatedCommand command){
         Objects.requireNonNull(command,"Simulated command required");
         var fields=new TreeMap<String,Object>();
         fields.put("schema_version",1);fields.put("command_id",command.commandId());

@@ -29,5 +29,5 @@ public class WorkerConfiguration {
         var transaction=new TransactionTemplate(tx);transaction.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);transaction.setTimeout(5);
         return new JdbcWorkerStore(jdbc,transaction,source,policy,clock,atomic);
     }
-    @Bean WorkerService workerService(WorkerStore store,CommandDecoder decoder){return new WorkerService(store,decoder);}
+    @Bean WorkerService workerService(WorkerStore store,CommandDecoder decoder){return new WorkerService(store,decoder,new com.live_jgv.worker.infrastructure.JsonDomainCommandPreparation());}
 }
