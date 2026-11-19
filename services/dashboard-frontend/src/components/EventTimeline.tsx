@@ -9,8 +9,8 @@ export interface TimelineEvent {
   updated_at: string
   reference_event_id: string | null
 }
-const labels: Record<EventType, string> = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa' }
-const descriptions: Record<EventType, string> = { GOAL: 'Marcador actualizado', VAR_CHECK: 'La jugada entra en revisión', GOAL_ANNULLED: 'Corrección del marcador', MATCH_CONTINUES: 'Actualización del estado del partido' }
+const labels: Record<EventType, string> = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa', MATCH_FINISHED: 'Finalizado' }
+const descriptions: Record<EventType, string> = { GOAL: 'Marcador actualizado', VAR_CHECK: 'La jugada entra en revisión', GOAL_ANNULLED: 'Corrección del marcador', MATCH_CONTINUES: 'Actualización del estado del partido', MATCH_FINISHED: 'Resultado definitivo' }
 const time = new Intl.DateTimeFormat('es-CO', { timeStyle: 'medium', timeZone: 'America/Bogota' })
 
 /** Displays the received order and scores; never creates or reorders sporting events. */

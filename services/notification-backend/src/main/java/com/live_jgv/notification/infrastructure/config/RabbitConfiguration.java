@@ -42,6 +42,9 @@ public class RabbitConfiguration {
             String routingKey=scoreRoutingKey(match);
             if (!match.matches("[A-Za-z0-9_.-]+")) throw new IllegalArgumentException("Explicit safe match IDs required");
             declarations.add(BindingBuilder.bind(input).to(topic).with(routingKey));
+            if (match.matches("demo-col-v4-00[1-6]")) {
+                declarations.add(BindingBuilder.bind(input).to(topic).with(routingKey + ".*"));
+            }
         }
         String dlx=queue+".dlx", dlq=queue+".dlq";
         declarations.add(new DirectExchange(dlx,true,false));

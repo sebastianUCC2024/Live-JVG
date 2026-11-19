@@ -1,7 +1,7 @@
 import { Icon } from './Icon'
 import { useNotificationAlerts } from '../hooks/useNotificationAlerts'
 
-const labels = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa' }
+const labels = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa', MATCH_FINISHED: 'Finalizado' }
 export function NotificationAlerts({ matchId, origin }: { matchId: string; origin: string | undefined }) {
   const state = useNotificationAlerts(matchId, origin)
   return <section id="alerts" className="notification-panel" aria-label="Alertas del partido" aria-busy={state.refreshing}>

@@ -1,0 +1,30 @@
+.round-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: .65rem;
+  margin-bottom: 1.25rem;
+}
+.round-score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .35rem .75rem;
+  padding: .75rem .85rem;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 26%, transparent);
+  border-radius: .75rem;
+  cursor: pointer;
+  text-align: left;
+}
+.round-score:hover, .round-score[aria-pressed="true"] {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  border-color: color-mix(in srgb, currentColor 58%, transparent);
+}
+.round-score:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.round-teams { display: grid; gap: .2rem; font-size: .875rem; }
+.round-teams strong { overflow-wrap: anywhere; }
+.round-result { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.round-state { grid-column: 1 / -1; font-size: .75rem; opacity: .8; }
+.round-state[data-var="true"] { font-weight: 800; opacity: 1; }

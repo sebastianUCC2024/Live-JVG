@@ -45,6 +45,7 @@ public final class PreparedVarCorrelation {
                 // No inference from time or from the number of open reviews.
                 next = reviews.close(event.referenceEventId());
             }
+            case MATCH_FINISHED -> { }
             case GOAL_ANNULLED -> throw new UnsupportedOperationException("Annulment mapping requires team approval");
         }
         var accepted = new HashMap<>(events);

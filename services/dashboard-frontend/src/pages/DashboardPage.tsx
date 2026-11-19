@@ -7,7 +7,7 @@ import { MatchCard } from '../components/MatchCard'
 import { StatePanel } from '../components/StatePanel'
 import { Icon } from '../components/Icon'
 
-const eventLabels = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa' }
+const eventLabels = { GOAL: 'Gol', VAR_CHECK: 'Revisión VAR', GOAL_ANNULLED: 'Gol anulado', MATCH_CONTINUES: 'El juego continúa', MATCH_FINISHED: 'Finalizado' }
 const sampleDate = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota' })
 
 type Filter = 'all' | 'var' | 'favorites'

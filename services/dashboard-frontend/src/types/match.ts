@@ -1,4 +1,4 @@
-export const eventTypes = ['GOAL', 'VAR_CHECK', 'GOAL_ANNULLED', 'MATCH_CONTINUES'] as const
+export const eventTypes = ['GOAL', 'VAR_CHECK', 'GOAL_ANNULLED', 'MATCH_CONTINUES', 'MATCH_FINISHED'] as const
 export type EventType = typeof eventTypes[number]
 export type VarStatus = 'CLEAR' | 'IN_PROGRESS'
 

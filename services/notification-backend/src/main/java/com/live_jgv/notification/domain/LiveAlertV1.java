@@ -17,7 +17,7 @@ public record LiveAlertV1(String contractVersion, UUID alertId, String matchId,
                 || eventType != snapshot.eventType() || !timestamp.equals(snapshot.updatedAt())
                 || !java.util.Objects.equals(referenceEventId,snapshot.referenceEventId()))
             throw new IllegalArgumentException("LiveAlert snapshot identity mismatch");
-        if (eventType == ScoreUpdate.EventType.MATCH_CONTINUES)
+        if (eventType == ScoreUpdate.EventType.MATCH_CONTINUES || eventType == ScoreUpdate.EventType.MATCH_FINISHED)
             throw new IllegalArgumentException("Continuation has no visible alert");
         if ((referenceEventId != null && referenceEventId.isBlank())
                 || (eventType == ScoreUpdate.EventType.GOAL_ANNULLED && referenceEventId == null))

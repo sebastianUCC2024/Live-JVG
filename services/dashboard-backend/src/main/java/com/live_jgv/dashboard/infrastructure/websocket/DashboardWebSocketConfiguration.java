@@ -50,6 +50,11 @@ public class DashboardWebSocketConfiguration implements WebSocketMessageBrokerCo
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/simulator/rounds")
+                        .allowedOrigins(properties.allowedOrigins().toArray(String[]::new))
+                        .allowedMethods("POST")
+                        .allowedHeaders("Content-Type", "X-Simulation-Key")
+                        .maxAge(3600);
                 registry.addMapping("/api/**").allowedOrigins(properties.allowedOrigins().toArray(String[]::new))
                         .allowedMethods("GET").allowedHeaders("Accept", "Content-Type").maxAge(3600);
             }

@@ -2,6 +2,7 @@ import type { MatchSnapshot } from '../types/match'
 import { Icon } from './Icon'
 
 export function VarEvent({ snapshot }: { snapshot: MatchSnapshot }) {
+  if (snapshot.event_type === 'MATCH_FINISHED') return <p>Resultado definitivo</p>
   const reviewing = snapshot.var_status === 'IN_PROGRESS'
   const annulled = snapshot.event_type === 'GOAL_ANNULLED'
   return <div className={`var-event ${reviewing ? 'reviewing' : annulled ? 'annulled' : 'clear'}`}>

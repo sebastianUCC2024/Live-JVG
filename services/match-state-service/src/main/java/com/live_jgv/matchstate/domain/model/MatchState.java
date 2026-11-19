@@ -14,20 +14,22 @@ public final class MatchState {
     private final Map<String, MatchEvent> processedEvents;
     private final Set<String> annulledGoalIds;
     private final VarStatus varStatus;
+    private final boolean finished;
 
     private MatchState(String matchId, String homeTeamId, String awayTeamId,
-                       Map<String, MatchEvent> events, Set<String> annulled, VarStatus status) {
-        this(matchId, homeTeamId, awayTeamId, events, annulled, status, true);
+                       Map<String, MatchEvent> events, Set<String> annulled, VarStatus status, boolean finished) {
+        this(matchId, homeTeamId, awayTeamId, events, annulled, status, finished, true);
     }
 
     private MatchState(String matchId, String homeTeamId, String awayTeamId,
-                       Map<String, MatchEvent> events, Set<String> annulled, VarStatus status, boolean copy) {
+                       Map<String, MatchEvent> events, Set<String> annulled, VarStatus status, boolean finished, boolean copy) {
         this.matchId = matchId;
         this.homeTeamId = homeTeamId;
         this.awayTeamId = awayTeamId;
         this.processedEvents = copy ? Map.copyOf(events) : events;
         this.annulledGoalIds = copy ? Set.copyOf(annulled) : annulled;
         this.varStatus = status;
+        this.finished = finished;
     }
 
     public static MatchState start(String matchId, String homeTeamId, String awayTeamId) {
@@ -37,7 +39,7 @@ public final class MatchState {
         if (homeTeamId.equals(awayTeamId)) {
             throw new IllegalArgumentException("Home and away teams must differ");
         }
-        return new MatchState(matchId, homeTeamId, awayTeamId, Map.of(), Set.of(), VarStatus.CLEAR);
+        return new MatchState(matchId, homeTeamId, awayTeamId, Map.of(), Set.of(), VarStatus.CLEAR, false);
     }
 
     public MatchState apply(MatchEvent event) {
@@ -57,6 +59,9 @@ public final class MatchState {
                 throw new InvalidMatchEventException(InvalidMatchEventException.Reason.ID_CONFLICT, "Event ID already used by a different payload");
             }
             return this;
+        }
+        if (finished) {
+            throw new InvalidMatchEventException("Match has already finished");
         }
         if (event.teamId() != null && !homeTeamId.equals(event.teamId()) && !awayTeamId.equals(event.teamId())) {
             throw new InvalidMatchEventException(InvalidMatchEventException.Reason.UNKNOWN_TEAM, "Unknown team for this match");
@@ -80,17 +85,22 @@ public final class MatchState {
                 status = VarStatus.CLEAR;
             }
             case MATCH_CONTINUES -> status = VarStatus.CLEAR;
+            case MATCH_FINISHED -> {
+                if (varStatus == VarStatus.IN_PROGRESS || event.minute() != 15) {
+                    throw new InvalidMatchEventException("Finish requires minute 15 and a resolved VAR review");
+                }
+            }
         }
         var events = copy ? new HashMap<>(processedEvents) : processedEvents;
         events.put(event.eventId(), event);
-        return new MatchState(matchId, homeTeamId, awayTeamId, events, annulled, status, copy);
+        return new MatchState(matchId, homeTeamId, awayTeamId, events, annulled, status, event.eventType() == EventType.MATCH_FINISHED, copy);
     }
 
     /** One mutable, private replay buffer; every event uses the same domain validations. */
     public static Rebuilder rebuilder(String matchId, String homeTeamId, String awayTeamId) {
         var initial = start(matchId, homeTeamId, awayTeamId);
         return new Rebuilder(new MatchState(initial.matchId, initial.homeTeamId, initial.awayTeamId,
-                new HashMap<>(), new HashSet<>(), VarStatus.CLEAR, false));
+                new HashMap<>(), new HashSet<>(), VarStatus.CLEAR, false, false));
     }
 
     public static final class Rebuilder {
@@ -103,7 +113,7 @@ public final class MatchState {
         public MatchState finish() {
             if (state == null) throw new IllegalStateException("Replay already finished");
             var result = new MatchState(state.matchId, state.homeTeamId, state.awayTeamId,
-                    state.processedEvents, state.annulledGoalIds, state.varStatus);
+                    state.processedEvents, state.annulledGoalIds, state.varStatus, state.finished);
             state = null;
             return result;
         }

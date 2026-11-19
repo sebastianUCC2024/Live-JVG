@@ -9,7 +9,7 @@
     "event_id": { "$ref": "#/$defs/identifier" },
     "match_id": { "$ref": "#/$defs/identifier" },
     "event_type": {
-      "enum": ["GOAL", "VAR_CHECK", "GOAL_ANNULLED", "MATCH_CONTINUES"]
+      "enum": ["GOAL", "VAR_CHECK", "GOAL_ANNULLED", "MATCH_CONTINUES", "MATCH_FINISHED"]
     },
     "team_id": { "type": ["string", "null"] },
     "minute": { "type": "integer", "minimum": 0, "maximum": 130, "description": "Initial project simulation limit, not a universal football rule." },

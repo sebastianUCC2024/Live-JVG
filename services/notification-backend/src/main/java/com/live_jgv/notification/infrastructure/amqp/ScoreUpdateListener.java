@@ -26,6 +26,11 @@ public final class ScoreUpdateListener {
         if(matches.isEmpty() || matches.stream().anyMatch(id->!id.matches("[A-Za-z0-9_.-]+"))) throw new IllegalArgumentException("Approved scope required");
         this.alertCodec=new com.live_jgv.notification.infrastructure.json.LiveAlertCodec(); this.allowedMatches=java.util.Set.copyOf(matches); return this;
     }
+    private boolean allowedMatch(String id) {
+        return allowedMatches.contains(id)
+                || (id.matches("demo-col-v4-00[1-6][.][a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}")
+                && allowedMatches.contains(id.substring(0, id.lastIndexOf('.'))));
+    }
     private final ProcessingFailurePolicy failurePolicy=new ProcessingFailurePolicy();
     public ScoreUpdateListener(ProcessScoreUpdateService processor, ScoreUpdateCodec codec,
             ConfirmedDlqRecovery recovery, Runnable stop, Sleeper sleeper, int attempts, long interval) {
@@ -40,7 +45,7 @@ public final class ScoreUpdateListener {
             var alert=alertCodec==null?null:alertCodec.decode(message.getBody());
             var update = alert==null?codec.decode(message.getBody()):alert.snapshot();
             var properties = message.getMessageProperties();
-            if(alert!=null && (!allowedMatches.contains(alert.matchId()) || !"live_alerts".equals(properties.getReceivedExchange()) || !alert.alertId().toString().equals(properties.getMessageId()))) throw new InvalidUpdateException("LiveAlert AMQP identity or scope mismatch");
+            if(alert!=null && (!allowedMatch(alert.matchId()) || !"live_alerts".equals(properties.getReceivedExchange()) || !alert.alertId().toString().equals(properties.getMessageId()))) throw new InvalidUpdateException("LiveAlert AMQP identity or scope mismatch");
             if (alert==null && ((properties.getMessageId() != null && !properties.getMessageId().equals(update.eventId()))
                     || (properties.getReceivedRoutingKey() != null && !properties.getReceivedRoutingKey().equals("score." + update.matchId()))))
                 throw new InvalidUpdateException("AMQP identity or routing key mismatch");
